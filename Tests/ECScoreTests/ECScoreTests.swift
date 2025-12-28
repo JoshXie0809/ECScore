@@ -23,7 +23,35 @@ import Testing
     storage.alterEntity(entity: e) { comp in
         comp.test = 666
     }
-    
+
     #expect(storage.components[0] != TestComponent(test: -333))
     #expect(storage.components[0] == TestComponent(test: 666))
+
+    let e2 = EntityId(id: 1115, version: 2222)
+    let e3 = EntityId(id: 11167, version: 2222)
+    storage.addEntity(newEntity: e2, TestComponent(test: 666))
+    storage.addEntity(newEntity: e3, TestComponent(test: 777))
+
+    storage.removeEntity(e)
+    #expect(!storage.contains(e))
+    #expect(storage.count == 2)
+    #expect(storage.activeEntities[0] == e3)
+    #expect(storage.activeEntities[1] == e2)
 }
+
+@Test func testWorld() async throws {
+    let w = World()
+
+    let entity = w.createEntity()
+    #expect(w.contains(entity))
+    let invalidEntity = EntityId(id: 100, version: 203)
+    #expect(!w.contains(invalidEntity))
+
+    w.destroyEntity(entity)
+    #expect(w.entityCount == 0)
+
+    let entitiy2 = w.createEntity()
+    #expect(entitiy2.version == 1)
+
+    print(w.activeEntities)
+} 

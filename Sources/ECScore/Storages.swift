@@ -8,10 +8,10 @@ final class Storage<T: Component>: AnyStorage {
 
     var activeEntities: [EntityId] { entities }
     var components: [T] { dense }
-
+    
     var count: Int { dense.count }
-    var componentType: ObjectIdentifier {
-        ObjectIdentifier(T.self)
+    var componentType: Any.Type {
+        T.self
     }
 
     func contains(_ id: EntityId) -> Bool {
