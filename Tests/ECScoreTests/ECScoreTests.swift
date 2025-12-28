@@ -53,5 +53,15 @@ import Testing
     let entitiy2 = w.createEntity()
     #expect(entitiy2.version == 1)
 
-    print(w.activeEntities)
+    struct TestComponent: Component {}
+    let storage = Storage<TestComponent>()
+    w.addStorage(storage)
+
+    storage.addEntity(newEntity: entitiy2, TestComponent())
+
+    let storageRef = w[TestComponent.self]
+    #expect(storageRef === storage)
+
+    w.destroyStorage(TestComponent.self)
+    #expect(w.storageCount == 0)
 } 

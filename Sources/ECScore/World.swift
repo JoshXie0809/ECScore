@@ -20,7 +20,7 @@ final class EntityManager {
     private var versions: [Int] = []
     private(set) var activeEntities = Set<EntityId>()
     var count: Int {
-        versions.count
+        activeEntities.count
     }
 
     func createEntity() -> EntityId {
@@ -61,7 +61,7 @@ final class EntityManager {
 
 extension World {
     var entityCount: Int {
-        activeEntities.count
+        entities.count
     }
 
     var activeEntities: Set<EntityId> {
@@ -77,6 +77,9 @@ extension World {
     }
 
     func destroyEntity(_ entitiy: EntityId) {
+        for storage in storages.values {
+            storage.removeEntity(entitiy)
+        }
         entities.destroyEntity(entitiy)
     }
 }
@@ -86,4 +89,49 @@ protocol AnyStorage: AnyObject {
     var count: Int { get }
     func removeEntity(_: EntityId)
     func contains(_: EntityId) -> Bool
+}
+
+extension World {
+    func addStorage<T: Component>(_ storage: Storage<T>) {
+        let id = ObjectIdentifier(T.self)
+        guard storages[id] == nil else {
+            return
+        }
+        storages[id] = storage
+    }
+
+    subscript<T: Component>(_ type: T.Type) -> Storage<T> {
+        let id = ObjectIdentifier(type)
+        guard let storage = storages[id] as? Storage<T> else {
+            let newStorage = Storage<T>()
+            storages[id] = newStorage
+            return newStorage
+        }
+        return storage
+    }
+
+    func destroyStorage<T: Component>(_ type: T.Type) {
+        let id = ObjectIdentifier(T.self)
+        guard storages[id] != nil else {
+            return
+        }
+
+        storages.removeValue(forKey: id)
+    }
+
+    var storageCount : Int {
+        storages.count
+    }
+}
+
+
+
+extension World: CustomStringConvertible {
+    var description: String {
+return """
+World(n: \(entityCount)) {
+    storages: \(storages.values)
+}
+"""
+    }
 }
