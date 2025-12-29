@@ -65,3 +65,31 @@ import Testing
     w.destroyStorage(TestComponent.self)
     #expect(w.storageCount == 0)
 } 
+
+@Test func testQuery() async throws {
+    let w = World()
+
+    w.addStorage(Storage<Comp1>())
+    w.addStorage(Storage<Comp2>())
+    let s1 = w[Comp1.self]
+    let s2 = w[Comp2.self]
+
+    for _ in 0..<200 {
+        let e = w.createEntity()
+        s1.addEntity(newEntity: e, Comp1())
+    } 
+
+    for _ in 0..<100 {
+        let e = w.createEntity()
+        s1.addEntity(newEntity: e, Comp1())
+        s2.addEntity(newEntity: e, Comp2())
+    } 
+
+    for _ in 0..<100 {
+        let e = w.createEntity()
+        s2.addEntity(newEntity: e, Comp2())
+    }
+    let qRes = w.query(Comp1.self, Comp2.self)
+    
+    print(qRes[0...5])
+}

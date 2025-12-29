@@ -62,4 +62,14 @@ final class Storage<T: Component>: AnyStorage {
         transform(&dense[index])
     }
 
+    func getEntity(_ entity: EntityId) -> T? {
+        // 1. 檢查 sparse 字典裡有沒有這個實體的索引
+        guard let index = sparse[entity] else {
+            return nil
+        }
+    
+        // 2. 根據索引從連續的 dense 陣列中取出組件
+        return dense[index]
+    }
+
 }

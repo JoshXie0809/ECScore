@@ -135,3 +135,25 @@ World(n: \(entityCount)) {
 """
     }
 }
+
+
+extension World {
+    // 簡單的查詢：回傳同時擁有 A 與 B 的實體
+    func query<A: Component, B: Component>(_ typeA: A.Type, _ typeB: B.Type) -> [(EntityId, A, B)] {
+        let storageA = self[A.self]
+        let storageB = self[B.self]
+        
+        // 效能優化策略：從數量少的 Storage 開始遍歷 (Smallest Storage First)
+        if storageA.count <= storageB.count {
+                return storageA.activeEntities.compactMap { id in
+                    guard let compB = storageB.getEntity(id) else { return nil } // 你需要實作 storage.get
+                    return (id, storageA.getEntity(id)!, compB)
+            }
+        } else {
+            return storageB.activeEntities.compactMap { id in
+                guard let compA = storageA.getEntity(id) else { return nil } // 你需要實作 storage.get
+                return (id, compA, storageB.getEntity(id)!)
+            }
+        }
+    }
+}
