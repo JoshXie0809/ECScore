@@ -66,7 +66,12 @@ import Testing
     #expect(w.storageCount == 0)
 } 
 
+
+
 @Test func testQuery() async throws {
+    struct Comp1: Component {}
+    struct Comp2: Component {}
+    
     let w = World()
 
     w.addStorage(Storage<Comp1>())
@@ -89,7 +94,25 @@ import Testing
         let e = w.createEntity()
         s2.addEntity(newEntity: e, Comp2())
     }
-    let qRes = w.query(Comp1.self, Comp2.self)
     
-    print(qRes[0...5])
+}
+
+@Test func testQuery2() async throws {
+    struct Comp1: Component {}
+    struct Comp2: Component {}
+    struct Comp3: Component {}
+    struct Comp4: Component {}
+
+    let w = World()
+    _ = w[Comp1.self]
+
+    let query = Query(w)
+        .with(Comp1.self)
+        .with(Comp4.self)
+        .without(Comp2.self)
+        .without(Comp3.self)
+
+    print(query.withTasks)
+    print(query.withoutTasks)
+    
 }

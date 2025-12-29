@@ -136,6 +136,47 @@ World(n: \(entityCount)) {
     }
 }
 
+// Query system 
+final class Query {
+    private let world: World
+    private var withSet = Set<ObjectIdentifier>()
+    private var withoutSet = Set<ObjectIdentifier>()
+
+    private(set) var withTasks: [ObjectIdentifier] = []
+    private(set) var withoutTasks: [ObjectIdentifier] = []
+
+    init(_ world: World) {
+        self.world = world
+    }
+
+    func with<T: Component>(_ type: T.Type) -> Query {
+        let id = ObjectIdentifier(type)
+
+        guard !withSet.contains(id) else { return self }
+        guard !withoutSet.contains(id) else { return self }
+        guard world.storages[id] != nil else {
+            return self
+        }
+
+        withSet.insert(id)
+        withTasks.append(id)
+        return self
+    }
+
+    func without<T: Component>(_ type: T.Type) -> Query {
+        let id = ObjectIdentifier(type
+        )
+        guard !withSet.contains(id) else { return self }
+        guard !withoutSet.contains(id) else { return self }
+        guard  world.storages[id] != nil else {
+            return self
+        }
+        withoutSet.insert(id)
+        withoutTasks.append(id)
+        return self
+    }
+}
+
 
 extension World {
     // 簡單的查詢：回傳同時擁有 A 與 B 的實體
