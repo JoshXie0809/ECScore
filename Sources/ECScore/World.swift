@@ -150,7 +150,7 @@ final class QueryDraft {
     private(set) var withTasks: [ObjectIdentifier] = []
     private(set) var withoutTasks: [ObjectIdentifier] = []
 
-    init(_ world: World) {
+    fileprivate init(_ world: World) {
         self.world = world
     }
 
@@ -205,15 +205,16 @@ struct Query {
     {
         let with = withTasks.sorted() 
             { id1, id2 in
-                let storageACount = world.storages[id1]?.count ?? 0
-                let storageBCount = world.storages[id2]?.count ?? 0
-                return storageACount < storageBCount
+                let count1 = world.storages[id1]?.count ?? 0
+                let count2 = world.storages[id2]?.count ?? 0
+                return count1 < count2
             }
+        
         let without = withoutTasks.sorted() 
             { id1, id2 in
-                let storageACount = world.storages[id1]?.count ?? 0
-                let storageBCount = world.storages[id2]?.count ?? 0
-                return storageACount > storageBCount
+                let count1 = world.storages[id1]?.count ?? 0
+                let count2 = world.storages[id2]?.count ?? 0
+                return count1 > count2
             }
         
         self.world = world
@@ -224,6 +225,10 @@ struct Query {
 
 
 extension World {
+    func queryDraft() -> QueryDraft {
+        QueryDraft(self)
+    }
+
     // 簡單的查詢：回傳同時擁有 A 與 B 的實體
     func query<A: Component, B: Component>(_ typeA: A.Type, _ typeB: B.Type) -> [(EntityId, A, B)] {
         let storageA = self[A.self]

@@ -118,7 +118,7 @@ import Testing
     s2.addEntity(newEntity: w.createEntity(), Comp4())
     s2.addEntity(newEntity: w.createEntity(), Comp4())
 
-    let query = QueryDraft(w)
+    let query = w.queryDraft()
         .with(Comp1.self)
         .with(Comp4.self)
         .without(Comp2.self)
