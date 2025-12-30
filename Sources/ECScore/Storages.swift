@@ -4,7 +4,7 @@ final class Storage<T: Component>: AnyStorage {
     private var sparse: [EntityId:Int] = [:]
     private var dense: [T] = []
     // dense id to entity id
-    private var entities: [EntityId] = []
+    private(set) var entities: [EntityId] = []
 
     var activeEntities: [EntityId] { entities }
     var components: [T] { dense }

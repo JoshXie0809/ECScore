@@ -89,6 +89,7 @@ protocol AnyStorage: AnyObject {
     var count: Int { get }
     func removeEntity(_: EntityId)
     func contains(_: EntityId) -> Bool
+    var entities: [EntityId] { get }
 }
 
 extension World {
@@ -146,9 +147,8 @@ final class QueryDraft {
     private let world: World
     private var withSet = Set<ObjectIdentifier>()
     private var withoutSet = Set<ObjectIdentifier>()
-
-    private(set) var withTasks: [ObjectIdentifier] = []
-    private(set) var withoutTasks: [ObjectIdentifier] = []
+    private var withTasks: [ObjectIdentifier] = []
+    private var withoutTasks: [ObjectIdentifier] = []
 
     fileprivate init(_ world: World) {
         self.world = world
@@ -221,30 +221,108 @@ struct Query {
         self.with = with
         self.without = without
     }
+
+    func query() -> [EntityId] {
+        #if DEBUG
+            print("Guard1")
+        #endif
+        // no set constraint
+        guard with.count != 0 || without.count != 0 else {
+            // here is with: [], without: []
+            var entityList: [EntityId] = []
+            entityList.reserveCapacity(world.entityCount)
+            for e in world.activeEntities {
+                entityList.append(e)
+            }
+            return entityList
+        }
+
+        #if DEBUG
+            print("Guard2")
+        #endif
+        // here is with: [], without: [...]
+        // here is with: [...], without: []
+        // here is with: [...], without: [...]
+        guard !(with.count == 0 && without.count != 0) else {
+            // here is with: [], without: [...]
+            var entityList: [EntityId] = []
+            entityList.reserveCapacity(world.entityCount)
+            for e in world.activeEntities {
+                entityList.append(e)
+            }
+
+            var withoutStorages: [AnyStorage] = []
+            for id in without {
+                if let storage = world.storages[id] {
+                    withoutStorages.append(storage)
+                }
+            }
+            #if DEBUG
+                print(withoutStorages)
+            #endif
+            
+            return entityList.filter { EntityId in 
+                for storage in withoutStorages {
+                    if(storage.contains(EntityId)) {
+                        return false
+                    }
+                }
+
+                return true
+            }
+            
+        }
+
+
+        #if DEBUG
+            print("Finally")
+        #endif
+
+        // here is with: [...], without: []
+        // here is with: [...], without: [...]
+        var withStorages: [AnyStorage] = []
+        var withoutStorages: [AnyStorage] = []
+        for id in with {
+            if let storage = world.storages[id] {
+                withStorages.append(storage)
+            }
+        }
+
+        for id in without {
+            if let storage = world.storages[id] {
+                withoutStorages.append(storage)
+            }
+        }
+
+        #if DEBUG
+            print(withStorages)
+            print(withoutStorages)
+        #endif
+
+        // has at least 1 with
+        let baseEntityList = withStorages[0].entities
+
+        return baseEntityList.filter { EntityId in 
+            // with
+            for i in 1..<withStorages.count {
+                if !withStorages[i].contains(EntityId) {
+                    return false
+                }
+            }
+            // without
+            for storage in withoutStorages {
+                if storage.contains(EntityId) {
+                    return false
+                }
+            }
+            return true
+        }
+    }
 }
 
 
 extension World {
     func queryDraft() -> QueryDraft {
         QueryDraft(self)
-    }
-
-    // 簡單的查詢：回傳同時擁有 A 與 B 的實體
-    func query<A: Component, B: Component>(_ typeA: A.Type, _ typeB: B.Type) -> [(EntityId, A, B)] {
-        let storageA = self[A.self]
-        let storageB = self[B.self]
-        
-        // 效能優化策略：從數量少的 Storage 開始遍歷 (Smallest Storage First)
-        if storageA.count <= storageB.count {
-                return storageA.activeEntities.compactMap { id in
-                    guard let compB = storageB.getEntity(id) else { return nil } // 你需要實作 storage.get
-                    return (id, storageA.getEntity(id)!, compB)
-            }
-        } else {
-            return storageB.activeEntities.compactMap { id in
-                guard let compA = storageA.getEntity(id) else { return nil } // 你需要實作 storage.get
-                return (id, compA, storageB.getEntity(id)!)
-            }
-        }
     }
 }

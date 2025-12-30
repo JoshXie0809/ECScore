@@ -67,17 +67,20 @@ import Testing
 } 
 
 
+struct Comp1: Component {}
+struct Comp2: Component {}
 
 @Test func testQuery() async throws {
-    struct Comp1: Component {}
-    struct Comp2: Component {}
-    
     let w = World()
 
     w.addStorage(Storage<Comp1>())
     w.addStorage(Storage<Comp2>())
     let s1 = w[Comp1.self]
     let s2 = w[Comp2.self]
+
+    for _ in 0..<200 {
+        _ = w.createEntity()
+    } 
 
     for _ in 0..<200 {
         let e = w.createEntity()
@@ -90,44 +93,25 @@ import Testing
         s2.addEntity(newEntity: e, Comp2())
     } 
 
-    for _ in 0..<100 {
+    for _ in 0..<900 {
         let e = w.createEntity()
         s2.addEntity(newEntity: e, Comp2())
     }
+
+    let q = w.queryDraft().buildQuery()
+    // all 200 + 200 + 100 + 900
+    #expect(q.query().count == 1400)
+
+    let q2 = w.queryDraft().without(Comp2.self).buildQuery()
+    // no comp + comp1 = 200 + 200 = 400
+    #expect(q2.query().count == 400)
+
+    let q3 = w.queryDraft().without(Comp2.self).without(Comp1.self).buildQuery()
+    // no comp
+    #expect(q3.query().count == 200)
+
+    let q4 = w.queryDraft().with(Comp1.self).with(Comp2.self).buildQuery()
+    // with Comp1 && Comp2 = 100
+    #expect(q4.query().count == 100)
     
-}
-
-@Test func testQuery2() async throws {
-    struct Comp1: Component {}
-    struct Comp2: Component {}
-    struct Comp3: Component {}
-    struct Comp4: Component {}
-
-    let w = World()
-    let s1 = w[Comp1.self]
-    _ = w[Comp2.self]
-    _ = w[Comp3.self]
-    let s2 = w[Comp4.self]
-
-    s1.addEntity(newEntity: w.createEntity(), Comp1())
-    s1.addEntity(newEntity: w.createEntity(), Comp1())
-    s1.addEntity(newEntity: w.createEntity(), Comp1())
-    s1.addEntity(newEntity: w.createEntity(), Comp1())
-    s1.addEntity(newEntity: w.createEntity(), Comp1())
-
-    s2.addEntity(newEntity: w.createEntity(), Comp4())
-    s2.addEntity(newEntity: w.createEntity(), Comp4())
-
-    let query = w.queryDraft()
-        .with(Comp1.self)
-        .with(Comp4.self)
-        .without(Comp2.self)
-        .without(Comp3.self)
-        .buildQuery()
-
-    let ws1 = query.with[0]
-    let ws2 = query.with[1]
-
-    #expect(ws1 == ObjectIdentifier(Comp4.self))
-    #expect(ws2 == ObjectIdentifier(Comp1.self))
 }
