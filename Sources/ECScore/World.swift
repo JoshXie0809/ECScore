@@ -261,9 +261,9 @@ struct Query {
                 print(withoutStorages)
             #endif
             
-            return entityList.filter { EntityId in 
+            return entityList.filter { eid in 
                 for storage in withoutStorages {
-                    if(storage.contains(EntityId)) {
+                    if(storage.contains(eid)) {
                         return false
                     }
                 }
@@ -272,7 +272,6 @@ struct Query {
             }
             
         }
-
 
         #if DEBUG
             print("Finally")
@@ -302,16 +301,16 @@ struct Query {
         // has at least 1 with
         let baseEntityList = withStorages[0].entities
 
-        return baseEntityList.filter { EntityId in 
+        return baseEntityList.filter { eid in 
             // with
             for i in 1..<withStorages.count {
-                if !withStorages[i].contains(EntityId) {
+                if !withStorages[i].contains(eid) {
                     return false
                 }
             }
             // without
             for storage in withoutStorages {
-                if storage.contains(EntityId) {
+                if storage.contains(eid) {
                     return false
                 }
             }
