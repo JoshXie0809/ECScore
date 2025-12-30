@@ -110,6 +110,11 @@ extension World {
         return storage
     }
 
+    func containsStorage<T: Component>(_ type: T.Type) -> Bool {
+        let id = ObjectIdentifier(T.self)
+        return storages[id] != nil
+    }
+
     func destroyStorage<T: Component>(_ type: T.Type) {
         let id = ObjectIdentifier(T.self)
         guard storages[id] != nil else {
@@ -136,8 +141,8 @@ World(n: \(entityCount)) {
     }
 }
 
-// Query system 
-final class Query {
+// Query Builder
+final class QueryDraft {
     private let world: World
     private var withSet = Set<ObjectIdentifier>()
     private var withoutSet = Set<ObjectIdentifier>()
@@ -149,12 +154,16 @@ final class Query {
         self.world = world
     }
 
-    func with<T: Component>(_ type: T.Type) -> Query {
+    func with<T: Component>(_ type: T.Type) -> Self {
         let id = ObjectIdentifier(type)
 
         guard !withSet.contains(id) else { return self }
         guard !withoutSet.contains(id) else { return self }
-        guard world.storages[id] != nil else {
+
+        guard world.containsStorage(type) else {
+            #if DEBUG
+            print("⚠️ QueryDraft: storage for \(type) not found")
+            #endif
             return self
         }
 
@@ -163,17 +172,53 @@ final class Query {
         return self
     }
 
-    func without<T: Component>(_ type: T.Type) -> Query {
+    func without<T: Component>(_ type: T.Type) -> Self {
         let id = ObjectIdentifier(type
         )
         guard !withSet.contains(id) else { return self }
         guard !withoutSet.contains(id) else { return self }
-        guard  world.storages[id] != nil else {
+        guard world.containsStorage(type) else {
+            #if DEBUG
+            print("⚠️ QueryDraft: storage for \(type) not found")
+            #endif
             return self
         }
         withoutSet.insert(id)
         withoutTasks.append(id)
         return self
+    }
+
+    func buildQuery() -> Query {
+        Query(world: world, withTasks: withTasks, withoutTasks: withoutTasks)
+    }
+}
+
+struct Query {
+    let world: World
+    let with: [ObjectIdentifier]
+    let without: [ObjectIdentifier]
+
+    init(
+        world: World,
+        withTasks: [ObjectIdentifier], 
+        withoutTasks: [ObjectIdentifier]) 
+    {
+        let with = withTasks.sorted() 
+            { id1, id2 in
+                let storageACount = world.storages[id1]?.count ?? 0
+                let storageBCount = world.storages[id2]?.count ?? 0
+                return storageACount < storageBCount
+            }
+        let without = withoutTasks.sorted() 
+            { id1, id2 in
+                let storageACount = world.storages[id1]?.count ?? 0
+                let storageBCount = world.storages[id2]?.count ?? 0
+                return storageACount > storageBCount
+            }
+        
+        self.world = world
+        self.with = with
+        self.without = without
     }
 }
 

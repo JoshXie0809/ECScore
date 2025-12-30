@@ -104,15 +104,30 @@ import Testing
     struct Comp4: Component {}
 
     let w = World()
-    _ = w[Comp1.self]
+    let s1 = w[Comp1.self]
+    _ = w[Comp2.self]
+    _ = w[Comp3.self]
+    let s2 = w[Comp4.self]
 
-    let query = Query(w)
+    s1.addEntity(newEntity: w.createEntity(), Comp1())
+    s1.addEntity(newEntity: w.createEntity(), Comp1())
+    s1.addEntity(newEntity: w.createEntity(), Comp1())
+    s1.addEntity(newEntity: w.createEntity(), Comp1())
+    s1.addEntity(newEntity: w.createEntity(), Comp1())
+
+    s2.addEntity(newEntity: w.createEntity(), Comp4())
+    s2.addEntity(newEntity: w.createEntity(), Comp4())
+
+    let query = QueryDraft(w)
         .with(Comp1.self)
         .with(Comp4.self)
         .without(Comp2.self)
         .without(Comp3.self)
+        .buildQuery()
 
-    print(query.withTasks)
-    print(query.withoutTasks)
-    
+    let ws1 = query.with[0]
+    let ws2 = query.with[1]
+
+    #expect(ws1 == ObjectIdentifier(Comp4.self))
+    #expect(ws2 == ObjectIdentifier(Comp1.self))
 }
