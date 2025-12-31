@@ -42,9 +42,11 @@ final class EntityManager {
         return entity
     }
 
-    func destroyEntity(_ entity: EntityId) {
+    func destroyEntity(_ entity: EntityId) 
+        -> Result<Void, WorldError>
+    {
         guard isValid(entity) else {
-            return
+            return .failure(.entitiyNotAlive(entity))
         }
 
         let destroyIndex = entity.id
@@ -52,6 +54,7 @@ final class EntityManager {
         versions[destroyIndex] += 1
         freeList.append(destroyIndex)
         activeEntities.remove(entity)
+        return .success( () )
     }
 
     func isValid(_ entity: EntityId) -> Bool {
@@ -59,6 +62,7 @@ final class EntityManager {
     }
 }
 
+// old must delete
 extension World {
     var entityCount: Int {
         entities.count
@@ -76,20 +80,33 @@ extension World {
         entities.isValid(entitiy)
     }
 
-    func destroyEntity(_ entitiy: EntityId) {
-        for storage in storages.values {
-            storage.removeEntity(entitiy)
+    func destroyEntity(_ entitiy: EntityId) 
+        -> Result<Void, WorldError>
+    {
+        let res = entities.destroyEntity(entitiy)
+        switch res {
+            case .failure:
+                return res
+
+            case .success:
+                for storage in storages.values {
+                    _ = storage.removeEntity(entitiy)
+                }
+                
+                return res
         }
-        entities.destroyEntity(entitiy)
+        
     }
 }
 
 protocol AnyStorage: AnyObject {
-    var componentType: Any.Type { get }
+    var componentType: Component.Type { get }
+    var componentId: ComponentId { get }
+    
     var count: Int { get }
-    func removeEntity(_: EntityId)
+    func removeEntity(_: EntityId) -> Bool // true is remove successfully
     func contains(_: EntityId) -> Bool
-    var entities: [EntityId] { get }
+    var entities: ContiguousArray<EntityId> { get }
 }
 
 extension World {
@@ -163,10 +180,6 @@ final class QueryDraft {
         guard !withSet.contains(id) else { return self }
         guard !withoutSet.contains(id) else { return self }
 
-        // ⚡️ 修改點：移除 world.containsStorage 檢查
-        // 即使現在沒有這個 Storage，也要記錄下來，讓 Query 知道「我需要這個組件」
-        // 如果 Query 發現它不存在，Query 自然會回傳空陣列，這才是正確的邏輯。
-
         withSet.insert(id)
         withTasks.append(id)
         return self
@@ -177,9 +190,6 @@ final class QueryDraft {
         
         guard !withSet.contains(id) else { return self }
         guard !withoutSet.contains(id) else { return self }
-        
-        // ⚡️ 修改點：移除 world.containsStorage 檢查
-        // 即使 Storage 不存在，記錄「排除它」也是安全的（排除一個不存在的東西 = 沒影響）
 
         withoutSet.insert(id)
         withoutTasks.append(id)
@@ -214,6 +224,7 @@ struct Query {
         }
     }
 
+    @inlinable
     func query() -> [EntityId] {
         // Case 1: 沒有任何限制，回傳全部 Active Entities
         guard !with.isEmpty || !without.isEmpty else {
@@ -276,5 +287,45 @@ struct Query {
 extension World {
     func queryDraft() -> QueryDraft {
         QueryDraft(self)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+extension World {
+    func applyCommand(_ command: WorldCommand) -> Result<[WorldEvent], WorldError>
+    {
+        switch command {
+            case .spawn:
+                let e = entities.createEntity()
+                return .success([.didSpawn( e ) ])
+
+            case .despwan(let entity):
+                var ret: [WorldEvent] = []
+
+                // 先嘗試 destroy（唯一權威）
+                switch entities.destroyEntity(entity) {
+                case .failure:
+                    return .failure(.entitiyNotAlive(entity))
+
+                case .success:
+                    // 再清掉 components（這裡就算 entity 已不在 active set 也沒差，只要 storage 用 id 查 sparse 就能刪）
+                    for storage in storages.values {
+                        if storage.removeEntity(entity) {
+                            ret.append(.didRemoveEntityComponent(entity, storage.componentId))
+                        }
+                    }
+
+                    ret.append(.didDespawn(entity))
+                    return .success(ret)
+                }
+        }
     }
 }

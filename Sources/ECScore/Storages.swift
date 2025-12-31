@@ -2,26 +2,29 @@ protocol Component {}
 
 final class Storage<T: Component>: AnyStorage {
     private var sparse: [EntityId:Int] = [:]
-    private var dense: [T] = []
+    private var dense: ContiguousArray<T> = []
     // dense id to entity id
-    private(set) var entities: [EntityId] = []
-
-    var activeEntities: [EntityId] { entities }
-    var components: [T] { dense }
+    private(set) var entities: ContiguousArray<EntityId> = []
+    var components: ContiguousArray<T> { dense }
+    var componentId: ComponentId {
+        ComponentId(T.self)
+    }
     
     var count: Int { dense.count }
-    var componentType: Any.Type {
+    var componentType: Component.Type {
         T.self
     }
 
+    @inlinable
     func contains(_ id: EntityId) -> Bool {
         sparse[id] != nil
     }
 
-    func removeEntity(_ removeEntity: EntityId) {
+    @discardableResult
+    func removeEntity(_ removeEntity: EntityId) -> Bool {
         guard let removeIndex = sparse[removeEntity] 
         else {
-            return
+            return false
         }
 
         // swap item at lastIndex to removeIndex
@@ -38,6 +41,7 @@ final class Storage<T: Component>: AnyStorage {
         dense.removeLast()
         entities.removeLast()
         sparse.removeValue(forKey: removeEntity)
+        return true
     }
 
     func addEntity(newEntity: EntityId, _ component: T) {

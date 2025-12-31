@@ -35,8 +35,8 @@ import Testing
     storage.removeEntity(e)
     #expect(!storage.contains(e))
     #expect(storage.count == 2)
-    #expect(storage.activeEntities[0] == e3)
-    #expect(storage.activeEntities[1] == e2)
+    #expect(storage.entities[0] == e3)
+    #expect(storage.entities[1] == e2)
 }
 
 @Test func testWorld() async throws {
@@ -47,7 +47,7 @@ import Testing
     let invalidEntity = EntityId(id: 100, version: 203)
     #expect(!w.contains(invalidEntity))
 
-    w.destroyEntity(entity)
+    _ = w.destroyEntity(entity)
     #expect(w.entityCount == 0)
 
     let entitiy2 = w.createEntity()
@@ -113,5 +113,36 @@ struct Comp2: Component {}
     let q4 = w.queryDraft().with(Comp1.self).with(Comp2.self).buildQuery()
     // with Comp1 && Comp2 = 100
     #expect(q4.query().count == 100)
+
+}
+
+
+@Test func testCommand() async throws {
+    let w = World()
+    let events = try w.applyCommand(.spawn).get()
+    let eventsView = EventView(events: events)
+
+    let eids = eventsView.spawnedEntities
+    #expect(eids.count == 1)
+    let eid = eids[0]
+    let s1 = w[Comp1.self]
+    let s2 = w[Comp2.self]
+
+    s1.addEntity(newEntity: eid, Comp1())
+    s2.addEntity(newEntity: eid, Comp2())
+
+    let events2 = try w.applyCommand(.despwan(eid)).get()
+    let events2View = EventView(events: events2)
+    let eids2 = events2View.despawnedEntities
+    #expect(eids2.count == 1)
+    let eid2 = eids2[0]
+    #expect(eid == eid2)
     
+    let cids = events2View.removedComponents(of: eid2)
+    #expect(cids.count == 2)
+    let removed = Set(cids)
+    let expected: Set<ComponentId> = [s1.componentId, s2.componentId]
+
+    #expect(removed == expected)
+
 }
