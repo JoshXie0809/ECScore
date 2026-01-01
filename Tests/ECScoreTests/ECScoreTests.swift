@@ -146,3 +146,51 @@ struct Comp2: Component {}
     #expect(removed == expected)
 
 }
+
+
+@Test func testCommand_doubleDespawnFails() async throws {
+    let w = World()
+    let events = try w.applyCommand(.spawn).get()
+    let eid = EventView(events: events).spawnedEntities[0]
+
+    _ = try w.applyCommand(.despwan(eid)).get()
+
+    guard case .failure(let err) = w.applyCommand(.despwan(eid)) else {
+        #expect(Bool(false), "Expected failure")
+        return
+    }
+    #expect(err == .entitiyNotAlive(eid))
+
+}
+
+func printBit(_ val: UInt64) {
+    for i in (0..<64).reversed() {
+        let bit = (val >> i) & 1
+        print(bit == 0 ? "." : "1", terminator: "")
+    }
+    print()
+}
+
+@Test func testP64() async throws {
+    let page = Page64()
+    printBit(page.mask)
+
+    page.add(3, SparseEntry(denseIdx: 55, gen: 2))
+    printBit(page.mask)
+    
+    page.add(63, SparseEntry(denseIdx: 55, gen: 2))
+    printBit(page.mask)
+
+    print(page)
+
+    page.remove(63)
+    printBit(page.mask)
+    print(page)
+
+    print(page.entityOnPage[3])
+    page.update(3) { se in
+        se.denseIdx = 1_000_000
+        se.gen = -20_000
+    }
+    print(page.entityOnPage[3])
+}   

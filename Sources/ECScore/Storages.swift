@@ -1,4 +1,32 @@
 protocol Component {}
+protocol AnyVal {
+    var cid: ComponentId{ get }
+    func cast<U: Component>(_ type: U.Type) -> U?
+}
+
+struct ValBox<T:Component>: AnyVal {
+    private let val: T
+    var cid: ComponentId {
+        ComponentId(T.self)
+    }
+
+    init(_ val: T) {
+        self.val = val
+    }
+
+    func cast<U: Component>(_ type: U.Type) -> U? { val as? U }
+    
+}
+
+struct ComponentId: Hashable, Sendable {
+    let raw: ObjectIdentifier
+    init<T: Component>(_ type: T.Type) {
+        self.raw = ObjectIdentifier(type)
+    }
+    init(_ raw: ObjectIdentifier) {
+        self.raw = raw
+    }
+}
 
 final class Storage<T: Component>: AnyStorage {
     private var sparse: [EntityId:Int] = [:]
@@ -75,5 +103,7 @@ final class Storage<T: Component>: AnyStorage {
         // 2. 根據索引從連續的 dense 陣列中取出組件
         return dense[index]
     }
+
+    
 
 }

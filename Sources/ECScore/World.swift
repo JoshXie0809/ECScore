@@ -303,29 +303,37 @@ extension World {
     func applyCommand(_ command: WorldCommand) -> Result<[WorldEvent], WorldError>
     {
         switch command {
-            case .spawn:
-                let e = entities.createEntity()
-                return .success([.didSpawn( e ) ])
+        case .spawn:
+            let e = entities.createEntity()
+            return .success([.didSpawn( e ) ])
 
-            case .despwan(let entity):
-                var ret: [WorldEvent] = []
+        case .despwan(let entity):
+            var ret: [WorldEvent] = []
 
-                // 先嘗試 destroy（唯一權威）
-                switch entities.destroyEntity(entity) {
-                case .failure:
-                    return .failure(.entitiyNotAlive(entity))
+            // 先嘗試 destroy（唯一權威）
+            switch entities.destroyEntity(entity) {
+            case .failure:
+                return .failure(.entitiyNotAlive(entity))
 
-                case .success:
-                    // 再清掉 components（這裡就算 entity 已不在 active set 也沒差，只要 storage 用 id 查 sparse 就能刪）
-                    for storage in storages.values {
-                        if storage.removeEntity(entity) {
-                            ret.append(.didRemoveEntityComponent(entity, storage.componentId))
-                        }
+            case .success:
+                // 再清掉 components（這裡就算 entity 已不在 active set 也沒差，只要 storage 用 id 查 sparse 就能刪）
+                for storage in storages.values {
+                    if storage.removeEntity(entity) {
+                        ret.append(.didRemoveEntityComponent(entity, storage.componentId))
                     }
-
-                    ret.append(.didDespawn(entity))
-                    return .success(ret)
                 }
+
+                ret.append(.didDespawn(entity))
+                return .success(ret)
+            }
+        
+        // case.addEntitiyComponent(let entitiy, let comp):
+        //     let id = comp.cid.raw
+        //     guard let storage = storages[id] else {
+        //         return .failure( .worldNotHasComponet(comp.cid) )
+        //     }
+        
+            
         }
     }
 }

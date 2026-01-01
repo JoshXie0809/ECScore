@@ -1,26 +1,18 @@
 enum WorldCommand {
     case spawn
     case despwan(EntityId)
+    // case addEntitiyComponent(EntityId, AnyVal)
 }
-
-struct ComponentId: Hashable, Sendable {
-    let raw: ObjectIdentifier
-    init<T: Component>(_ type: T.Type) {
-        self.raw = ObjectIdentifier(type)
-    }
-    init(_ raw: ObjectIdentifier) {
-        self.raw = raw
-    }
-}
-
 
 enum WorldEvent {
     case didSpawn(EntityId)
     case didDespawn(EntityId)
+    case didAddEntityComponent(EntityId, ComponentId)
     case didRemoveEntityComponent(EntityId, ComponentId)
 }
 
 enum WorldError: Error, Equatable {
+    case worldNotHasComponet(ComponentId)
     case entitiyNotAlive(EntityId)
     case entityNotHasComponent(EntityId, ComponentId)
 }
