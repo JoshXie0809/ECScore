@@ -1,7 +1,8 @@
 enum WorldCommand {
     case spawn
     case despwan(EntityId)
-    // case addEntitiyComponent(EntityId, AnyVal)
+    case addEntitiyComponent(EntityId, any Component)
+
 }
 
 enum WorldEvent {
@@ -15,6 +16,7 @@ enum WorldError: Error, Equatable {
     case worldNotHasComponet(ComponentId)
     case entitiyNotAlive(EntityId)
     case entityNotHasComponent(EntityId, ComponentId)
+    case entityComponentExisted(EntityId, ComponentId)
 }
 
 
@@ -38,6 +40,15 @@ struct EventView {
     func removedComponents(of entity: EntityId) -> [ComponentId] {
         events.compactMap {
             if case .didRemoveEntityComponent(let e, let c) = $0, e == entity {
+                return c
+            }
+            return nil
+        }
+    }
+
+    func addedComponents(of entity: EntityId) -> [ComponentId] {
+        events.compactMap {
+            if case .didAddEntityComponent(let e, let c) = $0, e == entity {
                 return c
             }
             return nil

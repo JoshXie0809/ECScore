@@ -142,8 +142,14 @@ struct Comp2: Component {}
     #expect(cids.count == 2)
     let removed = Set(cids)
     let expected: Set<ComponentId> = [s1.componentId, s2.componentId]
-
     #expect(removed == expected)
+
+    let event3 = try w.applyCommand( .addEntitiyComponent(eid, Comp1()) ).get()
+    let events3View = EventView(events: event3)
+    let cid3 = events3View.addedComponents(of: eid)
+    print(cid3)
+    
+
 
 }
 

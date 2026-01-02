@@ -105,6 +105,7 @@ protocol AnyStorage: AnyObject {
     
     var count: Int { get }
     func removeEntity(_: EntityId) -> Bool // true is remove successfully
+    func addEntity(newEntity: EntityId, _: any Component)
     func contains(_: EntityId) -> Bool
     var entities: ContiguousArray<EntityId> { get }
 }
@@ -327,13 +328,21 @@ extension World {
                 return .success(ret)
             }
         
-        // case.addEntitiyComponent(let entitiy, let comp):
-        //     let id = comp.cid.raw
-        //     guard let storage = storages[id] else {
-        //         return .failure( .worldNotHasComponet(comp.cid) )
-        //     }
+        case.addEntitiyComponent(let entitiy, let comp):
+            let compType = type(of: comp)                 // ✅ 這就是你要的 T.self（動態）
+            let cid = ComponentId(compType)
         
+            guard let storage = storages[cid.raw] else {
+                return .failure( .worldNotHasComponet( cid ) )
+            }
+
             
+            guard !storage.contains(entitiy) else {
+                return .failure( .entityComponentExisted(entitiy, cid ))
+            }
+
+            storage.addEntity(newEntity: entitiy, comp)
+            return .success([ .didAddEntityComponent(entitiy, cid)])
         }
     }
 }

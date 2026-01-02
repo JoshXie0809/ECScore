@@ -1,21 +1,15 @@
 protocol Component {}
-protocol AnyVal {
-    var cid: ComponentId{ get }
-    func cast<U: Component>(_ type: U.Type) -> U?
-}
 
-struct ValBox<T:Component>: AnyVal {
-    private let val: T
+struct ValBox<T:Component> {
+    let val: T
     var cid: ComponentId {
         ComponentId(T.self)
     }
 
     init(_ val: T) {
         self.val = val
+        
     }
-
-    func cast<U: Component>(_ type: U.Type) -> U? { val as? U }
-    
 }
 
 struct ComponentId: Hashable, Sendable {
@@ -70,6 +64,15 @@ final class Storage<T: Component>: AnyStorage {
         entities.removeLast()
         sparse.removeValue(forKey: removeEntity)
         return true
+    }
+
+    func addEntity(newEntity: EntityId, _ anyComponent: any Component) {
+        guard let c = anyComponent as? T else {
+            // 這代表你的 storage 字典或 cid 對錯了，屬於「不應該發生」的 internal error
+            preconditionFailure("Component type mismatch: expected \(T.self), got \(type(of: anyComponent))")
+        }
+
+        addEntity(newEntity: newEntity, c) // 呼叫有型別的 addEntity
     }
 
     func addEntity(newEntity: EntityId, _ component: T) {
