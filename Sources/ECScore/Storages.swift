@@ -1,17 +1,5 @@
 protocol Component {}
 
-struct ValBox<T:Component> {
-    let val: T
-    var cid: ComponentId {
-        ComponentId(T.self)
-    }
-
-    init(_ val: T) {
-        self.val = val
-        
-    }
-}
-
 struct ComponentId: Hashable, Sendable {
     let raw: ObjectIdentifier
     init<T: Component>(_ type: T.Type) {

@@ -329,6 +329,10 @@ extension World {
             }
         
         case.addEntitiyComponent(let entitiy, let comp):
+            guard entities.isValid(entitiy) else {
+                return .failure(.entitiyNotAlive(entitiy))
+            }
+            
             let compType = type(of: comp)                 // ✅ 這就是你要的 T.self（動態）
             let cid = ComponentId(compType)
         

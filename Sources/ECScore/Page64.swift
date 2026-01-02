@@ -59,3 +59,24 @@ final class Page64: CustomStringConvertible {
         return entityOnPage[index]
     }
 }
+
+final class Block64_L2 { // Layer 2
+    private(set) var blockMask: UInt64 = 0
+    private(set) var activePageCount: Int = 0
+    private(set) var activeEntityCount: Int = 0
+    private(set) var pageOnBlock: [Page64?] = Array(repeating: nil, count: 64)
+
+    @inline(__always)
+    func addPage(index: Int, page: Page64) {
+        // 外層負責提供 "初始的" Page
+        // Bloack64 不負責準備 Page
+        precondition(index >= 0 && index < 64, "invalid Block64_L2 index")
+        let bit = UInt64(1) << index
+        precondition(blockMask & bit == 0, "double add Page to Block64_L2")
+
+        blockMask |= bit
+        pageOnBlock[index] = page
+        activePageCount += 1
+    }
+
+}

@@ -199,4 +199,13 @@ func printBit(_ val: UInt64) {
         se.gen = -20_000
     }
     print(page.entityOnPage[3])
-}   
+}
+
+@Test func testBlock64_L2() async throws {
+    let page = Page64()
+    let block = Block64_L2()
+
+    block.addPage(index: 3, page: page)
+
+    printBit(block.blockMask)
+}
