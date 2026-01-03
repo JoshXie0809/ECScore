@@ -3,7 +3,7 @@ struct SparseEntry {
     var gen: Int
 }
 
-final class Page64: CustomStringConvertible {
+struct Page64: CustomStringConvertible {
     private(set) var mask: UInt64 = 0
     private(set) var activeCount: Int = 0
     private(set) var entityOnPage = ContiguousArray<SparseEntry>(
@@ -16,7 +16,7 @@ final class Page64: CustomStringConvertible {
     }
 
     @inline(__always)
-    func add(_ index: Int, _ sparseEntry: SparseEntry) {
+    mutating func add(_ index: Int, _ sparseEntry: SparseEntry) {
         precondition(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
         precondition(mask & bit == 0, "double add on Page64")
@@ -27,7 +27,7 @@ final class Page64: CustomStringConvertible {
     }
 
     @inline(__always)
-    func remove(_ index: Int) {
+    mutating func remove(_ index: Int) {
         precondition(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
         precondition(mask & bit != 0, "remove inactive slot")
@@ -38,7 +38,7 @@ final class Page64: CustomStringConvertible {
     }
 
     @inline(__always)
-    func update(_ index: Int, _ updateFn: (inout SparseEntry) -> Void ) {
+    mutating func update(_ index: Int, _ updateFn: (inout SparseEntry) -> Void ) {
         precondition(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
         precondition(mask & bit != 0, "update inactive slot")
@@ -58,25 +58,45 @@ final class Page64: CustomStringConvertible {
     func getUnchecked(_ index: Int) -> SparseEntry {
         return entityOnPage[index]
     }
+
+    @inline(__always)
+    mutating func reset() {
+        self.mask = 0
+        self.activeCount = 0
+        // 注意：如果你不介意舊資料留在裡面，甚至不需要清空 entityOnPage
+        // 因為 mask = 0 已經讓那些資料在邏輯上不可見了
+    }
 }
 
 final class Block64_L2 { // Layer 2
     private(set) var blockMask: UInt64 = 0
     private(set) var activePageCount: Int = 0
     private(set) var activeEntityCount: Int = 0
-    private(set) var pageOnBlock: [Page64?] = Array(repeating: nil, count: 64)
+    private(set) var pageOnBlock: ContiguousArray<Page64> = 
+        ContiguousArray<Page64>(repeating: Page64(), count: 64)
 
     @inline(__always)
-    func addPage(index: Int, page: Page64) {
-        // 外層負責提供 "初始的" Page
-        // Bloack64 不負責準備 Page
+    func addPage(_ index: Int) {
         precondition(index >= 0 && index < 64, "invalid Block64_L2 index")
         let bit = UInt64(1) << index
         precondition(blockMask & bit == 0, "double add Page to Block64_L2")
 
+        // 標記 active
         blockMask |= bit
-        pageOnBlock[index] = page
         activePageCount += 1
     }
 
+    @inline(__always)
+    func removePage(_ index: Int) {
+        precondition(index >= 0 && index < 64, "invalid Page64 index")
+        let bit = UInt64(1) << index
+        precondition(blockMask & bit != 0, "remove inactive slot")
+        
+        let page = pageOnBlock[index]
+        pageOnBlock[index].reset()
+
+        blockMask &= ~bit
+        activePageCount -= 1
+        activeEntityCount -= page.activeCount
+    }
 }

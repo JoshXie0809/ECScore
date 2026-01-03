@@ -144,9 +144,13 @@ struct Comp2: Component {}
     let expected: Set<ComponentId> = [s1.componentId, s2.componentId]
     #expect(removed == expected)
 
-    let event3 = try w.applyCommand( .addEntitiyComponent(eid, Comp1()) ).get()
-    let events3View = EventView(events: event3)
-    let cid3 = events3View.addedComponents(of: eid)
+    let events3 = try w.applyCommand(.spawn).get()
+    let events3View = EventView(events: events3)
+    let eid3 = events3View.spawnedEntities[0]
+
+    let events4 = try w.applyCommand( .addEntitiyComponent(eid3, Comp1()) ).get()
+    let events4View = EventView(events: events4)
+    let cid3 = events4View.addedComponents(of: eid)
     print(cid3)
     
 
@@ -178,7 +182,7 @@ func printBit(_ val: UInt64) {
 }
 
 @Test func testP64() async throws {
-    let page = Page64()
+    var page = Page64()
     printBit(page.mask)
 
     page.add(3, SparseEntry(denseIdx: 55, gen: 2))
@@ -202,10 +206,16 @@ func printBit(_ val: UInt64) {
 }
 
 @Test func testBlock64_L2() async throws {
-    let page = Page64()
     let block = Block64_L2()
 
-    block.addPage(index: 3, page: page)
+    block.addPage(3)
 
     printBit(block.blockMask)
+    #expect(block.activeEntityCount == 0)
+    #expect(block.activePageCount == 1)
+
+    block.removePage(3)
+    #expect(block.activePageCount != 1)
+    #expect(block.activePageCount == 0)
+
 }
