@@ -185,10 +185,10 @@ func printBit(_ val: UInt64) {
     var page = Page64()
     printBit(page.mask)
 
-    page.add(3, SparseEntry(denseIdx: 55, gen: 2))
+    page.add(3, SparseSetEntry(denseIdx: 55, gen: 2))
     printBit(page.mask)
     
-    page.add(63, SparseEntry(denseIdx: 55, gen: 2))
+    page.add(63, SparseSetEntry(denseIdx: 55, gen: 2))
     printBit(page.mask)
 
     print(page)
@@ -199,14 +199,14 @@ func printBit(_ val: UInt64) {
 
     print(page.entityOnPage[3])
     page.update(3) { se in
-        se.denseIdx = 1_000_000
+        se.denseIdx = 32_000
         se.gen = -20_000
     }
     print(page.entityOnPage[3])
 }
 
 @Test func testBlock64_L2() async throws {
-    let block = Block64_L2()
+    var block = Block64_L2()
 
     block.addPage(3)
 
@@ -218,4 +218,16 @@ func printBit(_ val: UInt64) {
     #expect(block.activePageCount != 1)
     #expect(block.activePageCount == 0)
 
+}
+
+
+@Test func testSparseSet() async throws {
+    let ss1 = SparseSet_L2<Comp1>()
+    printBit(ss1.sparse.blockMask)
+    print(type(of: ss1))
+    print(MemoryLayout<SparseSet_L2<Comp1>>.size)
+    print(MemoryLayout<SparseSet_L2<Comp1>>.stride)
+    let ss2 = SparseSet_L2<SparseSet_L2<Comp1>>()
+    print(ss2)
+    
 }
