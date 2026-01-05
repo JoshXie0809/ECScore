@@ -66,7 +66,6 @@ import Testing
     #expect(w.storageCount == 0)
 } 
 
-
 struct Comp1: Component {}
 struct Comp2: Component {}
 

@@ -2,6 +2,7 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "ECScore",
@@ -12,15 +13,38 @@ let package = Package(
             targets: ["ECScore"]
         ),
     ],
+    dependencies: [
+        // Swift Macro 一定要用
+        .package(
+            url: "https://github.com/apple/swift-syntax.git",
+            from: "600.0.0"
+        ),
+    ],
+
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "ECScore"
+            name: "ECScore",
+            dependencies: ["ECScoreMacros"]
         ),
+
+        // ✅ 新增：Macro target
+        .macro(
+            name: "ECScoreMacros",
+            dependencies: [
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
+            ]
+        ),
+        
         .testTarget(
             name: "ECScoreTests",
             dependencies: ["ECScore"]
         ),
     ]
+    
 )
