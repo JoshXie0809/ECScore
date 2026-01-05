@@ -1,10 +1,13 @@
+typealias BlockOffset = Int16
+typealias CompArrayIndex = Int16
+
 struct SparseSetEntry {
-    var denseIdx: Int16 // 紀錄在 dense Array 4096 中的第幾個位置
+    var denseIdx: CompArrayIndex // 紀錄在 dense Array 4096 中的第幾個位置
 }
 
 struct BlockId {
-    var offset: Int16
-    var gen: Int
+    var offset: BlockOffset
+    var gen: Int // gen is for validation
 }
 
 func printBit(_ val: UInt64) {
@@ -16,12 +19,13 @@ func printBit(_ val: UInt64) {
 }
 
 struct Page64: CustomStringConvertible {
-    private(set) var mask: UInt64 = 0
+    private(set) var pageMask: UInt64 = 0
     private(set) var activeCount: Int = 0
-    private(set) var entityOnPage = ContiguousArray<SparseSetEntry>(
-        repeating: SparseSetEntry(denseIdx: -1), 
-        count: 64
-    )
+    private(set) var entityOnPage = 
+        ContiguousArray<SparseSetEntry>(
+            repeating: SparseSetEntry(denseIdx: Int16(-1)), 
+            count: 64
+        )
 
     var description: String {
         "Page64(n:\(activeCount))"
@@ -31,10 +35,10 @@ struct Page64: CustomStringConvertible {
     mutating func add(_ index: Int, _ sparseEntry: SparseSetEntry) {
         precondition(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
-        precondition(mask & bit == 0, "double add on Page64")
+        precondition(pageMask & bit == 0, "double add on Page64")
 
         entityOnPage[index] = sparseEntry
-        mask |= bit
+        pageMask |= bit
         activeCount += 1
     }
 
@@ -42,10 +46,10 @@ struct Page64: CustomStringConvertible {
     mutating func remove(_ index: Int) {
         precondition(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
-        precondition(mask & bit != 0, "remove inactive slot")
+        precondition(pageMask & bit != 0, "remove inactive slot")
         
-        // entityOnPage[index] = SparseEntry(denseIdx: -1, gen: -1) // inactive
-        mask &= ~bit
+        // entityOnPage[index] = SparseEntry(denseIdx: -1) // inactive
+        pageMask &= ~bit
         activeCount -= 1
     }
 
@@ -53,7 +57,7 @@ struct Page64: CustomStringConvertible {
     mutating func update(_ index: Int, _ updateFn: (inout SparseSetEntry) -> Void ) {
         precondition(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
-        precondition(mask & bit != 0, "update inactive slot")
+        precondition(pageMask & bit != 0, "update inactive slot")
 
         updateFn(&entityOnPage[index])
     }
@@ -62,10 +66,9 @@ struct Page64: CustomStringConvertible {
     @inline(__always)
     func get(_ index: Int) -> SparseSetEntry? {
         let bit = UInt64(1) << index
-        return (mask & bit != 0) ? entityOnPage[index] : nil
+        return (pageMask & bit != 0) ? entityOnPage[index] : nil
     }
 
-    // 暴力版：給已知 index 必存在的系統迴圈使用
     @inline(__always)
     func getUnchecked(_ index: Int) -> SparseSetEntry {
         return entityOnPage[index]
@@ -73,44 +76,71 @@ struct Page64: CustomStringConvertible {
 
     @inline(__always)
     mutating func reset() {
-        self.mask = 0
+        self.pageMask = 0
         self.activeCount = 0
         // 注意：如果你不介意舊資料留在裡面，甚至不需要清空 entityOnPage
         // 因為 mask = 0 已經讓那些資料在邏輯上不可見了
     }
 }
 
-// struct Block64_L2 { // Layer 2
-//     private(set) var blockMask: UInt64 = 0
-//     private(set) var activePageCount: Int = 0
-//     private(set) var activeEntityCount: Int = 0
-//     private(set) var pageOnBlock: ContiguousArray<Page64> = 
-//         ContiguousArray<Page64>(repeating: Page64(), count: 64)
+struct Block64_L2 { // Layer 2
+    private(set) var blockMask: UInt64 = 0
+    private(set) var activePageCount: Int = 0
+    private(set) var activeEntityCount: Int = 0
+    private(set) var pageOnBlock = 
+        ContiguousArray<Page64>(repeating: Page64(), count: 64)
 
-//     @inline(__always)
-//     mutating func addPage(_ index: Int) {
-//         precondition(index >= 0 && index < 64, "invalid Block64_L2 index")
-//         let bit = UInt64(1) << index
-//         precondition(blockMask & bit == 0, "double add Page to Block64_L2")
+    @inline(__always)
+    private mutating func addPage(_ bit: UInt64) {
+        // precondition(index >= 0 && index < 64, "invalid Block64_L2 index")
+        // let bit = UInt64(1) << index
+        // precondition(blockMask & bit == 0, "double add Page to Block64_L2")
+        
+        blockMask |= bit
+        activePageCount += 1
+    }
 
-//         // 標記 active
-//         blockMask |= bit
-//         activePageCount += 1
-//     }
+    @inline(__always)
+    private mutating func removePage(_ bit: UInt64) {
+        // precondition(index >= 0 && index < 64, "invalid Page64 index")
+        // let bit = UInt64(1) << index
+        // precondition(blockMask & bit != 0, "remove inactive slot")
+        
+        blockMask &= ~bit
+        activePageCount -= 1
+        let index = bit.trailingZeroBitCount
+        activeEntityCount -= pageOnBlock[index].activeCount
+        pageOnBlock[index].reset()
+    }
 
-//     @inline(__always)
-//     mutating func removePage(_ index: Int) {
-//         precondition(index >= 0 && index < 64, "invalid Page64 index")
-//         let bit = UInt64(1) << index
-//         precondition(blockMask & bit != 0, "remove inactive slot")
+    @inline(__always)
+    mutating func addEntityOnBlock(_ index: Int, ssEntry: SparseSetEntry) {
+        let (blockId, pageId) = (index >> 6, index & 63)
 
-//         blockMask &= ~bit
-//         activePageCount -= 1
-//         activeEntityCount -= pageOnBlock[index].activeCount
-//         pageOnBlock[index].reset()
+        // check whether or not blockId is in 0~63
+        precondition(blockId >= 0 && blockId < 64, "invalid Block64_L2 index")
+        let bit = UInt64(1) << blockId
+        if blockMask & bit == 0 { addPage(bit)  } // active page
 
-//     }
-// }
+        pageOnBlock[blockId].add(pageId, ssEntry) // fn will check whether or not pageId is in 0~63
+        activeEntityCount += 1
+    }
+
+    @inline(__always)
+    mutating func removeEntityOnBlock(_ index: Int, ssEntry: SparseSetEntry) {
+        let (blockId, pageId) = (index >> 6, index & 63)
+
+        precondition(blockId >= 0 && blockId < 64, "invalid Block64_L2 index")        
+        let bit = UInt64(1) << blockId
+        precondition(blockMask & bit != 0, "remove entity on inactive page")
+
+        pageOnBlock[blockId].remove(pageId) // fn will check whether or not pageId is in 0~63
+        activeEntityCount -= 1
+        if pageOnBlock[blockId].activeCount == 0 { removePage(bit) }
+    }
+}
+
+
 
 // struct SparseSet_L2<T: Component>: Component {
 //     private(set) var sparse = Block64_L2()
