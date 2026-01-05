@@ -13,7 +13,15 @@ Block64 can operate slots on Page64
 4096 / 64 -> blockid
 4096 % 64 -> pageid
 
+## Method
 
 1. add : activate slots and give index on componets, double activate will break
 2. remove: inactive slots on page
+3. get / getUnckecked
+4. update compArrIdx (swap and pop)
 
+===
+
+# Block64
+
+1. getPageMask

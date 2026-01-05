@@ -172,6 +172,9 @@ struct Comp2: Component {}
 
 }
 
+@Test func B64() async throws {
+    let b64 = Block64_L2()
+}
 
 
 // @Test func testP64() async throws {

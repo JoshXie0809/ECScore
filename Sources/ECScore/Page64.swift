@@ -83,65 +83,6 @@ struct Page64: CustomStringConvertible {
     }
 }
 
-struct Block64_L2 { // Layer 2
-    private(set) var blockMask: UInt64 = 0
-    private(set) var activePageCount: Int = 0
-    private(set) var activeEntityCount: Int = 0
-    private(set) var pageOnBlock = 
-        ContiguousArray<Page64>(repeating: Page64(), count: 64)
-
-    @inline(__always)
-    private mutating func addPage(_ bit: UInt64) {
-        // precondition(index >= 0 && index < 64, "invalid Block64_L2 index")
-        // let bit = UInt64(1) << index
-        // precondition(blockMask & bit == 0, "double add Page to Block64_L2")
-        
-        blockMask |= bit
-        activePageCount += 1
-    }
-
-    @inline(__always)
-    private mutating func removePage(_ bit: UInt64) {
-        // precondition(index >= 0 && index < 64, "invalid Page64 index")
-        // let bit = UInt64(1) << index
-        // precondition(blockMask & bit != 0, "remove inactive slot")
-        
-        blockMask &= ~bit
-        activePageCount -= 1
-        let index = bit.trailingZeroBitCount
-        activeEntityCount -= pageOnBlock[index].activeCount
-        pageOnBlock[index].reset()
-    }
-
-    @inline(__always)
-    mutating func addEntityOnBlock(_ index: Int, ssEntry: SparseSetEntry) {
-        let (blockId, pageId) = (index >> 6, index & 63)
-
-        // check whether or not blockId is in 0~63
-        precondition(blockId >= 0 && blockId < 64, "invalid Block64_L2 index")
-        let bit = UInt64(1) << blockId
-        if blockMask & bit == 0 { addPage(bit)  } // active page
-
-        pageOnBlock[blockId].add(pageId, ssEntry) // fn will check whether or not pageId is in 0~63
-        activeEntityCount += 1
-    }
-
-    @inline(__always)
-    mutating func removeEntityOnBlock(_ index: Int, ssEntry: SparseSetEntry) {
-        let (blockId, pageId) = (index >> 6, index & 63)
-
-        precondition(blockId >= 0 && blockId < 64, "invalid Block64_L2 index")        
-        let bit = UInt64(1) << blockId
-        precondition(blockMask & bit != 0, "remove entity on inactive page")
-
-        pageOnBlock[blockId].remove(pageId) // fn will check whether or not pageId is in 0~63
-        activeEntityCount -= 1
-        if pageOnBlock[blockId].activeCount == 0 { removePage(bit) }
-    }
-}
-
-
-
 // struct SparseSet_L2<T: Component>: Component {
 //     private(set) var sparse = Block64_L2()
 //     private(set) var dense: ContiguousArray<T> = ContiguousArray<T>()
