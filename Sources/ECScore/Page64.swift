@@ -1,17 +1,25 @@
 struct SparseSetEntry {
     var denseIdx: Int16 // 紀錄在 dense Array 4096 中的第幾個位置
-    var gen: Int
 }
 
 struct BlockId {
     var offset: Int16
+    var gen: Int
+}
+
+func printBit(_ val: UInt64) {
+    for i in (0..<64).reversed() {
+        let bit = (val >> i) & 1
+        print(bit == 0 ? "." : "1", terminator: "")
+    }
+    print()
 }
 
 struct Page64: CustomStringConvertible {
     private(set) var mask: UInt64 = 0
     private(set) var activeCount: Int = 0
-    private(set) var entityOnPage: ContiguousArray<SparseSetEntry> = ContiguousArray<SparseSetEntry>(
-        repeating: SparseSetEntry(denseIdx: -1, gen: -1), 
+    private(set) var entityOnPage = ContiguousArray<SparseSetEntry>(
+        repeating: SparseSetEntry(denseIdx: -1), 
         count: 64
     )
 
@@ -72,48 +80,48 @@ struct Page64: CustomStringConvertible {
     }
 }
 
-struct Block64_L2 { // Layer 2
-    private(set) var blockMask: UInt64 = 0
-    private(set) var activePageCount: Int = 0
-    private(set) var activeEntityCount: Int = 0
-    private(set) var pageOnBlock: ContiguousArray<Page64> = 
-        ContiguousArray<Page64>(repeating: Page64(), count: 64)
+// struct Block64_L2 { // Layer 2
+//     private(set) var blockMask: UInt64 = 0
+//     private(set) var activePageCount: Int = 0
+//     private(set) var activeEntityCount: Int = 0
+//     private(set) var pageOnBlock: ContiguousArray<Page64> = 
+//         ContiguousArray<Page64>(repeating: Page64(), count: 64)
 
-    @inline(__always)
-    mutating func addPage(_ index: Int) {
-        precondition(index >= 0 && index < 64, "invalid Block64_L2 index")
-        let bit = UInt64(1) << index
-        precondition(blockMask & bit == 0, "double add Page to Block64_L2")
+//     @inline(__always)
+//     mutating func addPage(_ index: Int) {
+//         precondition(index >= 0 && index < 64, "invalid Block64_L2 index")
+//         let bit = UInt64(1) << index
+//         precondition(blockMask & bit == 0, "double add Page to Block64_L2")
 
-        // 標記 active
-        blockMask |= bit
-        activePageCount += 1
-    }
+//         // 標記 active
+//         blockMask |= bit
+//         activePageCount += 1
+//     }
 
-    @inline(__always)
-    mutating func removePage(_ index: Int) {
-        precondition(index >= 0 && index < 64, "invalid Page64 index")
-        let bit = UInt64(1) << index
-        precondition(blockMask & bit != 0, "remove inactive slot")
+//     @inline(__always)
+//     mutating func removePage(_ index: Int) {
+//         precondition(index >= 0 && index < 64, "invalid Page64 index")
+//         let bit = UInt64(1) << index
+//         precondition(blockMask & bit != 0, "remove inactive slot")
 
-        blockMask &= ~bit
-        activePageCount -= 1
-        activeEntityCount -= pageOnBlock[index].activeCount
-        pageOnBlock[index].reset()
+//         blockMask &= ~bit
+//         activePageCount -= 1
+//         activeEntityCount -= pageOnBlock[index].activeCount
+//         pageOnBlock[index].reset()
 
-    }
-}
+//     }
+// }
 
-struct SparseSet_L2<T: Component>: Component {
-    private(set) var sparse = Block64_L2()
-    private(set) var dense: ContiguousArray<T> = ContiguousArray<T>()
-    private(set) var entities: ContiguousArray<BlockId> = ContiguousArray<BlockId>()
-    // for parallel usage: 讀寫分離
-    private var denseBuffer: ContiguousArray<T> = ContiguousArray<T>()
+// struct SparseSet_L2<T: Component>: Component {
+//     private(set) var sparse = Block64_L2()
+//     private(set) var dense: ContiguousArray<T> = ContiguousArray<T>()
+//     private(set) var entities: ContiguousArray<BlockId> = ContiguousArray<BlockId>()
+//     // for parallel usage: 讀寫分離
+//     private var denseBuffer: ContiguousArray<T> = ContiguousArray<T>()
 
-    init() {
-        self.dense.reserveCapacity(4096)
-        self.denseBuffer.reserveCapacity(4096)
-        self.entities.reserveCapacity(4096)
-    }
-}
+//     init() {
+//         self.dense.reserveCapacity(4096)
+//         self.denseBuffer.reserveCapacity(4096)
+//         self.entities.reserveCapacity(4096)
+//     }
+// }

@@ -172,61 +172,55 @@ struct Comp2: Component {}
 
 }
 
-func printBit(_ val: UInt64) {
-    for i in (0..<64).reversed() {
-        let bit = (val >> i) & 1
-        print(bit == 0 ? "." : "1", terminator: "")
-    }
-    print()
-}
 
-@Test func testP64() async throws {
-    var page = Page64()
-    printBit(page.mask)
 
-    page.add(3, SparseSetEntry(denseIdx: 55, gen: 2))
-    printBit(page.mask)
+// @Test func testP64() async throws {
+//     var page = Page64()
+//     printBit(page.mask)
+
+//     page.add(3, SparseSetEntry(denseIdx: 55, gen: 2))
+//     printBit(page.mask)
     
-    page.add(63, SparseSetEntry(denseIdx: 55, gen: 2))
-    printBit(page.mask)
+//     page.add(63, SparseSetEntry(denseIdx: 55, gen: 2))
+//     printBit(page.mask)
 
-    print(page)
+//     print(page)
 
-    page.remove(63)
-    printBit(page.mask)
-    print(page)
+//     page.remove(63)
+//     printBit(page.mask)
+//     print(page)
 
-    print(page.entityOnPage[3])
-    page.update(3) { se in
-        se.denseIdx = 32_000
-        se.gen = -20_000
-    }
-    print(page.entityOnPage[3])
-}
+//     print(page.entityOnPage[3])
+//     page.update(3) { se in
+//         se.denseIdx = 32_000
+//         se.gen = -20_000
+//     }
+//     print(page.entityOnPage[3])
+// }
 
-@Test func testBlock64_L2() async throws {
-    var block = Block64_L2()
+// @Test func testBlock64_L2() async throws {
+//     var block = Block64_L2()
 
-    block.addPage(3)
+//     block.addPage(3)
 
-    printBit(block.blockMask)
-    #expect(block.activeEntityCount == 0)
-    #expect(block.activePageCount == 1)
+//     printBit(block.blockMask)
+//     #expect(block.activeEntityCount == 0)
+//     #expect(block.activePageCount == 1)
 
-    block.removePage(3)
-    #expect(block.activePageCount != 1)
-    #expect(block.activePageCount == 0)
+//     block.removePage(3)
+//     #expect(block.activePageCount != 1)
+//     #expect(block.activePageCount == 0)
 
-}
+// }
 
 
-@Test func testSparseSet() async throws {
-    let ss1 = SparseSet_L2<Comp1>()
-    printBit(ss1.sparse.blockMask)
-    print(type(of: ss1))
-    print(MemoryLayout<SparseSet_L2<Comp1>>.size)
-    print(MemoryLayout<SparseSet_L2<Comp1>>.stride)
-    let ss2 = SparseSet_L2<SparseSet_L2<Comp1>>()
-    print(ss2)
+// @Test func testSparseSet() async throws {
+//     let ss1 = SparseSet_L2<Comp1>()
+//     printBit(ss1.sparse.blockMask)
+//     print(type(of: ss1))
+//     print(MemoryLayout<SparseSet_L2<Comp1>>.size)
+//     print(MemoryLayout<SparseSet_L2<Comp1>>.stride)
+//     let ss2 = SparseSet_L2<SparseSet_L2<Comp1>>()
+//     print(ss2)
     
-}
+// }

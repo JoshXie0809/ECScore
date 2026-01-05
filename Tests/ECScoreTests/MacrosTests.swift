@@ -5,6 +5,9 @@ import Testing
 struct Comp3 {}
 
 @Test func testMacros() async throws {
-    let comp = Comp3()
-    comp.hello()
+    var comp = Comp3()
+    for _ in 0..<30 {
+        comp.hello()
+    }
+    #expect(comp.helloCount == 30)
 }

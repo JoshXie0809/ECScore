@@ -13,8 +13,11 @@ public struct AddHelloMacro: MemberMacro {
     ) throws -> [DeclSyntax] {
         // 這裡回傳「要插入到 type member 裡」的宣告（例如 func/var）
         return [
+            "private(set) var helloCount = 0",
+
             """
-            func hello() {
+            mutating func hello() {
+                helloCount += 1
                 print("hello from macro")
             }
             """
