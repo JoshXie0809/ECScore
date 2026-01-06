@@ -1,5 +1,7 @@
 fileprivate let SENTINEL = BlockOffset(4096) // 使用 4096 作為哨兵節點索引
 fileprivate let NIL = BlockOffset(-1)
+fileprivate let EMPTY = BlockOffset(-2)
+
 
 final class LinkedList4096 {
     // prev/next 陣列長度改為 4097，最後一個位置 [4096] 是哨兵
@@ -10,6 +12,23 @@ final class LinkedList4096 {
         // 初始化：哨兵節點指向自己，形成一個閉環
         prev[Int(SENTINEL)] = SENTINEL
         next[Int(SENTINEL)] = SENTINEL
+    }
+
+    var head: BlockOffset { 
+        // 如果哨兵的下一個還是自己，代表鏈表是「空的」
+        next[Int(SENTINEL)] == SENTINEL ?
+        EMPTY : // 返回你原始定義的空表標誌
+        next[Int(SENTINEL)] // 否則返回真正的第一個節點索引
+    }
+
+    var tail: BlockOffset { 
+        prev[Int(SENTINEL)] == SENTINEL ?
+        EMPTY : 
+        prev[Int(SENTINEL)] 
+    }
+
+    var isEmpty: Bool {
+        return head == EMPTY
     }
     
     func add(_ index: Int) {
@@ -50,9 +69,20 @@ final class LinkedList4096 {
         return index < 4096 && prev[index] != NIL
     }
 
-    func moveToTail(_ index: Int) {
+    func addOrMoveToTail(_ index: Int) {
         remove(index)
         add(index)
     }
 
+    func reset() {
+        // 使用內建的 withUnsafeMutableBufferPointer 是最接近 C 語言速度的作法
+        // 它能保證不產生多餘的拷貝
+        prev.withUnsafeMutableBufferPointer { $0.initialize(repeating: NIL) }
+        next.withUnsafeMutableBufferPointer { $0.initialize(repeating: NIL) }
+        
+        // 重新接回哨兵
+        prev[Int(SENTINEL)] = SENTINEL
+        next[Int(SENTINEL)] = SENTINEL
+    }
+    
 }

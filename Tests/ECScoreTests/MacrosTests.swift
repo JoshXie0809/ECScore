@@ -11,3 +11,13 @@ struct Comp3 {}
     }
     #expect(comp.helloCount == 30)
 }
+
+@Component
+struct Position {
+    let x: Float
+    let y: Float
+}
+
+// @Test func testComponentMacro() async throws {
+//     let storage = Storage<Position>()
+// }

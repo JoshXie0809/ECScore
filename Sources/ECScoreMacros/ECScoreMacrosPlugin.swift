@@ -4,6 +4,7 @@ import SwiftSyntaxMacros
 @main 
 struct ECScoreMacrosPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        AddHelloMacro.self
+        AddHelloMacro.self,
+        ComponentMacro.self,
     ]
 }
