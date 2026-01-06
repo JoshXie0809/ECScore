@@ -30,43 +30,55 @@ struct Block64_L2 { // Layer 2
 
     @inline(__always)
     mutating func addEntityOnBlock(_ index: Int, ssEntry: SparseSetEntry) {
-        let (blockId, pageId) = (index >> 6, index & 63)
+        let (pageIdx, slotIdx) = (index >> 6, index & 63)
 
         // check whether or not blockId is in 0~63
-        precondition(blockId >= 0 && blockId < 64, "invalid Block64_L2 index")
-        let bit = UInt64(1) << blockId
+        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")
+        let bit = UInt64(1) << pageIdx
         if blockMask & bit == 0 { addPage(bit)  } // active page
 
-        pageOnBlock[blockId].add(pageId, ssEntry) // fn will check whether or not pageId is in 0~63
+        pageOnBlock[pageIdx].add(slotIdx, ssEntry) // fn will check whether or not pageId is in 0~63
         activeEntityCount += 1
     }
 
     @inline(__always)
-    mutating func removeEntityOnBlock(_ index: Int, ssEntry: SparseSetEntry) {
-        let (blockId, pageId) = (index >> 6, index & 63)
+    mutating func removeEntityOnBlock(_ index: Int) {
+        let (pageIdx, slotIdx) = (index >> 6, index & 63)
 
-        precondition(blockId >= 0 && blockId < 64, "invalid Block64_L2 index")        
-        let bit = UInt64(1) << blockId
+        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")        
+        let bit = UInt64(1) << pageIdx
         precondition(blockMask & bit != 0, "remove entity on inactive page")
 
-        pageOnBlock[blockId].remove(pageId) // fn will check whether or not pageId is in 0~63
+        pageOnBlock[pageIdx].remove(slotIdx) // fn will check whether or not pageId is in 0~63
         activeEntityCount -= 1
-        if pageOnBlock[blockId].activeCount == 0 { removePage(bit) }
+        if pageOnBlock[pageIdx].activeCount == 0 { removePage(bit) }
     }
 
     @inline(__always)
     func getUnchecked(_ index: Int) -> SparseSetEntry {
-        let (blockId, pageId) = (index >> 6, index & 63)
-        return pageOnBlock[blockId].getUnchecked(pageId)
+        let (pageIdx, slotIdx) = (index >> 6, index & 63)
+        return pageOnBlock[pageIdx].getUnchecked(slotIdx)
     }
 
-    public func contains(_ index: Int) -> Bool {
+    @inline(__always)
+    func contains(_ index: Int) -> Bool {
         let pageIdx = index >> 6   // offset / 64
         let bit = UInt64(1) << pageIdx
         guard (blockMask & bit) != 0 else { return false }
         
         let slotIdx = index & 0x3F // offset % 64
         return pageOnBlock[pageIdx].get(slotIdx) != nil
+    }
+
+    @inline(__always)
+    mutating func updateComponentArrayIdx(_ index: Int, _ updateFn: (inout SparseSetEntry) -> Void ) {
+        let (pageIdx, slotIdx) = (index >> 6, index & 63)
+
+        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")        
+        let bit = UInt64(1) << pageIdx
+        precondition(blockMask & bit != 0, "update entity on inactive page")
+
+        pageOnBlock[pageIdx].update(slotIdx, updateFn)
     }
 
 
