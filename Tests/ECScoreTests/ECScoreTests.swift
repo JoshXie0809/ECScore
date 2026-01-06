@@ -172,11 +172,6 @@ struct Comp2: Component {}
 
 }
 
-@Test func B64() async throws {
-    let b64 = Block64_L2()
-}
-
-
 // @Test func testP64() async throws {
 //     var page = Page64()
 //     printBit(page.mask)
@@ -226,4 +221,30 @@ struct Comp2: Component {}
 //     let ss2 = SparseSet_L2<SparseSet_L2<Comp1>>()
 //     print(ss2)
     
+// }
+
+// @Test func testLinkedListFuzz() async throws {
+//     for _ in 0..<400 {
+//         let ll = LinkedList4096()
+//         var model = Set<Int>()
+
+//         for step in 0..<10_000 {
+//             let node = Int.random(in: 0..<4096)
+//             if Bool.random() {
+//                 ll.add(node)
+//                 model.insert(node)
+//             } else {
+//                 ll.remove(node)
+//                 model.remove(node)
+//             }
+
+//             if step % 200 == 0 {
+//                 // 方案 A：有 contains 就抽樣比對
+//                 for _ in 0..<64 {
+//                     let x = Int.random(in: 0..<4096)
+//                     #expect(ll.contains(x) == model.contains(x))
+//                 }
+//             }
+//         }
+//     }
 // }
