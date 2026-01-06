@@ -49,4 +49,10 @@ final class LinkedList4096 {
         // 注意：index 必須在 0..<4096 範圍內，SENTINEL 本身不計入
         return index < 4096 && prev[index] != NIL
     }
+
+    func moveToTail(_ index: Int) {
+        remove(index)
+        add(index)
+    }
+
 }
