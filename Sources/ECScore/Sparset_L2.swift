@@ -23,19 +23,35 @@ struct SparseSet_L2<T: Component>: SparseSet {
         guard sparse.contains(offset) else { return }
         
         let entry = sparse.getUnchecked(offset)
-        let componentsIdxOfEntity = Int(entry.compArrIdx)
+        let removeIdx = Int(entry.compArrIdx)
 
         // check version matched
         precondition( 
-            reverseEntities[componentsIdxOfEntity].version == version, 
+            reverseEntities[removeIdx].version == version, 
             "\(T.self): the version of entity not matched while removing \(eid.id)" 
         )
 
+        // remove sparse let in scare of other threads not errorly read
+        sparse.removeEntityOnBlock(offset) // total count -= 1
+
+        // swap and pop
+        let lastIdx = sparse.activeEntityCount // count is -1 while removing sparse
         
+        if removeIdx < lastIdx {
+            let lastBlockId = reverseEntities[lastIdx]
+            // update 3 places
+            components[removeIdx] = components[lastIdx]
+            reverseEntities[removeIdx] = lastBlockId
+            sparse.updateComponentArrayIdx( Int(lastBlockId.offset) ) { ssEntry in
+                ssEntry.compArrIdx = Int16(removeIdx)              
+            }
+        }
 
-        // let blockId = BlockId(offset: Int16(offset), version: version)
+        // remove 3 places
+        components.removeLast()
+        reverseEntities.removeLast()
+        // sparse is remove before
 
-        // sparse.removeEntityOnBlock(Int, ssEntry: SparseSetEntry)
     }
 
 

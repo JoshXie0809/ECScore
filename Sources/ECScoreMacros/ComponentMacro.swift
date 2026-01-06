@@ -50,22 +50,15 @@ public struct ComponentMacro: ExtensionMacro, PeerMacro {
 
         let storageDecl: DeclSyntax = """
             public struct \(raw: storageName): SparseSet {
-                private(set) var sparse: Block64_L2
-                private(set) var components : ContiguousArray<\(raw: typeName)>
-                private(set) var reverseEntities: ContiguousArray<BlockId>
+                private var _storage: SparseSet_L2<\(raw: typeName)>
 
                 init() {
-                    self.components = ContiguousArray<\(raw: typeName)>()
-                    self.components.reserveCapacity(4096)
-
-                    self.sparse = Block64_L2()
-                    
-                    self.reverseEntities = ContiguousArray<BlockId>()
-                    self.reverseEntities.reserveCapacity(4096)
+                    self._storage = SparseSet_L2<\(raw: typeName)>()
                 }
 
+                @inline(__always)
                 public mutating func remove(_ eid: EntityId) {
-
+                    _storage.remove(eid)
                 }
             }
             """

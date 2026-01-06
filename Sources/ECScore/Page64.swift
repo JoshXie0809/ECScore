@@ -89,7 +89,6 @@ struct Page64: CustomStringConvertible {
 //     private(set) var entities: ContiguousArray<BlockId> = ContiguousArray<BlockId>()
 //     // for parallel usage: 讀寫分離
 //     private var denseBuffer: ContiguousArray<T> = ContiguousArray<T>()
-
 //     init() {
 //         self.dense.reserveCapacity(4096)
 //         self.denseBuffer.reserveCapacity(4096)
