@@ -24,4 +24,5 @@ Block64 can operate slots on Page64
 
 # Block64
 
-1. getPageMask
+# SparseSet_L2
+- a 4096 slots container

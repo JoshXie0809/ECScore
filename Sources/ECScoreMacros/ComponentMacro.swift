@@ -9,8 +9,11 @@ import SwiftSyntaxMacros
 /// // generate
 /// extension Comp: Component {}
 /// 
+/// // peer struct
+/// 
 
-public struct ComponentMacro: ExtensionMacro {
+public struct ComponentMacro: ExtensionMacro, PeerMacro {
+
     public static func expansion(
         of node: AttributeSyntax, 
         attachedTo decl: some DeclGroupSyntax, 
@@ -32,6 +35,45 @@ public struct ComponentMacro: ExtensionMacro {
         ]
     
     }
+
+    public static func expansion(
+        of node: AttributeSyntax, 
+        providingPeersOf decl: some DeclSyntaxProtocol, 
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+        guard let structDecl = decl.as(StructDeclSyntax.self) else {
+            throw ECScoreError.compOnlyOnStrucDecl
+        }
+
+        let typeName = structDecl.trimmed.name.text
+        let storageName = "__SparseSet_L2_\(typeName)"
+
+        let storageDecl: DeclSyntax = """
+            public struct \(raw: storageName): SparseSet {
+                private(set) var sparse: Block64_L2
+                private(set) var components : ContiguousArray<\(raw: typeName)>
+                private(set) var reverseEntities: ContiguousArray<BlockId>
+
+                init() {
+                    self.components = ContiguousArray<\(raw: typeName)>()
+                    self.components.reserveCapacity(4096)
+
+                    self.sparse = Block64_L2()
+                    
+                    self.reverseEntities = ContiguousArray<BlockId>()
+                    self.reverseEntities.reserveCapacity(4096)
+                }
+
+                public mutating func remove(_ eid: EntityId) {
+
+                }
+            }
+            """
+
+        return [storageDecl]
+
+    }
+
 }
 
 

@@ -1,5 +1,4 @@
 struct Block64_L2 { // Layer 2
-
     private(set) var blockMask: UInt64 = 0
     private(set) var activePageCount: Int = 0
     private(set) var activeEntityCount: Int = 0
@@ -55,7 +54,20 @@ struct Block64_L2 { // Layer 2
         if pageOnBlock[blockId].activeCount == 0 { removePage(bit) }
     }
 
+    @inline(__always)
+    func getUnchecked(_ index: Int) -> SparseSetEntry {
+        let (blockId, pageId) = (index >> 6, index & 63)
+        return pageOnBlock[blockId].getUnchecked(pageId)
+    }
 
+    public func contains(_ index: Int) -> Bool {
+        let pageIdx = index >> 6   // offset / 64
+        let bit = UInt64(1) << pageIdx
+        guard (blockMask & bit) != 0 else { return false }
+        
+        let slotIdx = index & 0x3F // offset % 64
+        return pageOnBlock[pageIdx].get(slotIdx) != nil
+    }
 
 
     // @inline(__always)

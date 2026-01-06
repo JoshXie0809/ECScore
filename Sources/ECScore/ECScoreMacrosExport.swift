@@ -3,4 +3,5 @@ public macro AddHello() = #externalMacro(module: "ECScoreMacros", type: "AddHell
 
 
 @attached(extension, conformances: Component)
+@attached(peer, names: prefixed(__SparseSet_L2_))
 public macro Component() = #externalMacro(module: "ECScoreMacros", type: "ComponentMacro")

@@ -2,12 +2,12 @@ typealias BlockOffset = Int16
 typealias CompArrayIndex = Int16
 
 struct SparseSetEntry {
-    var denseIdx: CompArrayIndex // 紀錄在 dense Array 4096 中的第幾個位置
+    var compArrIdx: CompArrayIndex // 紀錄在 dense Array 4096 中的第幾個位置
 }
 
 struct BlockId {
     var offset: BlockOffset
-    var gen: Int // gen is for validation
+    var version: Int // gen is for validation
 }
 
 func printBit(_ val: UInt64) {
@@ -23,7 +23,7 @@ struct Page64: CustomStringConvertible {
     private(set) var activeCount: Int = 0
     private(set) var entityOnPage = 
         ContiguousArray<SparseSetEntry>(
-            repeating: SparseSetEntry(denseIdx: Int16(-1)), 
+            repeating: SparseSetEntry(compArrIdx: Int16(-1)), 
             count: 64
         )
 
