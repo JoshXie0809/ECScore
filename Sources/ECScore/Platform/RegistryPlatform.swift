@@ -1,32 +1,39 @@
 typealias RegistryId = EntityId
-// registry a tpye to a platform
-// can not remove registry type
-class RegistryPlatform : BasePlatform, Component {
-    // the entity of RegistyPlatform is ComponentType 
 
-    private var typeToId: [ObjectIdentifier:EntityId] = [:]
+class RegistryPlatform : Platform, Component {
+    let entities = Entities()
+    private var typeToId: [ObjectIdentifier: EntityId] = [:]
 
-    func registry<T: Component>(_ tpye: T.Type) -> RegistryId {
-        let typeId = ObjectIdentifier(tpye)
+    // 唯一的具體存儲：只存 Registry 自己
+    private lazy var selfStorage: Storage<RegistryPlatform> = {
+        let s = Storage<RegistryPlatform>()
+        return s
+    }()
 
-        // gaurd double registry
-        guard let tid = typeToId[typeId] else {
-            // init type
-            let eid = entities.spawn()[0]
-            typeToId[typeId] = eid
-            return eid
-        }
+    func registry<T: Component>(_ type: T.Type) -> RegistryId {
+        let typeId = ObjectIdentifier(type)
+        if let tid = typeToId[typeId] { return tid }
         
-        return tid
+        let eid = entities.spawn(1)[0]
+        typeToId[typeId] = eid
+        return eid
     }
 
-    override init() {
-        super.init()
-
+    init() {
         let rid = self.registry(RegistryPlatform.self)
-        let myStorage: Storage<RegistryPlatform> = self.getStorage(rid: rid)
+        
+        guard let myStorage = self.getStorage(for: rid) as? Storage<RegistryPlatform> else {
+            fatalError("無法初始化 Registry 儲存空間")
+        }
 
         myStorage.addEntity(newEntity: rid, self)
     }
 
+    // 實作 Platform 協議要求的原始方法
+    func getStorage(for rid: EntityId) -> PlatformStorage? {
+        if rid.id == 0 {
+            return selfStorage
+        }
+        return nil
+    }
 }
