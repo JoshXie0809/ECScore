@@ -17,6 +17,7 @@ struct SparseSet_L2<T: Component>: SparseSet {
         self.reverseEntities.reserveCapacity(4096)
     }
 
+    @inlinable
     mutating func remove(_ eid: EntityId) {
         let version = eid.version
         let offset = eid.id & 0x0FFF
@@ -31,7 +32,7 @@ struct SparseSet_L2<T: Component>: SparseSet {
             "\(T.self): the version of entity not matched while removing \(eid.id)" 
         )
 
-        // remove sparse let in scare of other threads not errorly read
+        // remove sparse let in scared of other threads not errorly read
         sparse.removeEntityOnBlock(offset) // total count -= 1
 
         // swap and pop
@@ -53,6 +54,4 @@ struct SparseSet_L2<T: Component>: SparseSet {
         // sparse is remove before
 
     }
-
-
 }

@@ -1,13 +1,3 @@
-struct EntityId: Hashable {
-    let id: Int
-    let version: Int
-}
-
-extension EntityId: CustomStringConvertible {
-    var description: String {
-        "E(id:\(id), v:\(version))"
-    }
-}
 
 final class World {
     fileprivate var storages: [ObjectIdentifier:AnyStorage] = [:]
