@@ -7,35 +7,44 @@ protocol PlatformStorage {
 
 }
 
-
-
-class BasePlatform : Platform {
-    var storages: [PlatformStorage?] = []
-    let entities = Entities()
-
-    func getStorage(for rid: RegistryId) -> PlatformStorage? {
-        guard rid.id >= 0 && rid.id < storages.count else { return nil }
-        return storages[rid.id]
-    }
-
-    // 取得或建立強型別儲存空間
-    final func getStorage<T: Component>(rid: RegistryId) -> Storage<T> {
-        let index = rid.id // 拿身分證上的數字去排隊
-        
-        if index >= storages.count {
-            let needed = index - storages.count + 1
-            storages.append(contentsOf: [PlatformStorage?](repeating: nil, count: needed))
-        }
-
-        if let existing = storages[index] {
-            return existing as! Storage<T>
-        } else {
-            let newS = Storage<T>()
-            storages[index] = newS
-            return newS
-        }
+extension Platform {
+    /// 嘗試從平台中取得地圖（握手）
+    var registry: RegistryPlatform? {
+        // 直接找 0 號位並嘗試轉型
+        let rid0 = EntityId(id: 0, version: 0)
+        let storage = self.getStorage(for: rid0) as? Storage<RegistryPlatform>
+        return storage?.getEntity(rid0)
     }
 }
+
+
+// class BasePlatform : Platform {
+//     var storages: [PlatformStorage?] = []
+//     let entities = Entities()
+
+//     func getStorage(for rid: RegistryId) -> PlatformStorage? {
+//         guard rid.id >= 0 && rid.id < storages.count else { return nil }
+//         return storages[rid.id]
+//     }
+
+//     // 取得或建立強型別儲存空間
+//     final func getStorage<T: Component>(rid: RegistryId) -> Storage<T> {
+//         let index = rid.id // 拿身分證上的數字去排隊
+        
+//         if index >= storages.count {
+//             let needed = index - storages.count + 1
+//             storages.append(contentsOf: [PlatformStorage?](repeating: nil, count: needed))
+//         }
+
+//         if let existing = storages[index] {
+//             return existing as! Storage<T>
+//         } else {
+//             let newS = Storage<T>()
+//             storages[index] = newS
+//             return newS
+//         }
+//     }
+// }
 
 
 
