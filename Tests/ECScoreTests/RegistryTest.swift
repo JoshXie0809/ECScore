@@ -11,7 +11,6 @@ import Testing
     let registryPf = RegistryPlatform()
 
     let registry =  registryPf.registry
-
     #expect(registry != nil)
     let registryNotNil = registry!
 

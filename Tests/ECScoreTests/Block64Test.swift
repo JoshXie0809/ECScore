@@ -130,7 +130,7 @@ struct Block64Tests {
 struct PFStorageTests {
     @Test("大跨度 ID 導致的 Segments 擴增與回收")
     func segmentExpansionAndRecycle() async throws {
-        var storage = PFStorage<Position>()
+        let storage = PFStorage<Position>()
         
         // 1. 新增一個 ID 非常大的實體 (跨 Block)
         let bigId = 5000 // 5000 >> 12 = 1, 會落入第 2 個 segment (index 1)
@@ -152,11 +152,32 @@ struct PFStorageTests {
     
     @Test("大量數據分頁壓力測試", arguments: [0, 4095, 4096, 8191, 8192])
     func boundaryTests(id: Int) async throws {
-        var storage = PFStorage<Position>()
+        let storage = PFStorage<Position>()
         let eid = EntityId(id: id, version: 1)
         
         storage.add(eid: eid, component: Position(x: 0, y: 0))
         #expect(storage.segments[id >> 12] != nil)
         #expect(storage.segments[id >> 12]!.sparse.contains(id & 0x0FFF))
     }
+}
+
+
+@Test("強制執行 Swap 補位邏輯以覆蓋程式碼")
+func testForceSwapLogic() async throws {
+    var storage = SparseSet_L2<Position>()
+    let eid1 = EntityId(id: 1, version: 1)
+    let eid2 = EntityId(id: 2, version: 1)
+    
+    // 1. 新增兩個實體：A 在索引 0, B 在索引 1
+    storage.add(eid1, Position(x: 1, y: 1)) 
+    storage.add(eid2, Position(x: 2, y: 2)) 
+    
+    // 2. 刪除第一個實體 (eid1)
+    // 此時 removeIdx = 0, lastIdx = 1 (因為刪除前 count 是 2)
+    // 0 < 1 成立，這會強制執行你截圖中那段 if 區塊！
+    storage.remove(eid1)
+    
+    // 3. 驗證補位是否成功
+    #expect(storage.count == 1)
+    #expect(storage.getWithDenseIndex_Uncheck(denseIdx: 0).x == 2) // B 應該搬到了索引 0
 }

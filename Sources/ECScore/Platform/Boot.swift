@@ -10,17 +10,17 @@ extension BasePlatform {
         let entityPlatformId = registry.register(Platform_Entitiy.self)
 
         // create storage for base pf
-        let r_storage = Storage<RegistryPlatform>()
-        let e_storage = Storage<E>()
+        let r_storage = PFStorage<RegistryPlatform>()
+        let e_storage = PFStorage<E>()
 
         
         // entityId 0
         let eid0 = entities.spawn(1)[0]
         // add eid 0 to r_storage
-        r_storage.addEntity(newEntity: eid0, registry)
+        r_storage.add(eid: eid0, component: registry)
 
         let eid1 = entities.spawn(1)[0]
-        e_storage.addEntity(newEntity: eid1, entities)
+        e_storage.add(eid: eid1, component: entities)
 
         // add two storage to list
         self.storages[registryPlatformId.id] = r_storage
@@ -31,10 +31,14 @@ extension BasePlatform {
 extension Platform {
     /// 嘗試從平台中取得地圖（握手）
     var registry: RegistryPlatform? {
+        let rid0 = RegistryId(id: 0, version: 0)
         // 直接找 0 號位並嘗試轉型
-        let rid0 = EntityId(id: 0, version: 0)
-        let storage = self.rawGetStorage(for: rid0) as? Storage<RegistryPlatform>
-        return storage?.getEntity(rid0)
+        guard let storage = self.rawGetStorage(for: rid0) as? PFStorage<RegistryPlatform> else {
+            print("Warning: Registry storage not found or type mismatch")
+            return nil
+        }
+
+        return storage.getWithDenseIndex_Uncheck(0)
     }
 }
 

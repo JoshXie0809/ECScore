@@ -1,5 +1,5 @@
 
-struct PFStorage<T: Component>: PlatformStorage {
+final class PFStorage<T: Component>: AnyPlatformStorage {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
 
     init() {
@@ -8,7 +8,7 @@ struct PFStorage<T: Component>: PlatformStorage {
     }
 
     @inlinable
-    mutating func ensureCapacity(for eid: EntityId) {
+    func ensureCapacity(for eid: EntityId) {
         let blockIdx = eid.id >> 12
 
         if blockIdx >= segments.count {
@@ -24,7 +24,7 @@ struct PFStorage<T: Component>: PlatformStorage {
     }
 
     @inlinable
-    mutating func add(eid: EntityId, component: T) {
+    func add(eid: EntityId, component: T) {
         ensureCapacity(for: eid) // ensure segments is not nil
         let blockIdx = eid.id >> 12
 
@@ -32,7 +32,7 @@ struct PFStorage<T: Component>: PlatformStorage {
     }
 
     @inlinable
-    mutating func remove(eid: EntityId) {
+    func remove(eid: EntityId) {
         let blockIdx = Int(eid.id >> 12)
         guard blockIdx < segments.count, let storage = segments[blockIdx] else { return }
         _ = storage // not nil
@@ -43,6 +43,22 @@ struct PFStorage<T: Component>: PlatformStorage {
         if segments[blockIdx]!.sparse.activeEntityCount == 0 {
             segments[blockIdx] = nil
         }
+    }
+
+    @inlinable
+    func getWithDenseIndex_Uncheck(_ index: Int) -> T? {
+        var temp_index = index
+        for segment: SparseSet_L2<T>? in segments {
+            if (segment == nil) { continue }
+            if temp_index >= segment!.count {
+                temp_index -= segment!.count
+                continue
+            }
+            // temp_index < segment.count
+            return segment!.components[temp_index]
+        }
+
+        return nil
     }
 
 }

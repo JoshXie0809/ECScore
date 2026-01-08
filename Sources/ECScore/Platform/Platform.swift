@@ -1,7 +1,8 @@
 protocol Platform {
-    func rawGetStorage(for id : RegistryId) -> PlatformStorage?
+    func rawGetStorage(for id : RegistryId) -> AnyPlatformStorage?
 }
 
-protocol PlatformStorage {
-
+protocol AnyPlatformStorage {
+    mutating func remove(eid: EntityId)
+    
 }

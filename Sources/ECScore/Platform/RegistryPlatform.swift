@@ -5,9 +5,9 @@ class RegistryPlatform : Platform, Component {
     private var typeToId: [ObjectIdentifier: EntityId] = [:]
 
     // 唯一的具體存儲：只存 Registry 自己
-    private lazy var selfStorage: Storage<RegistryPlatform> = 
+    private lazy var selfStorage: PFStorage<RegistryPlatform> = 
     {
-        let s = Storage<RegistryPlatform>()
+        let s = PFStorage<RegistryPlatform>()
         return s
     }()
 
@@ -24,16 +24,16 @@ class RegistryPlatform : Platform, Component {
     init() {
         let rid = self.register(RegistryPlatform.self)
         
-        guard let myStorage = self.rawGetStorage(for: rid) as? Storage<RegistryPlatform> 
+        guard let myStorage = self.rawGetStorage(for: rid) as? PFStorage<RegistryPlatform> 
         else {
             fatalError("cannot initialize RegistryPlatorm")
         }
 
-        myStorage.addEntity(newEntity: rid, self)
+        myStorage.add(eid: rid, component: self)
     }
 
     // 實作 Platform 協議要求的原始方法
-    func rawGetStorage(for rid: EntityId) -> PlatformStorage? {
+    func rawGetStorage(for rid: EntityId) -> AnyPlatformStorage? {
         if rid.id == 0 {
             return selfStorage
         }

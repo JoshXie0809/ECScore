@@ -10,7 +10,7 @@ struct ComponentId: Hashable, Sendable {
     }
 }
 
-final class Storage<T: Component>: AnyStorage, PlatformStorage {
+final class Storage<T: Component>: AnyStorage {
     private var sparse: [EntityId:Int] = [:]
     private var dense: ContiguousArray<T> = []
     // dense id to entity id

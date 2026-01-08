@@ -6,13 +6,13 @@ protocol Platform_Entitiy: Platform, Component {
 class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
     private var entities = Entities()
 
-    private lazy var selfStorage: Storage<EntitiyPlatForm_Ver0> = 
+    private lazy var selfStorage: PFStorage<EntitiyPlatForm_Ver0> = 
     {
-        let s = Storage<EntitiyPlatForm_Ver0>()
+        let s = PFStorage<EntitiyPlatForm_Ver0>()
         return s
     }()
 
-    func rawGetStorage(for rid: RegistryId) -> (any PlatformStorage)? {
+    func rawGetStorage(for rid: RegistryId) -> (any AnyPlatformStorage)? {
         if rid.id == 1 {
             return selfStorage
         }
