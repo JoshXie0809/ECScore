@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import ECScore
 
 @Test func b64_test1() async throws {
@@ -180,4 +181,66 @@ func testForceSwapLogic() async throws {
     // 3. 驗證補位是否成功
     #expect(storage.count == 1)
     #expect(storage.getWithDenseIndex_Uncheck(denseIdx: 0).x == 2) // B 應該搬到了索引 0
+}
+
+
+@Test func testSwapAndPopEfficiency() async throws {
+    let storage = PFStorage<Position>()
+    let entities = Entities()
+    
+    // 1. 產生三個實體
+    let eids = entities.spawn(3)
+    let e1 = eids[0], e2 = eids[1], e3 = eids[2]
+    
+    // 2. 依序新增組件 (DenseIndex: 0, 1, 2)
+    storage.add(eid: e1, component: Position(x: 1, y: 1))
+    storage.add(eid: e2, component: Position(x: 2, y: 2))
+    storage.add(eid: e3, component: Position(x: 3, y: 3))
+    
+    // 3. 刪除中間的 e2 (DenseIndex: 1)
+    // 這會觸發 image_74540c.png 第 47 行：removeIdx(1) < lastIdx(2)
+    storage.remove(eid: e2)
+    
+    // 4. 驗證補位邏輯
+    // 原本最後一個 e3 應該被搬移到索引 1 的位置
+    let movedComponent = storage.getWithDenseIndex_Uncheck(1)
+    #expect(movedComponent?.x == 3) // 確認數據搬過來了
+    
+    // 5. 驗證總數與結構
+    // 剩下的應該只有 2 個，且 e2 徹底消失
+    #expect(storage.getWithDenseIndex_Uncheck(2) == nil)
+}
+
+
+@Test func testLargeScalePerformance() async throws {
+    let storage = PFStorage<Position>()
+    let entities = Entities()
+    let count = 50000
+    let eids = entities.spawn(count)
+    
+    // 1. 批次寫入測試
+    for i in 0..<count {
+        storage.add(eid: eids[i], component: Position(x: Float(i), y: 0))
+    }
+    
+    // 2. 測量全量遍歷耗時
+    let start = DispatchTime.now()
+    
+    var sum: Float = 0
+    // 使用你最快的「非 nil segment 遍歷」邏輯
+    for segment in storage.segments {
+        guard let l2 = segment else { continue }
+        for i in 0..<l2.count {
+            sum += l2.components[i].x
+        }
+    }
+    
+    let end = DispatchTime.now()
+    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
+    let timeInterval = Double(nanoTime) / 1_000_000
+    
+    print("50,000 entities traversal time: \(timeInterval) ms")
+    
+    // 驗證計算結果正確
+    #expect(sum > 0)
 }
