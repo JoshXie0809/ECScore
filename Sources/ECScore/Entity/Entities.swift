@@ -9,7 +9,7 @@ extension EntityId: CustomStringConvertible {
     }
 }
 
-class Entities { // it is world!
+class Entities {
     private var freeList: [Int] = [] // where id can be reused
     private var versions:  [Int] = [] // the version for an id, init is 0
     private var isActive: [UInt64] = []
@@ -60,4 +60,26 @@ class Entities { // it is world!
                (isActive[entity.id >> 6] & (1 << (entity.id & 63)) != 0)
     }
 
+}
+
+class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
+    private var entities = Entities()
+
+    private lazy var selfStorage: Storage<EntitiyPlatForm_Ver0> = 
+    {
+        let s = Storage<EntitiyPlatForm_Ver0>()
+        return s
+    }()
+
+    func rawGetStorage(for rid: RegistryId) -> (any PlatformStorage)? {
+        return nil
+    }
+
+    func spawn(_ n: Int) -> [EntityId] {
+        entities.spawn(n)
+    }
+
+    func despawn(_ eid: EntityId) {
+        entities.despawn(eid)
+    }
 }
