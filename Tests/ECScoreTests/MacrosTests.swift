@@ -3,8 +3,8 @@ import Testing
 
 @Component
 struct Position {
-    let x: Float
-    let y: Float
+    var x: Float
+    var y: Float
 }
 
 

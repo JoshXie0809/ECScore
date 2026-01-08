@@ -45,3 +45,118 @@ import Testing
     #expect(sparse.getUnchecked(3092).compArrIdx == 12)
     
 }
+
+@Suite("SparseSet_L2 組件倉庫測試")
+struct SparseSetL2Tests {
+    @Test("驗證 Swap and Pop 邏輯")
+    func swapAndPopValidation() async throws {
+        var storage = SparseSet_L2<Position>()
+        
+        let eidA = EntityId(id: 10, version: 1)
+        let eidB = EntityId(id: 20, version: 1)
+        let eidC = EntityId(id: 30, version: 1)
+        
+        // 按順序新增 A(10), B(20), C(30)
+        storage.add(eidA, Position(x: 1, y: 1)) // Index 0
+        storage.add(eidB, Position(x: 2, y: 2)) // Index 1
+        storage.add(eidC, Position(x: 3, y: 3)) // Index 2
+        
+        #expect(storage.count == 3)
+        
+        // 移除中間的 B (id: 20, index: 1)
+        storage.remove(eidB)
+        
+        // 驗證：B 消失了，總數變 2
+        #expect(storage.count == 2)
+        #expect(storage.get(offset: 20) == nil)
+        
+        // 驗證核心 Swap & Pop：原本最後一個 C (3,3) 應該被搬到了索引 1 (原 B 的位置)
+        // 1. 數據內容搬移
+        #expect(storage.getWithDenseIndex_Uncheck(denseIdx: 1).x == 3)
+        // 2. 稀疏索引同步更新：id 30 映射到的 DenseIndex 應該變成 1
+        let entryC = storage.sparse.getUnchecked(30)
+        #expect(entryC.compArrIdx == 1)
+        // 3. 反向表更新：Index 1 對應的 Offset 應該是 30
+        #expect(storage.reverseEntities[1].offset == 30)
+    }
+    
+    @Test("驗證數據更新功能")
+    func updateInPlace() async throws {
+        var storage = SparseSet_L2<Position>()
+        let eid = EntityId(id: 5, version: 1)
+        storage.add(eid, Position(x: 10, y: 10))
+        
+        // 測試 In-place 修改
+        storage.updateWithDenseIndex_Uncheck(denseIdx: 0) { pos in
+            pos.x = 99
+        }
+        
+        #expect(storage.get(offset: 5)?.x == 99)
+    }
+}
+
+
+@Suite("Block64_L2 底層測試")
+struct Block64Tests {
+    @Test("驗證位圖索引與分頁生命週期")
+    func bitmapAndPageLifecycle() async throws {
+        var sparse = Block64_L2()
+        let entry = SparseSetEntry(compArrIdx: 123)
+        let offset = 3095 // 在第 48 頁 (3095 / 64)
+        
+        // 1. 新增
+        sparse.addEntityOnBlock(offset, ssEntry: entry)
+        #expect(sparse.contains(offset))
+        #expect(sparse.activeEntityCount == 1)
+        #expect(sparse.activePageCount == 1)
+        #expect(sparse.getUnchecked(offset).compArrIdx == 123)
+        
+        // 2. 測試位元遮罩 (BlockMask)
+        let pageIdx = offset >> 6
+        let bit = UInt64(1) << pageIdx
+        #expect(sparse.blockMask & bit != 0)
+        
+        // 3. 移除並驗證自動釋放 Page
+        sparse.removeEntityOnBlock(offset)
+        #expect(!sparse.contains(offset))
+        #expect(sparse.activeEntityCount == 0)
+        #expect(sparse.activePageCount == 0) // 因為最後一個實體沒了，Page 也該被釋放
+        #expect(sparse.blockMask == 0)
+    }
+}
+
+
+@Suite("PFStorage 動態分頁測試")
+struct PFStorageTests {
+    @Test("大跨度 ID 導致的 Segments 擴增與回收")
+    func segmentExpansionAndRecycle() async throws {
+        var storage = PFStorage<Position>()
+        
+        // 1. 新增一個 ID 非常大的實體 (跨 Block)
+        let bigId = 5000 // 5000 >> 12 = 1, 會落入第 2 個 segment (index 1)
+        let eidBig = EntityId(id: bigId, version: 1)
+        
+        storage.add(eid: eidBig, component: Position(x: 50, y: 50))
+        
+        // 驗證：segments 長度應該變為 2 (index 0, index 1)
+        #expect(storage.segments.count == 2)
+        #expect(storage.segments[1] != nil)
+        #expect(storage.segments[0] != nil) // 初始化會預留第一個
+        
+        // 2. 移除該實體
+        storage.remove(eid: eidBig)
+        
+        // 驗證選配優化：當 L2 完全空了，segment 應該被設回 nil 以釋放內存
+        #expect(storage.segments[1] == nil)
+    }
+    
+    @Test("大量數據分頁壓力測試", arguments: [0, 4095, 4096, 8191, 8192])
+    func boundaryTests(id: Int) async throws {
+        var storage = PFStorage<Position>()
+        let eid = EntityId(id: id, version: 1)
+        
+        storage.add(eid: eid, component: Position(x: 0, y: 0))
+        #expect(storage.segments[id >> 12] != nil)
+        #expect(storage.segments[id >> 12]!.sparse.contains(id & 0x0FFF))
+    }
+}
