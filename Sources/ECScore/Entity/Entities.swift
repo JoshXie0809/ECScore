@@ -72,6 +72,9 @@ class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
     }()
 
     func rawGetStorage(for rid: RegistryId) -> (any PlatformStorage)? {
+        if rid.id == 1 {
+            return selfStorage
+        }
         return nil
     }
 
