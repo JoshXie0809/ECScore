@@ -1,6 +1,14 @@
-struct EntityId: Hashable {
+struct EntityId: Hashable, Comparable {
     let id: Int
     let version: Int
+
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.id < rhs.id
+    }
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 extension EntityId: CustomStringConvertible {
