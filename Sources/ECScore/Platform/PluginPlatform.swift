@@ -55,7 +55,7 @@ protocol Platform_Plugin {
     func createPFStorage() -> any AnyPlatformStorage
 }
 
-final class Plugin_Platform_Ver0: Platform_Plugin_Manager, Platform_Plugin, Component {
+final class Plugin_Platform_Ver0: Platform, Platform_Plugin_Manager, Platform_Plugin, Component {
     private(set) var pluginsRequirements: [[Int]] = []
     
     init(base: BasePlatform) {

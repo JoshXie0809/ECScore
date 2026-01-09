@@ -16,11 +16,10 @@ extension BasePlatform {
         
         // entityId 0
         let eid0 = entities.spawn(1)[0]
-        // add eid 0 to r_storage
+        // add eid 0 to r_storage, e_storage
+        // they are public resourse (or at eid 0, it will be plublic resource)
         r_storage.add(eid: eid0, component: registry)
-
-        let eid1 = entities.spawn(1)[0]
-        e_storage.add(eid: eid1, component: entities)
+        e_storage.add(eid: eid0, component: entities)
 
         // add two storage to list
         self.storages[registryPlatformId.id] = r_storage
