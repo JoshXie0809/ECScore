@@ -33,12 +33,20 @@ extension Platform {
     var registry: RegistryPlatform? {
         let rid0 = RegistryId(id: 0, version: 0)
         // 直接找 0 號位並嘗試轉型
-        guard let storage = self.rawGetStorage(for: rid0) as? PFStorage<RegistryPlatform> else {
-            print("Warning: Registry storage not found or type mismatch")
+        guard let storage = self.rawGetStorage(for: rid0) else {
             return nil
         }
 
-        return storage.getWithDenseIndex_Uncheck(0)
+        return storage.getWithDenseIndex_Uncheck(0) as? RegistryPlatform
+    }
+
+    var entities: Platform_Entitiy? {
+        let rid1 =  RegistryId(id: 1, version: 0)
+        guard let storage = self.rawGetStorage(for: rid1) else {
+            return nil
+        }
+
+        return storage.getWithDenseIndex_Uncheck(0) as? Platform_Entitiy
     }
 }
 

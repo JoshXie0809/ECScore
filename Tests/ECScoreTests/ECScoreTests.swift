@@ -11,7 +11,12 @@ import Testing
 }
 
 @Test func testStorage() async throws {
-    struct TestComponent: Component, Equatable { var test: Int }
+    struct TestComponent: Component, Equatable { 
+        var test: Int 
+        func createPFStorage() -> any AnyPlatformStorage {
+            return PFStorage<Self>()
+        }
+    }
     let storage = Storage<TestComponent>(  )
     let e = EntityId(id: 1111, version: 2222)
     
@@ -53,7 +58,11 @@ import Testing
     let entitiy2 = w.createEntity()
     #expect(entitiy2.version == 1)
 
-    struct TestComponent: Component {}
+    struct TestComponent: Component {
+        func createPFStorage() -> any AnyPlatformStorage {
+            return PFStorage<Self>()
+        }
+    }
     let storage = Storage<TestComponent>()
     w.addStorage(storage)
 
@@ -66,8 +75,16 @@ import Testing
     #expect(w.storageCount == 0)
 } 
 
-struct Comp1: Component {}
-struct Comp2: Component {}
+struct Comp1: Component {
+    func createPFStorage() -> any AnyPlatformStorage {
+        return PFStorage<Self>()
+    }
+}
+struct Comp2: Component {
+    func createPFStorage() -> any AnyPlatformStorage {
+        return PFStorage<Self>()
+    }
+}
 
 @Test func testQuery() async throws {
     let w = World()

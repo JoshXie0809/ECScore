@@ -1,4 +1,6 @@
-protocol Component {}
+protocol Component {
+    func createPFStorage() -> any AnyPlatformStorage
+}
 
 struct ComponentId: Hashable, Sendable {
     let raw: ObjectIdentifier

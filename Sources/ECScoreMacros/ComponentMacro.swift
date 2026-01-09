@@ -30,7 +30,11 @@ public struct ComponentMacro: ExtensionMacro, PeerMacro {
 
         return [
             try ExtensionDeclSyntax("""
-            extension \(type): Component {}
+            extension \(type): Component {
+                func createPFStorage() -> any AnyPlatformStorage {
+                    return PFStorage<\(type)>()
+                }
+            }
             """)
         ]
     

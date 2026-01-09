@@ -1,8 +1,10 @@
 typealias RegistryId = EntityId
 
-class RegistryPlatform : Platform, Component {
+final class RegistryPlatform : Platform, Component {
     let entities = Entities()
     private var typeToId: [ObjectIdentifier: EntityId] = [:]
+
+    var count : Int { entities.liveCount }
 
     // 唯一的具體存儲：只存 Registry 自己
     private lazy var selfStorage: PFStorage<RegistryPlatform> = 
@@ -19,6 +21,11 @@ class RegistryPlatform : Platform, Component {
         let eid = entities.spawn(1)[0]
         typeToId[typeId] = eid
         return eid
+    }
+
+    func contains(_ type: Any.Type) -> Bool {
+        let typeId = ObjectIdentifier(type)
+        return typeToId[typeId] != nil
     }
 
     init() {
@@ -38,5 +45,9 @@ class RegistryPlatform : Platform, Component {
             return selfStorage
         }
         return nil
+    }
+
+    func createPFStorage() -> any AnyPlatformStorage {
+        return PFStorage<Self>()
     }
 }

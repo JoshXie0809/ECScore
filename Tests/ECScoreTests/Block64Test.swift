@@ -203,7 +203,7 @@ func testForceSwapLogic() async throws {
     
     // 4. 驗證補位邏輯
     // 原本最後一個 e3 應該被搬移到索引 1 的位置
-    let movedComponent = storage.getWithDenseIndex_Uncheck(1)
+    let movedComponent = storage.getWithDenseIndex_Uncheck(1) as? Position
     #expect(movedComponent?.x == 3) // 確認數據搬過來了
     
     // 5. 驗證總數與結構

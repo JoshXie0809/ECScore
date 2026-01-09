@@ -1,4 +1,3 @@
-
 final class PFStorage<T: Component>: AnyPlatformStorage {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
 
@@ -46,7 +45,22 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
     }
 
     @inlinable
-    func getWithDenseIndex_Uncheck(_ index: Int) -> T? {
+    func getWithDenseIndex_Uncheck<U: Component>(_ index: Int) -> U? {
+        var temp_index = index
+        for segment: SparseSet_L2<T>? in segments {
+            if (segment == nil) { continue }
+            if temp_index >= segment!.count {
+                temp_index -= segment!.count
+                continue
+            }
+            // temp_index < segment.count
+            return segment!.components[temp_index] as? U
+        }
+
+        return nil
+    }
+
+    func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
         var temp_index = index
         for segment: SparseSet_L2<T>? in segments {
             if (segment == nil) { continue }
@@ -61,4 +75,11 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
         return nil
     }
 
+    func rawAdd(eid: EntityId, component: Any) {
+        guard let typedComponent = component as? T else {
+            print("Warning: Type mismatch in storage")
+            return
+        }
+        self.add(eid: eid, component: typedComponent)
+    }
 }

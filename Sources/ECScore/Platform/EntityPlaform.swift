@@ -12,18 +12,15 @@ class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
         return s
     }()
 
-    func rawGetStorage(for rid: RegistryId) -> (any AnyPlatformStorage)? {
-        if rid.id == 1 {
-            return selfStorage
-        }
-        return nil
-    }
-
     func spawn(_ n: Int) -> [EntityId] {
         entities.spawn(n)
     }
 
     func despawn(_ eid: EntityId) {
         entities.despawn(eid)
+    }
+
+    func createPFStorage() -> any AnyPlatformStorage {
+        return PFStorage<Self>()
     }
 }
