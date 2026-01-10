@@ -135,42 +135,42 @@ func testFullBuildProcess() {
 }
 
 
-@Test func testBatchGeneration() {
-    // 2. 初始化平台環境 (確保 ID 統一)
-    let e_pf = EntitiyPlatForm_Ver0()
-    let r_pf = RegistryPlatform() // 讓 Registry 共用實體管理器
-    let base = BasePlatform()
-    base.boot(registry: r_pf, entities: e_pf)
+// @Test func testBatchGeneration() {
+//     // 2. 初始化平台環境 (確保 ID 統一)
+//     let e_pf = EntitiyPlatForm_Ver0()
+//     let r_pf = RegistryPlatform() // 讓 Registry 共用實體管理器
+//     let base = BasePlatform()
+//     base.boot(registry: r_pf, entities: e_pf)
 
-    // 3. 準備 Manifest (這就是你的「藍圖」)
-    // 注意：這裡傳入的是閉包 { MockComponentA() }，確保每次呼叫都會產生新實例
-    let manifest = Manifest(requirements: [
-        .Public_Component((MockComponentA.self, { MockComponentA() })),
-        .Public_Component((MockComponentB.self, { MockComponentB() }))
-    ])
+//     // 3. 準備 Manifest (這就是你的「藍圖」)
+//     // 注意：這裡傳入的是閉包 { MockComponentA() }，確保每次呼叫都會產生新實例
+//     let manifest = Manifest(requirements: [
+//         .Public_Component((MockComponentA.self, { MockComponentA() })),
+//         .Public_Component((MockComponentB.self, { MockComponentB() }))
+//     ])
 
-    // 4. Interop (開模) - 這步只做一次！
-    // 平台會在此時註冊型別並分配好 Storage 空間
-    let buildTokens = base.interop(manifest: manifest)
+//     // 4. Interop (開模) - 這步只做一次！
+//     // 平台會在此時註冊型別並分配好 Storage 空間
+//     let buildTokens = base.interop(manifest: manifest)
 
-    print("🚀 開始批次生成 20 個實體...")
+//     print("🚀 開始批次生成 20 個實體...")
 
-    var generatedCards: [IDCard] = []
+//     var generatedCards: [IDCard] = []
 
-    // 5. 批次生成迴圈
-    for i in 0..<20 {
-        // 使用同一組 tokens 進行快速生產
-        let card = base.build(from: buildTokens)
-        generatedCards.append(card)
+//     // 5. 批次生成迴圈
+//     for i in 0..<20 {
+//         // 使用同一組 tokens 進行快速生產
+//         let card = base.build(from: buildTokens)
+//         generatedCards.append(card)
         
-        // (選用) 驗證一下生成結果
-        // print("  - Generated Entity ID: \(card.eid.id)")
-    }
+//         // (選用) 驗證一下生成結果
+//         // print("  - Generated Entity ID: \(card.eid.id)")
+//     }
 
-    print("✅ 生成完畢，共 \(generatedCards.count) 個實體。")
+//     print("✅ 生成完畢，共 \(generatedCards.count) 個實體。")
     
-    // 6. 使用 Inspector 驗證結果
-    // 你會看到 ID 從 3 開始 (0=Registry, 1=EntityPF, 2=CompA, 3=CompB... 之後才是實體)
-    // 或是取決於你的註冊順序
-    base.inspectWorld()
-}
+//     // 6. 使用 Inspector 驗證結果
+//     // 你會看到 ID 從 3 開始 (0=Registry, 1=EntityPF, 2=CompA, 3=CompB... 之後才是實體)
+//     // 或是取決於你的註冊順序
+//     base.inspectWorld()
+// }
