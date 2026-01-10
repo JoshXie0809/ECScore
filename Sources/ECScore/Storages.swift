@@ -1,5 +1,5 @@
 protocol Component {
-    func createPFStorage() -> any AnyPlatformStorage
+    static func createPFStorage() -> any AnyPlatformStorage
 }
 
 struct ComponentId: Hashable, Sendable {

@@ -60,6 +60,13 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
         return nil
     }
 
+    @inlinable
+    func get<U: Component>(_ eid: EntityId) -> U? {
+        let (blockIdx, offset) = (eid.id >> 12, eid.id & 4095)
+        return segments[blockIdx]?.get(offset: offset) as? U
+    }
+
+    @inlinable
     func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
         var temp_index = index
         for segment: SparseSet_L2<T>? in segments {
@@ -75,6 +82,13 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
         return nil
     }
 
+    @inlinable
+    func get(_ eid: EntityId) -> Any? {
+        let (blockIdx, offset) = (eid.id >> 12, eid.id & 4095)
+        return segments[blockIdx]?.get(offset: offset)
+    }
+
+    @inlinable
     func rawAdd(eid: EntityId, component: Any) {
         guard let typedComponent = component as? T else {
             print("Warning: Type mismatch in storage")

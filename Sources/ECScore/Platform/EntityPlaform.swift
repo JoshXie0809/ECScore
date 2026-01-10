@@ -20,7 +20,7 @@ class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
         entities.despawn(eid)
     }
 
-    func createPFStorage() -> any AnyPlatformStorage {
+    static func createPFStorage() -> any AnyPlatformStorage {
         return PFStorage<Self>()
     }
 }

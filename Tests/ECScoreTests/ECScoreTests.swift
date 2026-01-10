@@ -13,7 +13,7 @@ import Testing
 @Test func testStorage() async throws {
     struct TestComponent: Component, Equatable { 
         var test: Int 
-        func createPFStorage() -> any AnyPlatformStorage {
+        static func createPFStorage() -> any AnyPlatformStorage {
             return PFStorage<Self>()
         }
     }
@@ -59,7 +59,7 @@ import Testing
     #expect(entitiy2.version == 1)
 
     struct TestComponent: Component {
-        func createPFStorage() -> any AnyPlatformStorage {
+        static func createPFStorage() -> any AnyPlatformStorage {
             return PFStorage<Self>()
         }
     }
@@ -76,12 +76,12 @@ import Testing
 } 
 
 struct Comp1: Component {
-    func createPFStorage() -> any AnyPlatformStorage {
+    static func createPFStorage() -> any AnyPlatformStorage {
         return PFStorage<Self>()
     }
 }
 struct Comp2: Component {
-    func createPFStorage() -> any AnyPlatformStorage {
+    static func createPFStorage() -> any AnyPlatformStorage {
         return PFStorage<Self>()
     }
 }

@@ -31,13 +31,12 @@ public struct ComponentMacro: ExtensionMacro, PeerMacro {
         return [
             try ExtensionDeclSyntax("""
             extension \(type): Component {
-                func createPFStorage() -> any AnyPlatformStorage {
+                static func createPFStorage() -> any AnyPlatformStorage {
                     return PFStorage<\(type)>()
                 }
             }
             """)
         ]
-    
     }
 
     public static func expansion(
