@@ -34,9 +34,12 @@ struct PlatformTests {
         let (base, registry) = makeBootedPlatform()
         
         // 1. 準備 Manifest
-        let componentA = MockComponentA()
+        let fnA = {
+            return MockComponentA()
+        }
+
         let manifest = Manifest(requirements: [
-            .Public_Component((MockComponentA.self, componentA))
+            .Public_Component((MockComponentA.self, fnA))
         ])
 
         // 2. 執行 Interop
@@ -57,9 +60,12 @@ struct PlatformTests {
     func testMultipleComponents() {
         let (base, registry) = makeBootedPlatform()
         
+        let fnA = { return MockComponentA() }
+        let fnB = { return MockComponentB() }
+        
         let manifest = Manifest(requirements: [
-            .Public_Component((MockComponentA.self, MockComponentA())),
-            .Private_Component((MockComponentB.self, MockComponentB()))
+            .Public_Component((MockComponentA.self, fnA )),
+            .Private_Component((MockComponentB.self, fnB ))
         ])
 
         _ = base.interop(manifest: manifest)
@@ -97,16 +103,22 @@ func testFullBuildProcess() {
 
     // 1. 定義初始資料
     let expectedValue = "Hello ECS"
-    let mockComponent = MockComponentC(value: expectedValue) // 假設 MockComponentA 有這個 property
+    let fnC = {
+        return MockComponentC(value: expectedValue) // 假設 MockComponentA 有這個 property
+    }
+
     let manifest = Manifest(requirements: [
-        .Public_Component((MockComponentC.self, mockComponent))
+        .Public_Component((MockComponentC.self, fnC))
     ])
 
     // 2. 執行 Interop (準備環境)
     let tokens = base.interop(manifest: manifest)
 
     // 3. 執行 Build (產生實體)
-    let eid = base.build(from: tokens).eid
+    let idcard = base.build(from: tokens)
+    print(idcard)
+    
+    let eid = idcard.eid
 
     // 4. 驗證資料是否正確進入 Storage
     let rid = registry.register(MockComponentC.self)
@@ -120,4 +132,45 @@ func testFullBuildProcess() {
     } else {
         Issue.record("組件未正確存入 Storage")
     }
+}
+
+
+@Test func testBatchGeneration() {
+    // 2. 初始化平台環境 (確保 ID 統一)
+    let e_pf = EntitiyPlatForm_Ver0()
+    let r_pf = RegistryPlatform() // 讓 Registry 共用實體管理器
+    let base = BasePlatform()
+    base.boot(registry: r_pf, entities: e_pf)
+
+    // 3. 準備 Manifest (這就是你的「藍圖」)
+    // 注意：這裡傳入的是閉包 { MockComponentA() }，確保每次呼叫都會產生新實例
+    let manifest = Manifest(requirements: [
+        .Public_Component((MockComponentA.self, { MockComponentA() })),
+        .Public_Component((MockComponentB.self, { MockComponentB() }))
+    ])
+
+    // 4. Interop (開模) - 這步只做一次！
+    // 平台會在此時註冊型別並分配好 Storage 空間
+    let buildTokens = base.interop(manifest: manifest)
+
+    print("🚀 開始批次生成 20 個實體...")
+
+    var generatedCards: [IDCard] = []
+
+    // 5. 批次生成迴圈
+    for i in 0..<20 {
+        // 使用同一組 tokens 進行快速生產
+        let card = base.build(from: buildTokens)
+        generatedCards.append(card)
+        
+        // (選用) 驗證一下生成結果
+        // print("  - Generated Entity ID: \(card.eid.id)")
+    }
+
+    print("✅ 生成完畢，共 \(generatedCards.count) 個實體。")
+    
+    // 6. 使用 Inspector 驗證結果
+    // 你會看到 ID 從 3 開始 (0=Registry, 1=EntityPF, 2=CompA, 3=CompB... 之後才是實體)
+    // 或是取決於你的註冊順序
+    base.inspectWorld()
 }

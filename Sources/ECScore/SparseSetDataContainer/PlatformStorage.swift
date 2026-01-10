@@ -91,8 +91,7 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
     @inlinable
     func rawAdd(eid: EntityId, component: Any) {
         guard let typedComponent = component as? T else {
-            print("Warning: Type mismatch in storage")
-            return
+            fatalError("the type mismatched while using rawAdd")
         }
         self.add(eid: eid, component: typedComponent)
     }

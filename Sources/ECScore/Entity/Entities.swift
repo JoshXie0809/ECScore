@@ -23,6 +23,9 @@ class Entities {
     private var isActive: [UInt64] = []
 
     private(set) var liveCount: Int = 0
+    var maxId : Int {
+        versions.count
+    }
 
     func spawn(_ n: Int = 1) -> [EntityId] {
         var results: [EntityId] = []
@@ -63,9 +66,20 @@ class Entities {
         liveCount -= 1
     }
 
+    @inlinable
     func isValid(_ entity: EntityId) -> Bool {
         return entity.id < versions.count && versions[entity.id] == entity.version && 
                (isActive[entity.id >> 6] & (1 << (entity.id & 63)) != 0)
+    }
+
+    @inlinable
+    func idIsActive(_ id: Int) -> Bool {
+        return id < maxId && (isActive[id >> 6] & (1 << (id & 63)) != 0)
+    }
+
+    @inlinable
+    func getVersion(_ id: Int) -> Int {
+        return versions[id]
     }
 
 }
