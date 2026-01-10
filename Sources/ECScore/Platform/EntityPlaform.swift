@@ -1,4 +1,4 @@
-protocol Platform_Entitiy: Platform, Component {
+protocol Platform_Entitiy: Platform, Component, AnyObject {
     func spawn(_: Int) -> [EntityId]
     func despawn(_: EntityId)
 }

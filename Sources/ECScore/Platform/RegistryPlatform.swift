@@ -1,7 +1,12 @@
 typealias RegistryId = EntityId
 
-final class RegistryPlatform : Platform, Component {
-    let entities = Entities()
+protocol Platform_Registry: AnyObject, Component {
+    func findType(_ type: Any.Type) -> RegistryId?
+    func register(_ type: Any.Type) -> RegistryId
+}
+
+final class RegistryPlatform : Platform, Platform_Registry, Component {
+    let entities: Entities = Entities()
     private var typeToId: [ObjectIdentifier: EntityId] = [:]
 
     var count : Int { entities.liveCount }
@@ -12,6 +17,11 @@ final class RegistryPlatform : Platform, Component {
         let s = PFStorage<RegistryPlatform>()
         return s
     }()
+
+    func findType(_ type: Any.Type) -> RegistryId? {
+        let typeId = ObjectIdentifier(type)
+        return typeToId[typeId]
+    }
 
     func register(_ type: Any.Type) -> RegistryId 
     {
@@ -28,16 +38,15 @@ final class RegistryPlatform : Platform, Component {
         return typeToId[typeId] != nil
     }
 
-    init() {
-        let rid = self.register(RegistryPlatform.self)
-        
-        guard let myStorage = self.rawGetStorage(for: rid) as? PFStorage<RegistryPlatform> 
-        else {
-            fatalError("cannot initialize RegistryPlatorm")
-        }
-
-        myStorage.add(eid: rid, component: self)
-    }
+    // init() {
+    //     let rid = self.register(RegistryPlatform.self)
+    //     guard let myStorage = self.rawGetStorage(for: rid) as? PFStorage<RegistryPlatform> 
+    //     else {
+    //         fatalError("cannot initialize RegistryPlatorm")
+    //     }
+    //     myStorage.add(eid: rid, component: self)
+    // }
+    
 
     // 實作 Platform 協議要求的原始方法
     func rawGetStorage(for rid: EntityId) -> AnyPlatformStorage? {

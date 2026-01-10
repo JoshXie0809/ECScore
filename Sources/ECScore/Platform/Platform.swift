@@ -13,6 +13,3 @@ protocol AnyPlatformStorage {
     func rawAdd(eid: EntityId, component: Any)
     func getWithDenseIndex_Uncheck(_ index: Int) -> Any?
 }
-
-
-    

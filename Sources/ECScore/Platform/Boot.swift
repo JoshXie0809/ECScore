@@ -1,16 +1,16 @@
 extension BasePlatform {
-    func boot<E: Platform_Entitiy>(registry: RegistryPlatform, entities: E) {
+    func boot<R: Platform_Registry, E: Platform_Entitiy>(registry: R, entities: E) {
         self.storages = [nil, nil]
         
         // expected rid.id = 0
-        let registryPlatformId = registry.register(RegistryPlatform.self)
+        let registryPlatformId = registry.register(Platform_Registry.self)
 
         // expected rid.id = 1
         // pf_entity register itself to rg_pf
         let entityPlatformId = registry.register(Platform_Entitiy.self)
 
         // create storage for base pf
-        let r_storage = PFStorage<RegistryPlatform>()
+        let r_storage = PFStorage<R>()
         let e_storage = PFStorage<E>()
 
         
@@ -29,14 +29,14 @@ extension BasePlatform {
 
 extension Platform {
     /// 嘗試從平台中取得地圖（握手）
-    var registry: RegistryPlatform? {
+    var registry: Platform_Registry? {
         let rid0 = RegistryId(id: 0, version: 0)
         // 直接找 0 號位並嘗試轉型
         guard let storage = self.rawGetStorage(for: rid0) else {
             return nil
         }
 
-        return storage.getWithDenseIndex_Uncheck(0) as? RegistryPlatform
+        return storage.getWithDenseIndex_Uncheck(0) as? Platform_Registry
     }
 
     var entities: Platform_Entitiy? {

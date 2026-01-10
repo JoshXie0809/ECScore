@@ -7,16 +7,6 @@ import Testing
     #expect(registryPf.register(RegistryPlatform.self).id == 0)   
 }
 
-@Test func registryTest2() async throws {
-    let registryPf = RegistryPlatform()
-
-    let registry =  registryPf.registry
-    #expect(registry != nil)
-    let registryNotNil = registry!
-
-    #expect(registryNotNil === registryPf)
-}
-
 @Test func bootTest() async throws {
     let base_pf = BasePlatform()
     let r_pf = RegistryPlatform()
@@ -24,11 +14,11 @@ import Testing
 
     base_pf.boot(registry: r_pf, entities: e_pf)
 
-    guard let registry = base_pf.registry else {
+    guard let registry = base_pf.registry as? RegistryPlatform else {
         fatalError("regitry not find!!")
     }
 
-    #expect(registry.register(RegistryPlatform.self).id == 0)
+    #expect(registry.register(Platform_Registry.self).id == 0)
     #expect(registry.register(Platform_Entitiy.self).id == 1)
 
     _ = registry.register(Position.self)
