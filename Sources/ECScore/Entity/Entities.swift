@@ -7,7 +7,7 @@ struct EntityId: Hashable, Comparable {
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
+        return lhs.id == rhs.id && lhs.version == rhs.version
     }
 }
 

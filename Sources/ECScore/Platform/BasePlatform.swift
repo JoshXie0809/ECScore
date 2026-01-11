@@ -43,7 +43,9 @@ enum IDItem {
 
 struct IDCard {
     let eid: EntityId
-    fileprivate let rids: [IDItem]
+    fileprivate let manifest: Manifest
+    fileprivate let rids: [RegistryId]
+    fileprivate let itemRids: [IDItem]
 }
 
 extension BasePlatform {
@@ -67,7 +69,7 @@ extension BasePlatform {
         Self.ensureStorageCapacity(base: self)
         // storages length is ensured
         for newT in newTypes {
-            let newT_storage =  Self.openAndCreateStorage(newT)
+            let newT_storage =  newT.createPFStorage()
             let rid = registry.register(newT)
             self.storages[rid.id] = newT_storage
         }
@@ -84,13 +86,6 @@ extension BasePlatform {
             base.storages.append( contentsOf: repeatElement(nil, count: needed) )
         }
     }
-
-    private static func openAndCreateStorage(_ type: any Component.Type) -> any AnyPlatformStorage {
-        func helper<T: Component>(_ concreteType: T.Type) -> any AnyPlatformStorage {
-            return T.createPFStorage()
-        }
-        return helper(type)
-    }
 }
 
 extension BasePlatform {
@@ -103,15 +98,15 @@ extension BasePlatform {
         
         // 2. 生成一個新的實體 ID
         let newEid = entities.spawn(1)[0]
-        var rids: [IDItem] = []
+        var item_rids: [IDItem] = []
 
         // 3. 遍歷 tokens 中的需求與對應的 rids
         for (index, item) in tokens.manifest.requirements.enumerated() {
             let rid = tokens.rids[index]
             switch item {
-            case .Public_Component: rids.append( .Public( rid ) )
-            case .Private_Component: rids.append( .Private( rid ))
-            case .Not_Need_Instance: rids.append( .Not_Need_Instance( rid ))
+            case .Public_Component: item_rids.append( .Public( rid ) )
+            case .Private_Component: item_rids.append( .Private( rid ))
+            case .Not_Need_Instance: item_rids.append( .Not_Need_Instance( rid ))
             }
             
             let meta = item.componentMetadata
@@ -119,12 +114,40 @@ extension BasePlatform {
             guard let storage = self.rawGetStorage(for: rid) else {
                 fatalError("Storage missing for rid=\(rid.id), type=\(meta.type)")
             }
+
             if let fn = meta.instance {
                 storage.rawAdd(eid: newEid, component: fn())
             }
         }
         
-        return IDCard(eid: newEid, rids: rids)
+        return IDCard(eid: newEid, manifest: tokens.manifest, rids: tokens.rids,itemRids: item_rids)
     }
 }
 
+
+final class Proxy {
+    private let idcard: IDCard
+    unowned private let _base: BasePlatform
+
+    init(idcard: IDCard, _base: BasePlatform) {
+        self.idcard = idcard
+        self._base = _base
+    }
+
+    func get<T: Component>(at: Int) -> T {
+        let rid = idcard.rids[at]        
+        return _base.rawGetStorage(for: rid)!.get(idcard.eid) as! T
+    }
+}
+
+extension BasePlatform {
+    func createProxy(idcard: IDCard) -> Proxy
+    {
+        let entities = self.entities!
+        guard entities.isValid(idcard.eid) else {
+            fatalError("invalid idCard in create proxy phase")
+        }
+
+        return Proxy(idcard: idcard, _base: self)
+    }
+}

@@ -2,6 +2,7 @@ protocol Platform_Entitiy: Platform, Component, AnyObject {
     func spawn(_: Int) -> [EntityId]
     func despawn(_: EntityId)
     func forEachLiveId(_ body: (EntityId) -> Void)
+    func isValid(_ eid: EntityId) -> Bool
 }
 
 class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
@@ -11,6 +12,10 @@ class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
         let s = PFStorage<EntitiyPlatForm_Ver0>()
         return s
     }()
+
+    func isValid(_ eid: EntityId) -> Bool {
+        return entities.isValid(eid)
+    }
 
     func spawn(_ n: Int) -> [EntityId] {
         entities.spawn(n)
