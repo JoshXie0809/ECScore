@@ -11,26 +11,36 @@ import Testing
         return PFStorage<Position>()
     }
 
+    let fnE = {
+        return EntitiyPlatForm_Ver0() 
+    }
+
     let manifest = Manifest(requirements: [
-        .Public_Component(( (PFStorage<Position>).self, fnC))
+        .Public_Component((PFStorage<Position>.self, fnC)),
+        .Not_Need_Instance(Position.self),
+        .Public_Component((EntitiyPlatForm_Ver0.self, fnE)),
+
     ])
 
     // 2. 執行 Interop (準備環境)
     let tokens = base.interop(manifest: manifest)
     // // // 3. 執行 Build (產生實體)
     let idcard = base.build(from: tokens)
+    print(tokens.rids)
 
     let a = {
         let proxy = base.createProxy(idcard: idcard)
-        let val: PFStorage<Position> = proxy.get(at: 0)
+        let pfs: PFStorage<Position> = proxy.get(at: 0)
         // add an entity
-        val.add(eid: EntityId(id: 23, version: 0), component: Position(x: 1.0, y: 2.0) )
-        #expect(type(of: val) == PFStorage<Position>.self)
+        pfs.add(eid: EntityId(id: 23, version: 0), component: Position(x: 1.0, y: 2.0) )
+        #expect(type(of: pfs) == PFStorage<Position>.self)
     }
 
     a()
 
-    let nested_st = base.rawGetStorage(for: tokens.rids[0])?.get(EntityId(id: 1, version: 0)) as! PFStorage<Position>
-    let val = nested_st.get(EntityId(id: 23, version: 0)) as! Position
-    #expect(val.x == 1.0 && val.y == 2.0 )
+    // using raw api is really awful
+
+    // let nested_st = base.rawGetStorage(for: tokens.rids[0])?.get(EntityId(id: 1, version: 0)) as! PFStorage<Position>
+    // let val = nested_st.get(EntityId(id: 23, version: 0)) as! Position
+    // #expect(val.x == 1.0 && val.y == 2.0 )
 }

@@ -134,6 +134,7 @@ final class Proxy {
         self._base = _base
     }
 
+    @inlinable
     func get<T: Component>(at: Int) -> T {
         let rid = idcard.rids[at]        
         return _base.rawGetStorage(for: rid)!.get(idcard.eid) as! T

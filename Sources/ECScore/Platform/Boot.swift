@@ -3,11 +3,11 @@ extension BasePlatform {
         self.storages = [nil, nil]
         
         // expected rid.id = 0
-        let registryPlatformId = registry.register(Platform_Registry.self)
+        let registryPlatformId = registry.register(R.self)
 
         // expected rid.id = 1
         // pf_entity register itself to rg_pf
-        let entityPlatformId = registry.register(Platform_Entitiy.self)
+        let entityPlatformId = registry.register(E.self)
 
         // create storage for base pf
         let r_storage = PFStorage<R>()

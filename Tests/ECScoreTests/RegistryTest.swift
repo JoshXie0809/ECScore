@@ -18,8 +18,8 @@ import Testing
         fatalError("regitry not find!!")
     }
 
-    #expect(registry.register(Platform_Registry.self).id == 0)
-    #expect(registry.register(Platform_Entitiy.self).id == 1)
+    #expect(registry.register(RegistryPlatform.self).id == 0)
+    #expect(registry.register(EntitiyPlatForm_Ver0.self).id == 1)
 
     _ = registry.register(Position.self)
 
