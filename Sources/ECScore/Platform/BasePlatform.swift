@@ -1,10 +1,13 @@
-class BasePlatform : Platform {
-    var storages: [AnyPlatformStorage?] = []
+final class BasePlatform : Platform {
+    var storages: [AnyPlatformStorage?]
 
     func rawGetStorage(for rid: RegistryId) -> AnyPlatformStorage? {
         guard rid.id >= 0 && rid.id < storages.count else { return nil }
         return storages[rid.id]
     }
+
+    // main platform
+    init(_ rawStorage: [AnyPlatformStorage?] = []) { self.storages = rawStorage }
 }
 
 enum ManifestItem {
@@ -26,6 +29,16 @@ extension ManifestItem {
             return (type, c)
         case .Not_Need_Instance(let type):
             return (type, nil)
+        }
+    }
+
+    var CompType: any Component.Type {
+        switch self {
+        case .Public_Component(let (ct, _)),
+             .Private_Component(let (ct, _)),
+             .Not_Need_Instance(let ct):
+            return ct
+            
         }
     }
 }
@@ -136,16 +149,33 @@ final class Proxy {
 
     @inlinable
     func get<T: Component>(at: Int) -> T {
+        guard _base.entities!.isValid(idcard.eid) else {
+            fatalError("Logic Error: try to access a dead (Entity \(idcard.eid))!")
+        }
+
         let rid = idcard.rids[at]        
         return _base.rawGetStorage(for: rid)!.get(idcard.eid) as! T
+    }
+
+    var maxRid: Int {
+        var max = 0
+        for rid in idcard.rids {
+            max = rid.id > max ? rid.id : max
+        }
+        return max
     }
 }
 
 extension BasePlatform {
+    @inlinable
+    func isValid(eid: EntityId) -> Bool {
+        let entities = self.entities!
+        return entities.isValid(eid)
+    }
+
     func createProxy(idcard: IDCard) -> Proxy
     {
-        let entities = self.entities!
-        guard entities.isValid(idcard.eid) else {
+        guard isValid(eid: idcard.eid) else {
             fatalError("invalid idCard in create proxy phase")
         }
 

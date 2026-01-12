@@ -19,7 +19,6 @@ import Testing
         .Public_Component((PFStorage<Position>.self, fnC)),
         .Not_Need_Instance(Position.self),
         .Public_Component((EntitiyPlatForm_Ver0.self, fnE)),
-
     ])
 
     // 2. 執行 Interop (準備環境)
@@ -43,4 +42,38 @@ import Testing
     // let nested_st = base.rawGetStorage(for: tokens.rids[0])?.get(EntityId(id: 1, version: 0)) as! PFStorage<Position>
     // let val = nested_st.get(EntityId(id: 23, version: 0)) as! Position
     // #expect(val.x == 1.0 && val.y == 2.0 )
+}
+
+
+@Test func proxyAsPlatform() async throws {
+    let base = BasePlatform()
+    let registry = RegistryPlatform()
+    let entities = EntitiyPlatForm_Ver0()
+    base.boot(registry: registry, entities: entities)
+
+    let fnC = {
+        return PFStorage<Position>()
+    }
+
+    let fnE = {
+        return EntitiyPlatForm_Ver0() 
+    }
+
+    let manifest = Manifest(requirements: [
+        .Public_Component((PFStorage<Position>.self, fnC)),
+        .Not_Need_Instance(Position.self),
+        .Public_Component((EntitiyPlatForm_Ver0.self, fnE)),
+    ])
+
+    // 2. 執行 Interop (準備環境)
+    let tokens = base.interop(manifest: manifest)
+    // // // 3. 執行 Build (產生實體)
+    let idcard = base.build(from: tokens)
+    
+    let proxy = base.createProxy(idcard: idcard)
+    let proxy_base_pf = proxy.asBasePlatform()
+    
+    print(proxy_base_pf)
+    #expect(proxy_base_pf.registry == nil) // use the main base_pf registry
+    #expect(proxy_base_pf.entities != nil)
 }

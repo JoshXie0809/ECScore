@@ -28,7 +28,7 @@ extension BasePlatform {
 }
 
 extension Platform {
-    /// 嘗試從平台中取得地圖（握手）
+    @inlinable
     var registry: Platform_Registry? {
         let rid0 = RegistryId(id: 0, version: 0)
         // 直接找 0 號位並嘗試轉型
@@ -39,6 +39,7 @@ extension Platform {
         return storage.getWithDenseIndex_Uncheck(0) as? Platform_Registry
     }
 
+    @inlinable
     var entities: Platform_Entitiy? {
         let rid1 =  RegistryId(id: 1, version: 0)
         guard let storage = self.rawGetStorage(for: rid1) else {
