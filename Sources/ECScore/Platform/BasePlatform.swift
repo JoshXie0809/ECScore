@@ -244,10 +244,16 @@ final class Sub_BasePlatform: BasePlatform {
 
             // not private type
             let rid = proxy.idcard.rids[at]
-            if let comp = proxy.get(at: at) {
+
+            // [修正點]: 只有當這個位置還是 nil 時才建立新的 Storage
+            // 如果之前的 Storage Component 已經填過了，這裡就跳過，防止覆蓋
+            if rawStorage[rid.id] == nil {
                 // here is public
                 // maxRid + 1 gaurantee that insert is valid
                 rawStorage[rid.id] = CompType.createPFStorage()
+            }
+
+            if let comp = proxy.get(at: at) {
                 // store comp to storage
                 rawStorage[rid.id]!.rawAdd(eid: eid0, component: comp)
                 
