@@ -1,8 +1,5 @@
 extension Proxy {
-    func asBasePlatform() -> BasePlatform {
-        var rawStorages: [AnyPlatformStorage?] = []
-        rawStorages.append(contentsOf: repeatElement(nil, count: maxRid))
-
-        return BasePlatform(rawStorages)
+    func asBasePlatform() -> BasePlatform? {
+        return Sub_BasePlatform(proxy: self)
     }
 }

@@ -1,13 +1,11 @@
-final class BasePlatform : Platform {
-    var storages: [AnyPlatformStorage?]
+// main platform
+class BasePlatform : Platform {
+    var storages: [AnyPlatformStorage?] = []
 
     func rawGetStorage(for rid: RegistryId) -> AnyPlatformStorage? {
         guard rid.id >= 0 && rid.id < storages.count else { return nil }
         return storages[rid.id]
     }
-
-    // main platform
-    init(_ rawStorage: [AnyPlatformStorage?] = []) { self.storages = rawStorage }
 }
 
 enum ManifestItem {
@@ -139,7 +137,7 @@ extension BasePlatform {
 
 
 final class Proxy {
-    private let idcard: IDCard
+    fileprivate let idcard: IDCard
     unowned private let _base: BasePlatform
 
     init(idcard: IDCard, _base: BasePlatform) {
@@ -148,21 +146,51 @@ final class Proxy {
     }
 
     @inlinable
-    func get<T: Component>(at: Int) -> T {
+    func get<T: Component>(at: Int) -> T? {
         guard _base.entities!.isValid(idcard.eid) else {
             fatalError("Logic Error: try to access a dead (Entity \(idcard.eid))!")
         }
-
-        let rid = idcard.rids[at]        
-        return _base.rawGetStorage(for: rid)!.get(idcard.eid) as! T
+        let item = idcard.itemRids[at]
+        switch item {
+        case .Private, .Not_Need_Instance:
+            return nil
+        case .Public(let rid):
+            return _base.rawGetStorage(for: rid)!.get(idcard.eid) as? T
+        }
     }
 
-    var maxRid: Int {
+    @inlinable
+    func get(at: Int) -> (any Component)? {
+        guard _base.entities!.isValid(idcard.eid) else {
+            fatalError("Logic Error: try to access a dead (Entity \(idcard.eid))!")
+        }
+        let item = idcard.itemRids[at]
+        switch item {
+        case .Private, .Not_Need_Instance:
+            return nil
+        case .Public(let rid):
+            return _base.rawGetStorage(for: rid)!.get(idcard.eid) as? any Component
+        }
+    }
+
+
+    fileprivate var maxRid: Int {
         var max = 0
         for rid in idcard.rids {
             max = rid.id > max ? rid.id : max
         }
         return max
+    }
+
+    fileprivate func findTypeAt(_ targetRid: RegistryId) -> Int? {
+        for (at, rid) in idcard.rids.enumerated() {
+            if rid == targetRid { return at }
+        }
+        return nil
+    }
+
+    fileprivate var registry: Platform_Registry {
+        _base.registry!
     }
 }
 
@@ -181,4 +209,62 @@ extension BasePlatform {
 
         return Proxy(idcard: idcard, _base: self)
     }
+}
+
+
+final class Sub_BasePlatform: BasePlatform {
+    private let proxy: Proxy
+    
+    init(proxy: Proxy) {
+        self.proxy = proxy
+        super.init()
+
+        var rawStorage: [AnyPlatformStorage?] = []
+        rawStorage.append(contentsOf: repeatElement(nil, count: proxy.maxRid + 1))
+
+        for (at, ele) in proxy.idcard.itemRids.enumerated() {
+            var CompType: any Component.Type
+            switch ele {
+            case .Public,
+                 .Not_Need_Instance:
+                // not private type
+                CompType = proxy.idcard.manifest.requirements[at].CompType
+            case .Private:
+                continue
+            }
+
+            // not private type
+            let rid = proxy.idcard.rids[at]
+            if let comp = proxy.get(at: at) {
+                // here is public
+                // maxRid + 1 gaurantee that insert is valid
+                rawStorage[rid.id] = CompType.createPFStorage()
+                // store comp to storage
+                rawStorage[rid.id]!.rawAdd(eid: proxy.idcard.eid, component: comp)
+                
+                // check if it is a storage
+                if let storageProvider = comp as? StorageTypeProvider {
+                    let innerType = storageProvider.storedComponentType
+                    
+                    guard proxy.registry.contains(innerType) else {
+                        fatalError("not registry for T:(\(innerType)) means does not need st<T> component")
+                    }
+                    let innerTypeRid = proxy.registry.register(innerType)
+
+                    guard proxy.findTypeAt(innerTypeRid) != nil else {
+                        fatalError("not apply for T:(\(innerType)) means does not need st<T> component")
+                    }
+                    
+                    let storage = comp as! AnyPlatformStorage
+                    rawStorage[innerTypeRid.id] = storage
+                }
+            }
+            
+            // not need instance
+            // do not need to do anything
+        }
+
+        self.storages = rawStorage
+    }
+    
 }

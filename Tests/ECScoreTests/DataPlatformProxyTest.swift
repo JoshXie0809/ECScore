@@ -29,7 +29,7 @@ import Testing
 
     let a = {
         let proxy = base.createProxy(idcard: idcard)
-        let pfs: PFStorage<Position> = proxy.get(at: 0)
+        let pfs: PFStorage<Position> = proxy.get(at: 0)!
         // add an entity
         pfs.add(eid: EntityId(id: 23, version: 0), component: Position(x: 1.0, y: 2.0) )
         #expect(type(of: pfs) == PFStorage<Position>.self)
@@ -71,9 +71,10 @@ import Testing
     let idcard = base.build(from: tokens)
     
     let proxy = base.createProxy(idcard: idcard)
-    let proxy_base_pf = proxy.asBasePlatform()
+    let proxy_base_pf = proxy.asBasePlatform()!
     
-    print(proxy_base_pf)
+    print(proxy_base_pf.storages)
     #expect(proxy_base_pf.registry == nil) // use the main base_pf registry
-    #expect(proxy_base_pf.entities != nil)
+    #expect(proxy_base_pf.storages.count == 4)
+
 }

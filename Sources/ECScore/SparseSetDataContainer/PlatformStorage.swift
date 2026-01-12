@@ -106,3 +106,15 @@ extension PFStorage: Component where T: Component {
         return PFStorage<Self>()
     }
 }
+
+// 定義一個協議，用來獲取內部泛型 T 的類型
+protocol StorageTypeProvider {
+    /// 告訴外界，這個 Storage 裡面管理的 Component 型別是什麼
+    var storedComponentType: any Component.Type { get }
+}
+
+extension PFStorage: StorageTypeProvider {
+    var storedComponentType: any Component.Type {
+        return T.self // 直接回傳泛型 T 的型別
+    }
+}
