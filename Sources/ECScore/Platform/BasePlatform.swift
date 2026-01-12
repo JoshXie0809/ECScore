@@ -219,9 +219,18 @@ final class Sub_BasePlatform: BasePlatform {
         self.proxy = proxy
         super.init()
 
+        // check it has Platform Entites to manage its slots
+        guard proxy.findTypeAt(proxy.registry.register(EntitiyPlatForm_Ver0.self)) != nil
+        else {
+            fatalError("need Platfomr_Entity for manage its slot")
+        }
+
+        let eid0 = EntityId(id: 0, version: 0)
+
         var rawStorage: [AnyPlatformStorage?] = []
         rawStorage.append(contentsOf: repeatElement(nil, count: proxy.maxRid + 1))
 
+        // this is the boot for sub-platform
         for (at, ele) in proxy.idcard.itemRids.enumerated() {
             var CompType: any Component.Type
             switch ele {
@@ -240,7 +249,7 @@ final class Sub_BasePlatform: BasePlatform {
                 // maxRid + 1 gaurantee that insert is valid
                 rawStorage[rid.id] = CompType.createPFStorage()
                 // store comp to storage
-                rawStorage[rid.id]!.rawAdd(eid: proxy.idcard.eid, component: comp)
+                rawStorage[rid.id]!.rawAdd(eid: eid0, component: comp)
                 
                 // check if it is a storage
                 if let storageProvider = comp as? StorageTypeProvider {
@@ -254,6 +263,10 @@ final class Sub_BasePlatform: BasePlatform {
                     guard proxy.findTypeAt(innerTypeRid) != nil else {
                         fatalError("not apply for T:(\(innerType)) means does not need st<T> component")
                     }
+
+                    guard rawStorage[innerTypeRid.id] == nil else {
+                        fatalError("please change the order on menifast. make sure st<\(innerType)> place is before then \(innerType)")
+                    }
                     
                     let storage = comp as! AnyPlatformStorage
                     rawStorage[innerTypeRid.id] = storage
@@ -264,7 +277,12 @@ final class Sub_BasePlatform: BasePlatform {
             // do not need to do anything
         }
 
+        // put rawStorages to self.storages
         self.storages = rawStorage
+        
+        // now we can spawn our eid0
+        precondition(eid0 == self.entities!.spawn(1)[0], "should be Eid(id: 0, ver: 0)")
+        // boot is finised
     }
     
 }

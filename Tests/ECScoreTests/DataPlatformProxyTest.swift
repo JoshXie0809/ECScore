@@ -60,9 +60,11 @@ import Testing
     }
 
     let manifest = Manifest(requirements: [
+        // Storage Type
         .Public_Component((PFStorage<Position>.self, fnC)),
-        .Not_Need_Instance(Position.self),
         .Public_Component((EntitiyPlatForm_Ver0.self, fnE)),
+        // Data Type
+        .Not_Need_Instance(Position.self),
     ])
 
     // 2. 執行 Interop (準備環境)
@@ -77,4 +79,9 @@ import Testing
     #expect(proxy_base_pf.registry == nil) // use the main base_pf registry
     #expect(proxy_base_pf.storages.count == 4)
 
+    #expect(proxy_base_pf.entities != nil)
+    
+    proxy_base_pf.entities!.forEachLiveId { eid in
+        print(eid)
+    }
 }
