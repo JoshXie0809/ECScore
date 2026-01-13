@@ -17,7 +17,7 @@ import Testing
 
     let manifest = Manifest(requirements: [
         .Public_Component((PFStorage<Position>.self, fnC)),
-        .Not_Need_Instance(Position.self),
+        .Phantom(Position.self),
         .Public_Component((EntityPlatForm_Ver0.self, fnE)),
     ])
 
@@ -64,7 +64,7 @@ import Testing
         .Public_Component((EntityPlatForm_Ver0.self, fnE)),
         .Public_Component((PFStorage<Position>.self, fnC)),
         // Data Type
-        .Not_Need_Instance(Position.self),
+        .Phantom(Position.self),
     ])
 
     // 2. 執行 Interop (準備環境)
@@ -75,12 +75,15 @@ import Testing
     let proxy = base.createProxy(idcard: idcard)
     let proxy_base_pf = proxy.asBasePlatform()!
     
-    #expect(proxy_base_pf.registry == nil) // use the main base_pf registry
     #expect(proxy_base_pf.storages.count == 4)
-    #expect(proxy_base_pf.entities != nil)
+    #expect(proxy_base_pf.entities != nil) 
+    #expect(proxy_base_pf.registry != nil) // use the proxy as registry
 
     let eid0_position_storage = proxy_base_pf.storages[2]?.get(EntityId(id: 0, version: 0)) as! PFStorage<Position>
     let proxy_base_pf_storage_position = proxy_base_pf.storages[3] as! PFStorage<Position>
     
     #expect( eid0_position_storage.self  === proxy_base_pf_storage_position.self)
+
+    print(proxy_base_pf.storages)
 }
+

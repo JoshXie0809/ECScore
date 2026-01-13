@@ -11,7 +11,7 @@ class BasePlatform : Platform {
 enum ManifestItem {
     case Public_Component( (Component.Type, (() -> any Component) ) )
     case Private_Component( (Component.Type, (() -> any Component) ) )
-    case Not_Need_Instance( Component.Type )
+    case Phantom( Component.Type )
 }
 
 struct Manifest {
@@ -24,7 +24,7 @@ extension ManifestItem {
         switch self {
         case .Public_Component(let (type, _)),
              .Private_Component(let (type, _)),
-             .Not_Need_Instance(let type):
+             .Phantom(let type):
             return type
         }
     }
@@ -35,7 +35,7 @@ extension ManifestItem {
         case .Public_Component(let (_, f)),
              .Private_Component(let (_, f)):
             return f
-        case .Not_Need_Instance:
+        case .Phantom:
             return nil
         }
     }
@@ -43,13 +43,14 @@ extension ManifestItem {
 
 struct EntityBuildTokens {
     fileprivate let manifest: Manifest
+    fileprivate let ridToAt: [RegistryId:Int]
     let rids: [RegistryId]
 }
 
 enum IDItem {
     case Public(RegistryId)
     case Private(RegistryId)
-    case Not_Need_Instance(RegistryId)
+    case Phantom(RegistryId)
 }
 
 struct IDCard {
@@ -57,6 +58,7 @@ struct IDCard {
     fileprivate let manifest: Manifest
     fileprivate let rids: [RegistryId]
     fileprivate let itemRids: [IDItem]
+    fileprivate let ridToAt: [RegistryId:Int]
 }
 
 extension BasePlatform {
@@ -66,8 +68,9 @@ extension BasePlatform {
         }
         var rids: [RegistryId] = []
         var newTypes: [any Component.Type] = []
+        var ridToAt: [RegistryId:Int] = [:]
 
-        for item in manifest.requirements {
+        for (idx, item) in manifest.requirements.enumerated() {
             let type = item.componentType
             if !registry.contains(type) {
                 newTypes.append(type)
@@ -75,9 +78,11 @@ extension BasePlatform {
 
             let rid = registry.register(type)
             rids.append(rid)
+            ridToAt[rid] = idx
         }
         // prepare to build storage
         Self.ensureStorageCapacity(base: self)
+
         // storages length is ensured
         for newT in newTypes {
             let newT_storage =  newT.createPFStorage()
@@ -85,7 +90,7 @@ extension BasePlatform {
             self.storages[rid.id] = newT_storage
         }
 
-        return EntityBuildTokens(manifest: manifest, rids: rids)
+        return EntityBuildTokens(manifest: manifest, ridToAt: ridToAt, rids: rids)
     }
 
     private static func ensureStorageCapacity(base: BasePlatform) {
@@ -117,7 +122,7 @@ extension BasePlatform {
             switch item {
             case .Public_Component: item_rids.append( .Public( rid ) )
             case .Private_Component: item_rids.append( .Private( rid ))
-            case .Not_Need_Instance: item_rids.append( .Not_Need_Instance( rid ))
+            case .Phantom: item_rids.append( .Phantom( rid ))
             }
             
             let meta = (type: item.componentType, instance: item.factory)
@@ -131,18 +136,26 @@ extension BasePlatform {
             }
         }
         
-        return IDCard(eid: newEid, manifest: tokens.manifest, rids: tokens.rids,itemRids: item_rids)
+        return IDCard(
+            eid: newEid,
+            manifest: tokens.manifest,
+            rids: tokens.rids,
+            itemRids: item_rids,
+            ridToAt: tokens.ridToAt
+        )
     }
 }
 
 
 final class Proxy {
     fileprivate let idcard: IDCard
-    unowned private let _base: BasePlatform
+    unowned fileprivate let _base: BasePlatform
+    private(set) var maxRid: Int
 
     init(idcard: IDCard, _base: BasePlatform) {
         self.idcard = idcard
         self._base = _base
+        self.maxRid = Self.maxRid(idcard: idcard)
     }
 
     @inlinable
@@ -152,7 +165,7 @@ final class Proxy {
         }
         let item = idcard.itemRids[at]
         switch item {
-        case .Private, .Not_Need_Instance:
+        case .Private, .Phantom:
             return nil
         case .Public(let rid):
             return _base.rawGetStorage(for: rid)!.get(idcard.eid) as? T
@@ -166,15 +179,14 @@ final class Proxy {
         }
         let item = idcard.itemRids[at]
         switch item {
-        case .Private, .Not_Need_Instance:
+        case .Private, .Phantom:
             return nil
         case .Public(let rid):
             return _base.rawGetStorage(for: rid)!.get(idcard.eid) as? any Component
         }
     }
 
-
-    fileprivate var maxRid: Int {
+    static private func maxRid(idcard: IDCard) -> Int {
         var max = 0
         for rid in idcard.rids {
             max = rid.id > max ? rid.id : max
@@ -182,11 +194,8 @@ final class Proxy {
         return max
     }
 
-    fileprivate func findTypeAt(_ targetRid: RegistryId) -> Int? {
-        for (at, rid) in idcard.rids.enumerated() {
-            if rid == targetRid { return at }
-        }
-        return nil
+    fileprivate func ridToAt(_ targetRid: RegistryId) -> Int? {
+        return idcard.ridToAt[targetRid]
     }
 
     fileprivate var registry: Platform_Registry {
@@ -220,9 +229,25 @@ final class Sub_BasePlatform: BasePlatform {
         super.init()
 
         // check it has Platform Entites to manage its slots
-        guard proxy.findTypeAt(proxy.registry.register(EntityPlatForm_Ver0.self)) != nil
-        else {
-            fatalError("need Platfomr_Entity for manage its slot")
+        var hasEntity: Bool = false
+        var hasRegistry: Bool = false
+
+        for manifest_item in proxy.idcard.manifest.requirements {
+            let componentType = manifest_item.componentType
+            if componentType is Platform_Entity.Type {
+                hasEntity = true
+            }
+            else if componentType is Platform_Registry.Type {
+                hasRegistry = true
+            } 
+        }
+
+        guard hasEntity else {
+            fatalError("need Platform_Entity for manage its slot")
+        }
+
+        guard !hasRegistry else {
+            fatalError("sub platform cannot has any Platform_Registry Type")
         }
 
         let eid0 = EntityId(id: 0, version: 0)
@@ -235,7 +260,7 @@ final class Sub_BasePlatform: BasePlatform {
             var componentType: any Component.Type
             switch ele {
             case .Public,
-                 .Not_Need_Instance:
+                 .Phantom:
                 // not private type
                 componentType = proxy.idcard.manifest.requirements[at].componentType
             case .Private:
@@ -267,7 +292,7 @@ final class Sub_BasePlatform: BasePlatform {
                     }
                     let innerTypeRid = proxy.registry.register(innerType)
 
-                    guard proxy.findTypeAt(innerTypeRid) != nil else {
+                    guard proxy.ridToAt(innerTypeRid) != nil else {
                         fatalError("not apply for T:(\(innerType)) means does not need st<T> component")
                     }
 
@@ -284,12 +309,74 @@ final class Sub_BasePlatform: BasePlatform {
             // do not need to do anything
         }
 
+        // insert Proxy_Registry to Sub_PF
+        let storage = Prxoy_Registry.createPFStorage() as! PFStorage<Prxoy_Registry>
+        storage.add(eid: EntityId(id: 0, version: 0), component: Prxoy_Registry(proxy: proxy))
+
+        rawStorage[0] = storage
+        
         // put rawStorages to self.storages
         self.storages = rawStorage
-        
+
         // now we can spawn our eid0
         precondition(eid0 == self.entities!.spawn(1)[0], "should be Eid(id: 0, ver: 0)")
+
         // boot is finised
     }
-    
+}
+
+
+final class Prxoy_Registry: Platform_Registry, Component {
+    unowned private let proxy: Proxy
+
+    init(proxy: Proxy) {
+        self.proxy = proxy
+    }
+
+    // proxy can not register new type
+    func register(_ type: any Any.Type) -> RegistryId {
+        guard let registry = proxy._base.registry else {
+            fatalError("the host of the proxy dead")
+        }
+
+        guard registry.contains(type) else {
+            fatalError("proxy can not register new type")
+        }
+
+        let rid =  registry.register(type)
+        guard proxy.ridToAt(rid) != nil else {
+            fatalError("proxy does not has this manifest type")
+        }
+
+        return rid
+    }
+
+    func contains(_ type: any Any.Type) -> Bool {
+        guard let registry = proxy._base.registry else {
+            fatalError("the host of the proxy dead")
+        }
+        guard registry.contains(type) else {
+            return false
+        }
+        
+        let rid = registry.register(type)
+        guard let at = proxy.ridToAt(rid) else {
+            return false
+        }
+
+        switch proxy.idcard.itemRids[at] {
+        case .Public:
+            return true
+        case .Private, .Phantom:
+            return false
+        }
+    }
+
+    var count: Int {
+        proxy.idcard.rids.count
+    }
+
+    static func createPFStorage() -> any AnyPlatformStorage {
+        return PFStorage<Prxoy_Registry>()
+    }
 }
