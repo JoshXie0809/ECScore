@@ -41,9 +41,49 @@ extension ManifestItem {
     }
 }
 
+extension ManifestItem {
+    var kindName: String {
+        switch self {
+        case .Public_Component:  return "Public"
+        case .Private_Component: return "Private"
+        case .Phantom:           return "Phantom"
+        }
+    }
+}
+
+extension Manifest {
+    /// Throws if the manifest contains duplicated component types.
+    func validateNoDuplicateTypes() throws {
+        // key: ObjectIdentifier(componentType)
+        var firstSeen: [ObjectIdentifier:(index: Int, kind: String, type: Any.Type)] = [:]
+        var duplicates: [ManifestValidationError.DuplicateTypeDetail] = []
+
+        for (idx, item) in requirements.enumerated() {
+            let t = item.componentType
+            let key: ObjectIdentifier = ObjectIdentifier(t)
+
+            if let first = firstSeen[key] {
+                duplicates.append(.init(
+                    type: first.type,
+                    firstIndex: first.index,
+                    firstKind: first.kind,
+                    secondIndex: idx,
+                    secondKind: item.kindName
+                ))
+            } else {
+                firstSeen[key] = (idx, item.kindName, t)
+            }
+        }
+
+        if !duplicates.isEmpty {
+            throw ManifestValidationError.duplicatedComponentTypes(details: duplicates)
+        }
+    }
+}
+
 struct EntityBuildTokens {
     fileprivate let manifest: Manifest
-    fileprivate let ridToAt: [RegistryId:Int]
+    fileprivate let ridToAt: [Int:Int]
     let rids: [RegistryId]
 }
 
@@ -58,36 +98,79 @@ struct IDCard {
     fileprivate let manifest: Manifest
     fileprivate let rids: [RegistryId]
     fileprivate let itemRids: [IDItem]
-    fileprivate let ridToAt: [RegistryId:Int]
+    fileprivate let ridToAt: [Int:Int]
 }
 
+enum ManifestValidationError: Error, CustomStringConvertible {
+    case duplicatedComponentTypes(details: [DuplicateTypeDetail])
+
+    struct DuplicateTypeDetail {
+        let type: Any.Type
+        let firstIndex: Int
+        let firstKind: String
+        let secondIndex: Int
+        let secondKind: String
+    }
+
+    var description: String {
+        switch self {
+        case .duplicatedComponentTypes(let details):
+            let lines = details.map {
+                "Duplicated component type: \($0.type) " +
+                "(first: idx=\($0.firstIndex), kind=\($0.firstKind)) " +
+                "(again: idx=\($0.secondIndex), kind=\($0.secondKind))"
+            }
+            return lines.joined(separator: "\n")
+        }
+    }
+}
+
+
 extension BasePlatform {
-    func interop(manifest: Manifest) -> EntityBuildTokens {
+func interop(manifest: Manifest) -> EntityBuildTokens {
+
+        // ✅ Preflight: duplicated component type check
+        do {
+            try manifest.validateNoDuplicateTypes()
+        } catch {
+            fatalError("Invalid Manifest:\n\(error)")
+        }
+
         guard let registry = registry else {
             fatalError("Platform Registry not found during interop phase")
         }
+
         var rids: [RegistryId] = []
-        var newTypes: [any Component.Type] = []
-        var ridToAt: [RegistryId:Int] = [:]
+        var ridToAt: [Int:Int] = [:]
+
+        // ✅ record newly-registered (type, rid) pairs to avoid double-register assumptions
+        var newTypeRids: [(type: any Component.Type, rid: RegistryId)] = []
 
         for (idx, item) in manifest.requirements.enumerated() {
             let type = item.componentType
-            if !registry.contains(type) {
-                newTypes.append(type)
-            }
 
+            // Check "newness" BEFORE registering
+            let wasNew = !registry.contains(type)
+
+            // Register exactly once per requirement
             let rid = registry.register(type)
+
             rids.append(rid)
-            ridToAt[rid] = idx
+            ridToAt[rid.id] = idx
+
+            // Only create storage for truly-new types (capture rid now)
+            if wasNew {
+                newTypeRids.append((type: type, rid: rid))
+            }
         }
-        // prepare to build storage
+
+        // Ensure base storage capacity AFTER registry size is updated by registrations above
         Self.ensureStorageCapacity(base: self)
 
-        // storages length is ensured
-        for newT in newTypes {
-            let newT_storage =  newT.createPFStorage()
-            let rid = registry.register(newT)
-            self.storages[rid.id] = newT_storage
+        // Build storages for newly-registered types using the captured rid
+        for pair in newTypeRids {
+            // storages length is ensured
+            self.storages[pair.rid.id] = pair.type.createPFStorage()
         }
 
         return EntityBuildTokens(manifest: manifest, ridToAt: ridToAt, rids: rids)
@@ -157,12 +240,18 @@ final class Proxy {
         self._base = _base
         self.maxRid = Self.maxRid(idcard: idcard)
     }
+    
+    @inline(__always)
+    private func checkAt(_ at: Int) {
+        precondition(at >= 0 && at < idcard.itemRids.count, "Proxy.get(at:) out of range: \(at)")
+    }
 
     @inlinable
     func get<T: Component>(at: Int) -> T? {
         guard _base.entities!.isValid(idcard.eid) else {
             fatalError("Logic Error: try to access a dead (Entity \(idcard.eid))!")
         }
+        checkAt(at)
         let item = idcard.itemRids[at]
         switch item {
         case .Private, .Phantom:
@@ -177,6 +266,7 @@ final class Proxy {
         guard _base.entities!.isValid(idcard.eid) else {
             fatalError("Logic Error: try to access a dead (Entity \(idcard.eid))!")
         }
+        checkAt(at)
         let item = idcard.itemRids[at]
         switch item {
         case .Private, .Phantom:
@@ -195,7 +285,7 @@ final class Proxy {
     }
 
     fileprivate func ridToAt(_ targetRid: RegistryId) -> Int? {
-        return idcard.ridToAt[targetRid]
+        return idcard.ridToAt[targetRid.id]
     }
 
     fileprivate var registry: Platform_Registry {
@@ -310,8 +400,8 @@ final class Sub_BasePlatform: BasePlatform {
         }
 
         // insert Proxy_Registry to Sub_PF
-        let storage = Prxoy_Registry.createPFStorage() as! PFStorage<Prxoy_Registry>
-        storage.add(eid: EntityId(id: 0, version: 0), component: Prxoy_Registry(proxy: proxy))
+        let storage = Proxy_Registry.createPFStorage() as! PFStorage<Proxy_Registry>
+        storage.add(eid: EntityId(id: 0, version: 0), component: Proxy_Registry(proxy: proxy))
 
         rawStorage[0] = storage
         
@@ -326,7 +416,7 @@ final class Sub_BasePlatform: BasePlatform {
 }
 
 
-final class Prxoy_Registry: Platform_Registry, Component {
+final class Proxy_Registry: Platform_Registry, Component {
     unowned private let proxy: Proxy
 
     init(proxy: Proxy) {
@@ -365,9 +455,9 @@ final class Prxoy_Registry: Platform_Registry, Component {
         }
 
         switch proxy.idcard.itemRids[at] {
-        case .Public:
+        case .Public, .Phantom:
             return true
-        case .Private, .Phantom:
+        case .Private:
             return false
         }
     }
@@ -377,6 +467,19 @@ final class Prxoy_Registry: Platform_Registry, Component {
     }
 
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorage<Prxoy_Registry>()
+        return PFStorage<Proxy_Registry>()
+    }
+
+    func isReadable(_ type: any Any.Type) -> Bool {
+        guard let registry = proxy._base.registry else {
+            fatalError("the host of the proxy dead")
+        }
+        guard registry.contains(type) else { return false }
+
+        let rid = registry.register(type)
+        guard let at = proxy.ridToAt(rid) else { return false }
+
+        if case .Public = proxy.idcard.itemRids[at] { return true }
+        return false
     }
 }
