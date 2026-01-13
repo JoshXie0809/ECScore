@@ -84,6 +84,8 @@ import Testing
     
     #expect( eid0_position_storage.self  === proxy_base_pf_storage_position.self)
 
-    print(proxy_base_pf.storages)
+    let sub_pf_registry = proxy_base_pf.registry! as? Proxy_Registry
+    #expect(sub_pf_registry != nil)
+
 }
 

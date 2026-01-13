@@ -395,8 +395,7 @@ final class Sub_BasePlatform: BasePlatform {
                 }
             }
             
-            // not_need_instance
-            // do not need to do anything
+            // phantom type do not need to do anything
         }
 
         // insert Proxy_Registry to Sub_PF
@@ -409,6 +408,7 @@ final class Sub_BasePlatform: BasePlatform {
         self.storages = rawStorage
 
         // now we can spawn our eid0
+        // please confirm the type that main_pf_entities.Type == sub_pf_entitiese.Type
         precondition(eid0 == self.entities!.spawn(1)[0], "should be Eid(id: 0, ver: 0)")
 
         // boot is finised
