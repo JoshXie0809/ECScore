@@ -95,10 +95,6 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
         }
         self.add(eid: eid, component: typedComponent)
     }
-
-    static var valueType: any Component.Type { 
-        return T.self
-    }
 }
 
 extension PFStorage: Component where T: Component {

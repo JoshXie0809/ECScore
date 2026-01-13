@@ -4,7 +4,7 @@ import Testing
 @Test func dataPF_Proxy() async throws {
     let base = BasePlatform()
     let registry = RegistryPlatform()
-    let entities = EntitiyPlatForm_Ver0()
+    let entities = EntityPlatForm_Ver0()
     base.boot(registry: registry, entities: entities)
 
     let fnC = {
@@ -12,13 +12,13 @@ import Testing
     }
 
     let fnE = {
-        return EntitiyPlatForm_Ver0() 
+        return EntityPlatForm_Ver0() 
     }
 
     let manifest = Manifest(requirements: [
         .Public_Component((PFStorage<Position>.self, fnC)),
         .Not_Need_Instance(Position.self),
-        .Public_Component((EntitiyPlatForm_Ver0.self, fnE)),
+        .Public_Component((EntityPlatForm_Ver0.self, fnE)),
     ])
 
     // 2. 執行 Interop (準備環境)
@@ -48,7 +48,7 @@ import Testing
 @Test func proxyAsPlatform() async throws {
     let base = BasePlatform()
     let registry = RegistryPlatform()
-    let entities = EntitiyPlatForm_Ver0()
+    let entities = EntityPlatForm_Ver0()
     base.boot(registry: registry, entities: entities)
 
     let fnC = {
@@ -56,12 +56,12 @@ import Testing
     }
 
     let fnE = {
-        return EntitiyPlatForm_Ver0() 
+        return EntityPlatForm_Ver0() 
     }
 
     let manifest = Manifest(requirements: [
         // Storage Type
-        .Public_Component((EntitiyPlatForm_Ver0.self, fnE)),
+        .Public_Component((EntityPlatForm_Ver0.self, fnE)),
         .Public_Component((PFStorage<Position>.self, fnC)),
         // Data Type
         .Not_Need_Instance(Position.self),

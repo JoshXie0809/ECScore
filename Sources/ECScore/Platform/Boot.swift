@@ -1,5 +1,5 @@
 extension BasePlatform {
-    func boot<R: Platform_Registry, E: Platform_Entitiy>(registry: R, entities: E) {
+    func boot<R: Platform_Registry, E: Platform_Entity>(registry: R, entities: E) {
         self.storages = [nil, nil]
         
         // expected rid.id = 0
@@ -40,13 +40,13 @@ extension Platform {
     }
 
     @inlinable
-    var entities: Platform_Entitiy? {
+    var entities: Platform_Entity? {
         let rid1 =  RegistryId(id: 1, version: 0)
         guard let storage = self.rawGetStorage(for: rid1) else {
             return nil
         }
 
-        return storage.getWithDenseIndex_Uncheck(0) as? Platform_Entitiy
+        return storage.getWithDenseIndex_Uncheck(0) as? Platform_Entity
     }
 }
 

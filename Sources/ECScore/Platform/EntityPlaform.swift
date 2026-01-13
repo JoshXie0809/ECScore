@@ -1,15 +1,15 @@
-protocol Platform_Entitiy: Platform, Component, AnyObject {
+protocol Platform_Entity: Platform, Component, AnyObject {
     func spawn(_: Int) -> [EntityId]
     func despawn(_: EntityId)
     func forEachLiveId(_ body: (EntityId) -> Void)
     func isValid(_ eid: EntityId) -> Bool
 }
 
-class EntitiyPlatForm_Ver0: Platform_Entitiy, Component {
+class EntityPlatForm_Ver0: Platform_Entity, Component {
     private var entities = Entities()
-    private lazy var selfStorage: PFStorage<EntitiyPlatForm_Ver0> = 
+    private lazy var selfStorage: PFStorage<EntityPlatForm_Ver0> = 
     {
-        let s = PFStorage<EntitiyPlatForm_Ver0>()
+        let s = PFStorage<EntityPlatForm_Ver0>()
         return s
     }()
 

@@ -27,6 +27,7 @@ class Entities {
         versions.count
     }
 
+    @inlinable
     func spawn(_ n: Int = 1) -> [EntityId] {
         var results: [EntityId] = []
         results.reserveCapacity(n)
@@ -38,7 +39,7 @@ class Entities {
             } else {
                 id = versions.count
                 versions.append(0)
-                // 檢查是否需要增加 Bitmask 桶子
+                // 檢查是否需要增加 Bitmask bucket
                 if (id >> 6) >= isActive.count {
                     isActive.append(0)
                 }
@@ -52,6 +53,7 @@ class Entities {
         return results
     }
 
+    @inlinable
     func despawn(_ entity: EntityId) {
         // 安全檢查：版本號必須相符才能銷毀
         guard isValid(entity) else { return }

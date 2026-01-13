@@ -20,23 +20,23 @@ struct Manifest {
 
 extension ManifestItem {
     // 統一提取型別與實例/工廠函數
-    var componentMetadata: (type: any Component.Type, instance: (() -> any Component)? ) {
+    var componentType: any Component.Type {
         switch self {
-        case .Public_Component(let (type, c)),
-             .Private_Component(let (type, c)):
-            return (type, c)
-        case .Not_Need_Instance(let type):
-            return (type, nil)
+        case .Public_Component(let (type, _)),
+             .Private_Component(let (type, _)),
+             .Not_Need_Instance(let type):
+            return type
         }
     }
-
-    var CompType: any Component.Type {
+    
+    // 把 factory 獨立出來
+    var factory: (() -> any Component)? {
         switch self {
-        case .Public_Component(let (ct, _)),
-             .Private_Component(let (ct, _)),
-             .Not_Need_Instance(let ct):
-            return ct
-            
+        case .Public_Component(let (_, f)),
+             .Private_Component(let (_, f)):
+            return f
+        case .Not_Need_Instance:
+            return nil
         }
     }
 }
@@ -68,12 +68,12 @@ extension BasePlatform {
         var newTypes: [any Component.Type] = []
 
         for item in manifest.requirements {
-            let meta = item.componentMetadata
-            if !registry.contains(meta.type) {
-                newTypes.append(meta.type)
+            let type = item.componentType
+            if !registry.contains(type) {
+                newTypes.append(type)
             }
 
-            let rid = registry.register(meta.type)
+            let rid = registry.register(type)
             rids.append(rid)
         }
         // prepare to build storage
@@ -120,7 +120,7 @@ extension BasePlatform {
             case .Not_Need_Instance: item_rids.append( .Not_Need_Instance( rid ))
             }
             
-            let meta = item.componentMetadata
+            let meta = (type: item.componentType, instance: item.factory)
             // 4. 取得對應的 Storage 並存入實例
             guard let storage = self.rawGetStorage(for: rid) else {
                 fatalError("Storage missing for rid=\(rid.id), type=\(meta.type)")
@@ -220,7 +220,7 @@ final class Sub_BasePlatform: BasePlatform {
         super.init()
 
         // check it has Platform Entites to manage its slots
-        guard proxy.findTypeAt(proxy.registry.register(EntitiyPlatForm_Ver0.self)) != nil
+        guard proxy.findTypeAt(proxy.registry.register(EntityPlatForm_Ver0.self)) != nil
         else {
             fatalError("need Platfomr_Entity for manage its slot")
         }
@@ -232,12 +232,12 @@ final class Sub_BasePlatform: BasePlatform {
 
         // this is the boot for sub-platform
         for (at, ele) in proxy.idcard.itemRids.enumerated() {
-            var CompType: any Component.Type
+            var componentType: any Component.Type
             switch ele {
             case .Public,
                  .Not_Need_Instance:
                 // not private type
-                CompType = proxy.idcard.manifest.requirements[at].CompType
+                componentType = proxy.idcard.manifest.requirements[at].componentType
             case .Private:
                 continue
             }
@@ -250,10 +250,11 @@ final class Sub_BasePlatform: BasePlatform {
             if rawStorage[rid.id] == nil {
                 // here is public
                 // maxRid + 1 gaurantee that insert is valid
-                rawStorage[rid.id] = CompType.createPFStorage()
+                rawStorage[rid.id] = componentType.createPFStorage()
             }
 
             if let comp = proxy.get(at: at) {
+
                 // store comp to storage
                 rawStorage[rid.id]!.rawAdd(eid: eid0, component: comp)
                 
@@ -271,7 +272,7 @@ final class Sub_BasePlatform: BasePlatform {
                     }
 
                     guard rawStorage[innerTypeRid.id] == nil else {
-                        fatalError("please change the order on menifast. make sure st<\(innerType)> place is before then \(innerType)")
+                        fatalError("please change the order on manifest. make sure st<\(innerType)> place is before then \(innerType)")
                     }
                     
                     let storage = comp as! AnyPlatformStorage
@@ -279,7 +280,7 @@ final class Sub_BasePlatform: BasePlatform {
                 }
             }
             
-            // not need instance
+            // not_need_instance
             // do not need to do anything
         }
 

@@ -22,7 +22,7 @@ struct PlatformTests {
     private func makeBootedPlatform() -> (BasePlatform, RegistryPlatform) {
         let base = BasePlatform()
         let registry = RegistryPlatform()
-        let entities = EntitiyPlatForm_Ver0()
+        let entities = EntityPlatForm_Ver0()
         
         // 建立初始環境：Registry(0), Entities(1)
         base.boot(registry: registry, entities: entities)
@@ -98,7 +98,7 @@ struct MockComponentC: Component {
 func testFullBuildProcess() {
     let base = BasePlatform()
     let registry = RegistryPlatform()
-    let entities = EntitiyPlatForm_Ver0()
+    let entities = EntityPlatForm_Ver0()
     base.boot(registry: registry, entities: entities)
 
     // 1. 定義初始資料
