@@ -16,9 +16,12 @@ import Testing
     }
 
     let manifest = Manifest(requirements: [
+        // 維持好 data storage and data type 的順序
         .Public_Component((PFStorage<Position>.self, fnC)),
-        .Phantom(Position.self),
         .Public_Component((EntityPlatForm_Ver0.self, fnE)),
+        // 暫時懶得改
+        .Phantom(Position.self),
+
     ])
 
     // 2. 執行 Interop (準備環境)
