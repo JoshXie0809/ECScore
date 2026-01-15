@@ -65,44 +65,45 @@ extension Validated {
     }
 }
 
-// test
-enum Proof_FooVerified: Proof {}
-struct FooFlag : Flags {
-    var rawValue: Int
-    // for validate
-    static func validator<T>(_ at: Int) -> ((T, inout Self) -> Bool)? {
-        guard let fooCase = FlagCase(rawValue: at) else {
-            return nil
-        }
 
-        let mask = 1 << fooCase.rawValue
+// // Foo Case
+// enum Proof_FooVerified: Proof {}
+// struct FooFlag : Flags {
+//     var rawValue: Int
+//     // for validate
+//     static func validator<T>(_ at: Int) -> ((T, inout Self) -> Bool)? {
+//         guard let fooCase = FlagCase(rawValue: at) else {
+//             return nil
+//         }
 
-        switch fooCase {
-        case .isFoo :
-            let fn = { (_ val: T, flags: inout Self) in
-                flags.rawValue |= mask
-                return true
-            }
-            return fn
-        }
-    }
+//         let mask = 1 << fooCase.rawValue
 
-    // for certify
-    static func requirement(for proof: any Proof.Type) -> Self {
-        switch proof {
-        case is Proof_FooVerified.Type:
-            return [.foo] // 必須擁有 foo 這個位元
-        default:
-            return []    // 預設不需要任何旗標
-        }
-    }
+//         switch fooCase {
+//         case .isFoo :
+//             let fn = { (_ val: T, flags: inout Self) in
+//                 flags.rawValue |= mask
+//                 return true
+//             }
+//             return fn
+//         }
+//     }
 
-    // lower bit at
-    enum FlagCase: Int {
-        case isFoo = 0
-    }
+//     // for certify
+//     static func requirement(for proof: any Proof.Type) -> Self {
+//         switch proof {
+//         case is Proof_FooVerified.Type:
+//             return [.foo] // 必須擁有 foo 這個位元
+//         default:
+//             return []    // 預設不需要任何旗標
+//         }
+//     }
 
-    // 建議定義靜態屬性方便讀取
-    static let foo = FooFlag(rawValue: 1 << FlagCase.isFoo.rawValue)
-}
+//     // lower bit at
+//     enum FlagCase: Int {
+//         case isFoo = 0
+//     }
+
+//     // 建議定義靜態屬性方便讀取
+//     static let foo = FooFlag(rawValue: 1 << FlagCase.isFoo.rawValue)
+// }
 
