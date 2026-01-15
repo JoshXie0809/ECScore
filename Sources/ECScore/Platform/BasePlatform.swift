@@ -8,20 +8,13 @@ class BasePlatform : Platform {
     }
 }
 
-typealias ManifestItem = any Component.Type
+struct StorageRequirements {
+    var requirements: [any Component.Type]
 
-struct Manifest {
-    let requirements: [ ManifestItem ]
+    mutating func add(_ type: Component.Type) {
+        requirements.append(type)
+    }
 }
-
-
-
-
-
-
-
-
-
 
 
 
