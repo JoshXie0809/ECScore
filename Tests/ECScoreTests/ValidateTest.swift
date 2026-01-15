@@ -6,17 +6,18 @@ enum Proof_FooVerified: Proof {}
 struct FooFlags : Flags {
     var rawValue: Int
     // for validate
-    static func validator<T>(_ at: Int) -> ((T, inout Self) -> Bool)? {
+
+    typealias BaseValue = String
+
+    static func validator(_ at: Int) -> ((BaseValue, inout Self) -> Bool)? {
         guard let fooCase = FlagCase(rawValue: at) else {
             return nil
         }
 
-        let mask = 1 << fooCase.rawValue
-
         switch fooCase {
         case .isFoo :
-            let fn = { (_ val: T, flags: inout Self) in
-                flags.rawValue |= mask
+            let fn = { (_ val: BaseValue, flags: inout Self) in
+                flags.insert(.foo)
                 return true
             }
             return fn
@@ -81,7 +82,7 @@ struct FooFlags : Flags {
     raw2.alter { val in
         val = "Hello world!"
     }
-    
+
     var val2 = raw2.upgrade(FooFlags.self)
     #expect(val2.certify(Proof_FooVerified.self) == nil)
 

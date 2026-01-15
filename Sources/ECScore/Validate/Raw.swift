@@ -10,7 +10,7 @@ struct Raw<T> {
     }
 }
 
-struct Validated<T, P: Proof, F: Flags> {
+struct Validated<T, P: Proof, F: Flags> where F.BaseValue == T {
     let value: T
     var flags = F()
 
@@ -28,23 +28,21 @@ protocol Proof {}
 enum Proof_Init: Proof {}
 
 protocol Flags: OptionSet {
-    static func validator<T>(_ at: Int) -> ((_: T, _: inout Self) -> Bool)?
+    associatedtype BaseValue
+    static func validator(_ at: Int) -> ((_: BaseValue, _: inout Self) -> Bool)?
     static func requirement(for proof: any Proof.Type) -> Self
 }
 
 
 @discardableResult
-func validate<T, P: Proof, F: Flags> (
+func validate<T, P: Proof, F: Flags>(
     validated: inout Validated<T, P, F>,
-    _ at: Int,
-) -> Bool
-{
-    if let validator: (_: T, _: inout F) -> Bool = F.validator(at) {
-        return validator(validated.value, &validated.flags)
-    }
-
-    return false
+    _ at: Int
+) -> Bool {
+    guard let validator = F.validator(at) else { return false }
+    return validator(validated.value, &validated.flags)
 }
+
 
 // certify
 extension Validated {
@@ -64,46 +62,3 @@ extension Validated {
         return nil
     }
 }
-
-
-// // Foo Case
-// enum Proof_FooVerified: Proof {}
-// struct FooFlag : Flags {
-//     var rawValue: Int
-//     // for validate
-//     static func validator<T>(_ at: Int) -> ((T, inout Self) -> Bool)? {
-//         guard let fooCase = FlagCase(rawValue: at) else {
-//             return nil
-//         }
-
-//         let mask = 1 << fooCase.rawValue
-
-//         switch fooCase {
-//         case .isFoo :
-//             let fn = { (_ val: T, flags: inout Self) in
-//                 flags.rawValue |= mask
-//                 return true
-//             }
-//             return fn
-//         }
-//     }
-
-//     // for certify
-//     static func requirement(for proof: any Proof.Type) -> Self {
-//         switch proof {
-//         case is Proof_FooVerified.Type:
-//             return [.foo] // 必須擁有 foo 這個位元
-//         default:
-//             return []    // 預設不需要任何旗標
-//         }
-//     }
-
-//     // lower bit at
-//     enum FlagCase: Int {
-//         case isFoo = 0
-//     }
-
-//     // 建議定義靜態屬性方便讀取
-//     static let foo = FooFlag(rawValue: 1 << FlagCase.isFoo.rawValue)
-// }
-
