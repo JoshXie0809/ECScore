@@ -5,12 +5,14 @@ struct Raw<T> {
         fn(&self.value)
     }
 
-    consuming func upgrade<F: Flags>(_ flagType: F.Type) -> Validated<T, Proof_Init, F> {
+    consuming func upgrade<F: Flags>(_ flagType: F.Type) -> Validated<T, Proof_Init, F> 
+    where T == F.Value
+    {
         Validated(value: value)
     }
 }
 
-struct Validated<T, P: Proof, F: Flags> where F.BaseValue == T {
+struct Validated<T, P: Proof, F: Flags> where F.Value == T {
     let value: T
     var flags = F()
 
@@ -28,8 +30,8 @@ protocol Proof {}
 enum Proof_Init: Proof {}
 
 protocol Flags: OptionSet {
-    associatedtype BaseValue
-    static func validator(_ at: Int) -> ((_: BaseValue, _: inout Self) -> Bool)?
+    associatedtype Value
+    static func validator(_ at: Int) -> ((_: Value, _: inout Self) -> Bool)?
     static func requirement(for proof: any Proof.Type) -> Self
 }
 

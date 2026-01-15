@@ -7,21 +7,24 @@ struct FooFlags : Flags {
     var rawValue: Int
     // for validate
 
-    typealias BaseValue = String
+    typealias Value = String
 
-    static func validator(_ at: Int) -> ((BaseValue, inout Self) -> Bool)? {
+    static func validator(_ at: Int) -> ((Value, inout Self) -> Bool)? {
         guard let fooCase = FlagCase(rawValue: at) else {
             return nil
         }
-
+        var fn: (FooFlags.Value, inout FooFlags) -> Bool
+        
         switch fooCase {
         case .isFoo :
-            let fn = { (_ val: BaseValue, flags: inout Self) in
+            fn = { (_ val: Value, flags: inout Self) in
                 flags.insert(.foo)
                 return true
             }
-            return fn
+            
         }
+
+        return fn
     }
 
     // for certify
