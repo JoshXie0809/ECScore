@@ -5,7 +5,7 @@ struct Raw<T> {
         fn(&self.value)
     }
 
-    consuming func upgrade<F: Flags>(_ flagTpye: F.Type) -> Validated<T, Proof_Init, F> {
+    consuming func upgrade<F: Flags>(_ flagType: F.Type) -> Validated<T, Proof_Init, F> {
         Validated(value: value)
     }
 }
@@ -24,9 +24,17 @@ struct Validated<T, P: Proof, F: Flags> {
     }
 }
 
+protocol Proof {}
+enum Proof_Init: Proof {}
+
+protocol Flags: OptionSet {
+    static func validator<T>(_ at: Int) -> ((_: T, _: inout Self) -> Bool)?
+    static func requirement(for proof: any Proof.Type) -> Self
+}
+
 
 @discardableResult
-func Validator<T, P: Proof, F: Flags> (
+func validate<T, P: Proof, F: Flags> (
     validated: inout Validated<T, P, F>,
     _ at: Int,
 ) -> Bool
@@ -38,21 +46,36 @@ func Validator<T, P: Proof, F: Flags> (
     return false
 }
 
-protocol Proof {}
-enum Proof_Init: Proof {}
-protocol Flags: OptionSet {
-    static func validator<T>(_ at: Int) -> ((_: T, _: inout Self) -> Bool)?
+// certify
+extension Validated {
+    /// 嘗試根據當前的 Flags 認證一個新的 Proof
+    /// 如果條件不符合，會回傳 nil (或拋出錯誤)
+    consuming func certify<NewP: Proof>(_ target: NewP.Type) -> Validated<T, NewP, F>? {
+        let requiredFlags = F.requirement(for: target)
+        
+        // 檢查當前的旗標是否滿足目標 Proof 的所有要求
+        if self.flags.isSuperset(of: requiredFlags) {
+            // 由於 init 是 fileprivate，在同一個檔案內我們可以自由轉換型別
+            var newValidated = Validated<T, NewP, F>(value: self.value)
+            newValidated.flags = self.flags
+            return newValidated
+        }
+        
+        return nil
+    }
 }
 
-// test 
+// test
+enum Proof_FooVerified: Proof {}
 struct FooFlag : Flags {
     var rawValue: Int
+    // for validate
     static func validator<T>(_ at: Int) -> ((T, inout Self) -> Bool)? {
         guard let fooCase = FlagCase(rawValue: at) else {
             return nil
         }
 
-        let mask = 1 << (fooCase.rawValue - 1)
+        let mask = 1 << fooCase.rawValue
 
         switch fooCase {
         case .isFoo :
@@ -64,8 +87,22 @@ struct FooFlag : Flags {
         }
     }
 
-    enum FlagCase: Int {
-        case isFoo = 1
+    // for certify
+    static func requirement(for proof: any Proof.Type) -> Self {
+        switch proof {
+        case is Proof_FooVerified.Type:
+            return [.foo] // 必須擁有 foo 這個位元
+        default:
+            return []    // 預設不需要任何旗標
+        }
     }
+
+    // lower bit at
+    enum FlagCase: Int {
+        case isFoo = 0
+    }
+
+    // 建議定義靜態屬性方便讀取
+    static let foo = FooFlag(rawValue: 1 << FlagCase.isFoo.rawValue)
 }
 

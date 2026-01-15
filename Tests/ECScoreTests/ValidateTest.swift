@@ -12,15 +12,18 @@ import Testing
     // init status
     print(val1) // simu do sth
 
-    Validator(validated: &val1, FooFlag.FlagCase.isFoo.rawValue)
+    // validate
+    validate(validated: &val1, FooFlag.FlagCase.isFoo.rawValue)
     // after validator
     print(val1) 
 
-
-    let raw1 = val1.downgrade()
+    // certify
+    let val1_c = val1.certify(Proof_FooVerified.self)
+    #expect(val1_c != nil)
+    
+    print(val1_c!)
+    let raw1 = val1_c!.downgrade()
     print(raw1) 
-
-
 
     // // second validate system
     // let val2 = raw.upgrade(Platform_Flags.self)
