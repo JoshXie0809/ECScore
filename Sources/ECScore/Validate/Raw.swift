@@ -45,7 +45,6 @@ func validate<T, P: Proof, F: Flags>(
     return validator(validated.value, &validated.flags)
 }
 
-
 // certify
 extension Validated {
     /// 嘗試根據當前的 Flags 認證一個新的 Proof
