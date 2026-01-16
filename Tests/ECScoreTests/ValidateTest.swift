@@ -47,7 +47,6 @@ struct FooFlags : Flags {
 }
 
 
-
 @Test func rawToValidatedToRaw() {
     // read from edge
     let raw = Raw(value: "hello world")

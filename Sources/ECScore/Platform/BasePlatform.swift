@@ -8,29 +8,14 @@ class BasePlatform : Platform {
     }
 }
 
-struct StorageRequirements {
-    var requirements: [any Component.Type]
+// 向 main base-pf 確保需要的 Type 的 storage 是存在的
+typealias ComponentManifest = Array<any Component.Type>
 
-    mutating func add(_ type: Component.Type) {
-        requirements.append(type)
+extension BasePlatform {
+    func interop(val: Validated<ComponentManifest, Proof_Init, Platform_Flags>) {
+
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
