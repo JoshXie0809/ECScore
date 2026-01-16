@@ -11,13 +11,100 @@ class BasePlatform : Platform {
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的
 typealias ComponentManifest = Array<any Component.Type>
 
-extension BasePlatform {
-    func interop(val: Validated<ComponentManifest, Proof_Interop, Platform_Flags>) 
-    {
+func interop(
+    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Flags>,
+    _ manifest_val: Validated<ComponentManifest, Proof_Unique, Manifest_Flags>
+) {
+    // prove to can handshake
+    let base = pf_val.value
+    let registry = pf_val.value.registry!
+    let manifest = manifest_val.value
 
+    var newRids: [(RegistryId, any Component.Type)] = []
+
+    for type in manifest {
+        if !registry.contains(type) {
+            // not contains, so register the type
+            let rid = registry.register(type)
+            newRids.append((rid, type))
+        }
+    }
+
+    // ensure storages length
+    ensureStorageCapacity(base: base)
+
+    for (rid, type) in newRids {
+        base.storages[rid.id] = type.createPFStorage()
     }
 }
 
+
+fileprivate func ensureStorageCapacity(base: BasePlatform) {
+    let registry = base.registry! // check while interop start
+    let rid_count = registry.count
+    let needed = rid_count - base.storages.count
+    
+    if needed > 0 {
+        base.storages.append( contentsOf: repeatElement(nil, count: needed) )
+    }
+}
+
+
+
+
+
+// extension BasePlatform {
+// func interop(manifest: Manifest) -> EntityBuildTokens {
+
+//         // ✅ Preflight: duplicated component type check
+//         do {
+//             try manifest.validateNoDuplicateTypes()
+//         } catch {
+//             fatalError("Invalid Manifest:\n\(error)")
+//         }
+
+//         guard let registry = registry else {
+//             fatalError("Platform Registry not found during interop phase")
+//         }
+
+//         var rids: [RegistryId] = []
+//         var ridToAt: [Int:Int] = [:]
+
+//         // ✅ record newly-registered (type, rid) pairs to avoid double-register assumptions
+//         var newTypeRids: [(type: any Component.Type, rid: RegistryId)] = []
+
+//         for (idx, item) in manifest.requirements.enumerated() {
+//             let type = item.componentType
+
+//             // Check "newness" BEFORE registering
+//             let wasNew = !registry.contains(type)
+
+//             // Register exactly once per requirement
+//             let rid = registry.register(type)
+
+//             rids.append(rid)
+//             ridToAt[rid.id] = idx
+
+//             // Only create storage for truly-new types (capture rid now)
+//             if wasNew {
+//                 newTypeRids.append((type: type, rid: rid))
+//             }
+//         }
+
+//         // Ensure base storage capacity AFTER registry size is updated by registrations above
+//         Self.ensureStorageCapacity(base: self)
+
+//         // Build storages for newly-registered types using the captured rid
+//         for pair in newTypeRids {
+//             // storages length is ensured
+//             self.storages[pair.rid.id] = pair.type.createPFStorage()
+//         }
+
+//         return EntityBuildTokens(manifest: manifest, ridToAt: ridToAt, rids: rids)
+//     }
+
+    
+// }
 
             
 
@@ -177,67 +264,6 @@ extension BasePlatform {
 //     }
 // }
 
-
-// extension BasePlatform {
-// func interop(manifest: Manifest) -> EntityBuildTokens {
-
-//         // ✅ Preflight: duplicated component type check
-//         do {
-//             try manifest.validateNoDuplicateTypes()
-//         } catch {
-//             fatalError("Invalid Manifest:\n\(error)")
-//         }
-
-//         guard let registry = registry else {
-//             fatalError("Platform Registry not found during interop phase")
-//         }
-
-//         var rids: [RegistryId] = []
-//         var ridToAt: [Int:Int] = [:]
-
-//         // ✅ record newly-registered (type, rid) pairs to avoid double-register assumptions
-//         var newTypeRids: [(type: any Component.Type, rid: RegistryId)] = []
-
-//         for (idx, item) in manifest.requirements.enumerated() {
-//             let type = item.componentType
-
-//             // Check "newness" BEFORE registering
-//             let wasNew = !registry.contains(type)
-
-//             // Register exactly once per requirement
-//             let rid = registry.register(type)
-
-//             rids.append(rid)
-//             ridToAt[rid.id] = idx
-
-//             // Only create storage for truly-new types (capture rid now)
-//             if wasNew {
-//                 newTypeRids.append((type: type, rid: rid))
-//             }
-//         }
-
-//         // Ensure base storage capacity AFTER registry size is updated by registrations above
-//         Self.ensureStorageCapacity(base: self)
-
-//         // Build storages for newly-registered types using the captured rid
-//         for pair in newTypeRids {
-//             // storages length is ensured
-//             self.storages[pair.rid.id] = pair.type.createPFStorage()
-//         }
-
-//         return EntityBuildTokens(manifest: manifest, ridToAt: ridToAt, rids: rids)
-//     }
-
-//     private static func ensureStorageCapacity(base: BasePlatform) {
-//         let registry = base.registry! // check while interop start
-//         let rid_count = registry.count
-//         let needed = rid_count - base.storages.count
-        
-//         if needed > 0 {
-//             base.storages.append( contentsOf: repeatElement(nil, count: needed) )
-//         }
-//     }
-// }
 
 // extension BasePlatform {
 //     /// 根據 tokens 真正建立實體並填入組件

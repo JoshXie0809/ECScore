@@ -1,7 +1,7 @@
 struct Platform_Flags: Flags {
     var rawValue: Int
 
-    typealias Value = ComponentManifest
+    typealias Value = BasePlatform
 
     static func validator(_ at: Int) -> ((Self.Value, inout Self) -> Bool)? {
         guard let PFCase = FlagCase(rawValue: at) else {
@@ -11,15 +11,12 @@ struct Platform_Flags: Flags {
         var fn: (Self.Value, inout Self) -> Bool
 
         switch PFCase {
-        case .noDouble: 
-            fn = { (_ arr, _ mask) in
-                var seen = Set<ObjectIdentifier>()
-                for comp in arr {
-                    let (inserted, _) = seen.insert(ObjectIdentifier(comp))
-                    guard inserted else { return false }
-                }
-                // arr is valid
-                mask.insert([.noDouble])
+        case .handshake: 
+            fn = { (_ pf, _ mask) in
+                guard pf.registry != nil else {return false}
+                guard pf.entities != nil else {return false}
+                // pf can handshake
+                mask.insert([.handshake])
                 return true
             }
         }
@@ -29,18 +26,18 @@ struct Platform_Flags: Flags {
 
     static func requirement(for proof: any Proof.Type) -> Platform_Flags {
         switch proof {
-        case is Proof_Interop.Type:
-            return [.noDouble]
+        case is Proof_Handshake.Type:
+            return [.handshake]
         default:
             return []
         }
     }
 
     enum FlagCase: Int {
-        case noDouble = 0
+        case handshake = 0
     }
 
-    static let noDouble = Platform_Flags(rawValue: 1 << FlagCase.noDouble.rawValue)
+    static let handshake = Platform_Flags(rawValue: 1 << FlagCase.handshake.rawValue)
 }
 
-enum Proof_Interop: Proof {}
+enum Proof_Handshake: Proof {}
