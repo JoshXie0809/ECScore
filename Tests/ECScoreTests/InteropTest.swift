@@ -1,60 +1,61 @@
-// import Testing
-// @testable import ECScore // 替換為你的模組名稱
+import Testing
+@testable import ECScore 
 
-// // 模擬組件 A
-// struct MockComponentA: Component {
-//     static func createPFStorage() -> any AnyPlatformStorage {
-//         return PFStorage<MockComponentA>()
-//     }
-// }
 
-// // 模擬組件 B
-// struct MockComponentB: Component {
-//     static func createPFStorage() -> any AnyPlatformStorage {
-//         return PFStorage<MockComponentB>()
-//     }
-// }
+// 模擬組件 A
+struct MockComponentA: Component {
+    static func createPFStorage() -> any AnyPlatformStorage {
+        return PFStorage<MockComponentA>()
+    }
+}
+
+// 模擬組件 B
+struct MockComponentB: Component {
+    static func createPFStorage() -> any AnyPlatformStorage {
+        return PFStorage<MockComponentB>()
+    }
+}
+
+@Suite("BasePlatform Interop 測試")
+struct PlatformTests {
+    // 輔助方法：快速初始化一個已 Boot 的平台
+    private func makeBootedPlatform() -> (BasePlatform, RegistryPlatform) {
+        let base = BasePlatform()
+        let registry = RegistryPlatform()
+        let entities = EntityPlatForm_Ver0()
+        
+        // 建立初始環境：Registry(0), Entities(1)
+        base.boot(registry: registry, entities: entities)
+        return (base, registry)
+    }
+
+    @Test("驗證 Interop 能做出 Validated<T, P, F>")
+    func testInteropRegistration() {
+        let (base, _ ) = makeBootedPlatform()
+
+        // 未驗證的 input
+        let manifest: ComponentManifest = [MockComponentA.self, MockComponentB.self]
+        // 驗證流程
+        var val = Raw(value: manifest).upgrade(Platform_Flags.self)
+        let ok = validate(validated: &val, Platform_Flags.FlagCase.noDouble.rawValue)
+        #expect(ok)
+        let val_interop = val.certify(Proof_Interop.self)
+        #expect(val_interop != nil)
+
+        // 執行 Interop
+        base.interop(val: val_interop!)
+    }
+
+
+}
+
 
 // @Suite("BasePlatform Interop 測試")
 // struct PlatformTests {
     
-//     // 輔助方法：快速初始化一個已 Boot 的平台
-//     private func makeBootedPlatform() -> (BasePlatform, RegistryPlatform) {
-//         let base = BasePlatform()
-//         let registry = RegistryPlatform()
-//         let entities = EntityPlatForm_Ver0()
-        
-//         // 建立初始環境：Registry(0), Entities(1)
-//         base.boot(registry: registry, entities: entities)
-//         return (base, registry)
-//     }
 
-//     @Test("驗證 Interop 能正確註冊新組件並分配 Storage")
-//     func testInteropRegistration() {
-//         let (base, registry) = makeBootedPlatform()
-        
-//         // 1. 準備 Manifest
-//         let fnA = {
-//             return MockComponentA()
-//         }
 
-//         let manifest = Manifest(requirements: [
-//             .Public_Component((MockComponentA.self, fnA))
-//         ])
 
-//         // 2. 執行 Interop
-//         let tokens = base.interop(manifest: manifest)
-
-//         // 3. 斷言驗證
-//         let ridA = registry.register(MockComponentA.self)
-        
-//         // 驗證 ID 是否被正確分配
-//         #expect(tokens.rids.contains(ridA))
-        
-//         // 驗證 Storage 陣列是否已擴張並填入
-//         #expect(base.storages.count > ridA.id)
-//         #expect(base.rawGetStorage(for: ridA) != nil)
-//     }
 
 //     @Test("驗證多個組件同時註冊時的 Storage 容量與順序")
 //     func testMultipleComponents() {

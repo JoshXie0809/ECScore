@@ -47,8 +47,8 @@ func validate<T, P: Proof, F: Flags>(
 
 // certify
 extension Validated {
-    /// 嘗試根據當前的 Flags 認證一個新的 Proof
-    /// 如果條件不符合，會回傳 nil (或拋出錯誤)
+    /// 如果條件不符合，會回傳 nil (或拋出錯誤) 
+    /// 會改成錯誤的
     consuming func certify<NewP: Proof>(_ target: NewP.Type) -> Validated<T, NewP, F>? {
         let requiredFlags = F.requirement(for: target)
         

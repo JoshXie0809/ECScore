@@ -29,7 +29,7 @@ struct Platform_Flags: Flags {
 
     static func requirement(for proof: any Proof.Type) -> Platform_Flags {
         switch proof {
-        case is Proof_Introp.Type:
+        case is Proof_Interop.Type:
             return [.noDouble]
         default:
             return []
@@ -43,4 +43,4 @@ struct Platform_Flags: Flags {
     static let noDouble = Platform_Flags(rawValue: 1 << FlagCase.noDouble.rawValue)
 }
 
-enum Proof_Introp: Proof {}
+enum Proof_Interop: Proof {}

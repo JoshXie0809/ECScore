@@ -12,10 +12,42 @@ class BasePlatform : Platform {
 typealias ComponentManifest = Array<any Component.Type>
 
 extension BasePlatform {
-    func interop(val: Validated<ComponentManifest, Proof_Init, Platform_Flags>) {
+    func interop(val: Validated<ComponentManifest, Proof_Interop, Platform_Flags>) 
+    {
 
     }
 }
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
