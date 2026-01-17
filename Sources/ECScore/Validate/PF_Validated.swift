@@ -1,4 +1,4 @@
-struct Platform_Flags: Facts {
+struct Platform_Facts: Facts {
     typealias Value = BasePlatform
     typealias Flags = CaseFlags
     private(set) var flags: Flags
@@ -8,17 +8,17 @@ struct Platform_Flags: Facts {
     }
 
     static func validator(_ at: Int) -> ((Self.Value, inout Self) -> Bool)? {
-        guard let PFCase = FlagCase(rawValue: at) else {
+        guard let flagCase = FlagCase(rawValue: at) else {
             return nil
         }
 
         var fn: (Self.Value, inout Self) -> Bool
 
-        switch PFCase {
+        switch flagCase {
         case .handshake: 
             fn = { (_ pf, _ mask) in
-                guard pf.registry != nil else {return false}
-                guard pf.entities != nil else {return false}
+                guard pf.registry != nil else { return false }
+                guard pf.entities != nil else { return false }
                 // pf can handshake
                 mask.flags.insert([.handshake])
                 return true

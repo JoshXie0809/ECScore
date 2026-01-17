@@ -9,13 +9,13 @@ struct Manifest_Facts: Facts
     }
 
     static func validator(_ at: Int) -> ((Self.Value, inout Self) -> Bool)? {
-        guard let PFCase = FlagCase(rawValue: at) else {
+        guard let flagCase = FlagCase(rawValue: at) else {
             return nil
         }
 
         var fn: (Self.Value, inout Self) -> Bool
 
-        switch PFCase {
+        switch flagCase {
         case .unique: 
             fn = { (_ arr, _ mask) in
                 var seen = Set<ObjectIdentifier>()
@@ -52,8 +52,5 @@ struct Manifest_Facts: Facts
         static let unique = CaseFlags(rawValue: 1 << FlagCase.unique.rawValue)
     }
 }
-
-
-
 
 enum Proof_Unique: Proof {}

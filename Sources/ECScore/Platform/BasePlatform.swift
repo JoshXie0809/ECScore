@@ -26,7 +26,7 @@ typealias ComponentManifest = Array<any Component.Type>
 // }
 
 func interop(
-    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Flags>,
+    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ manifest_val: Validated<ComponentManifest, Proof_Unique, Manifest_Facts>
 )
 {

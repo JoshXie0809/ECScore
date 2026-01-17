@@ -1,94 +1,114 @@
-// import Testing
-// @testable import ECScore
+import Testing
+@testable import ECScore
 
-// // test Foo Case
-// enum Proof_FooVerified: Proof {}
-// struct FooFlags : Facts {
-//     var rawValue: Int
-//     // for validate
+// test Foo Case
+struct FooFacts<T> : Facts {
 
-//     typealias Value = String
+    typealias Value = T
+    typealias Flags = FooCaseFlags
+    private(set) var flags: Flags
 
-//     static func validator(_ at: Int) -> ((Value, inout Self) -> Bool)? {
-//         guard let fooCase = FlagCase(rawValue: at) else {
-//             return nil
-//         }
-//         var fn: (FooFlags.Value, inout FooFlags) -> Bool
-        
-//         switch fooCase {
-//         case .isFoo :
-//             fn = { (_ val: Value, flags: inout Self) in
-//                 flags.insert(.foo)
-//                 return true
-//             }
-            
-//         }
+    init() {
+        self.flags = Flags()
+    }
 
-//         return fn
-//     }
+    static func validator(_ at: Int) -> ((Value, inout Self) -> Bool)? {
+        guard let fooCase = FooFlagCase(rawValue: at) else {
+            return nil
+        }
+        var fn: (Self.Value, inout Self) -> Bool
 
-//     // for certify
-//     static func requirement(for proof: any Proof.Type) -> Self {
-//         switch proof {
-//         case is Proof_FooVerified.Type:
-//             return [.foo] // 必須擁有 foo 這個位元
-//         default:
-//             return []    // 預設不需要任何旗標
-//         }
-//     }
+        switch fooCase {
+        case .foo :
+            fn = { (_ val: Value, facts: inout Self) in
+                facts.flags.insert(.foo)
+                return true
+            }
 
-//     // lower bit at
-//     enum FlagCase: Int {
-//         case isFoo = 0
-//     }
+        case .bar :
+            fn = { (_ val: Value, facts: inout Self) in
+                facts.flags.insert(.bar)
+                return true
+            }
+        }
 
-//     // 建議定義靜態屬性方便讀取
-//     static let foo = Self(rawValue: 1 << FlagCase.isFoo.rawValue)
-// }
+        return fn
+    }
+
+    // for certify
+    static func requirement(for proof: any Proof.Type) -> FooCaseFlags {
+        switch proof {
+        case is Proof_FooVerified.Type:
+            return [.foo, .bar] // 必須擁有 foo 這個位元
+        default:
+            return []    // 預設不需要任何旗標
+        }
+    }
 
 
-// @Test func rawToValidatedToRaw() {
-//     // read from edge
-//     let raw = Raw(value: "hello world")
-//     print(raw)
+}
 
-//     // first validate system
-//     var val1 = raw.upgrade(FooFlags.self)
-//     #expect(val1.facts.isEmpty)
+// lower bit at
+enum FooFlagCase: Int {
+    case foo = 0
+    case bar = 1
+}
 
-//     // init status
-//     print(val1) // simu do sth
+struct FooCaseFlags: OptionSet {
+    var rawValue: Int
+    static let foo = FooCaseFlags(rawValue: 1 << FooFlagCase.foo.rawValue)
+    static let bar = FooCaseFlags(rawValue: 1 << FooFlagCase.bar.rawValue)
+}
 
-//     // validate
-//     let before = val1.facts
-//     let ok = validate(validated: &val1, FooFlags.FlagCase.isFoo.rawValue /* rule: isFoo */)
+enum Proof_FooVerified: Proof {}
 
-//     #expect(ok)
-//     #expect(val1.facts != before)
-//     #expect(val1.facts.isSuperset(of: [.foo]))
 
-//     // after validator
-//     print(val1) 
+@Test func rawToValidatedToRaw() {
+    // read from edge
+    let raw = Raw(value: "hello world")
+    print(raw)
 
-//     // certify
-//     let val1_c = val1.certify(Proof_FooVerified.self)
-//     #expect(val1_c != nil)
+    // first validate system
+    var val1 = raw.upgrade(FooFacts.self)
+    #expect(val1.facts.flags.isEmpty)
 
-//     let _: Validated<String, Proof_FooVerified, FooFlags> = val1_c!
+    // // init status
+    print(val1) // simu do sth
+
+    // // validate
+    let before = val1.facts.flags
+    let ok = validate(validated: &val1, FooFlagCase.foo.rawValue /* rule: isFoo */)
+
+    #expect(ok)
+    #expect(val1.facts.flags != before)
+    #expect(val1.facts.flags.isSuperset(of: [.foo]))
+
+    // // after validator
+    print(val1) 
+
+    // // certify
+    let val1_c = val1.certify(Proof_FooVerified.self)
+    print(val1_c)
     
-//     print(val1_c!)
-//     let raw1 = val1_c!.downgrade()
-//     print(raw1) 
+    
+    // #expect(val1_c == .failure)
 
-//     var raw2 = Raw(value: "x")
-//     raw2.alter { val in
-//         val = "Hello world!"
-//     }
 
-//     var val2 = raw2.upgrade(FooFlags.self)
-//     #expect(val2.certify(Proof_FooVerified.self) == nil)
+    // let _: Validated<String, Proof_FooVerified, FooFlags> = val1_c!
+    
+    // print(val1_c!)
+    // let raw1 = val1_c!.downgrade()
+    // print(raw1) 
 
-//     let not_ok = validate(validated: &val2, 2)
-//     #expect(!not_ok)
+    // var raw2 = Raw(value: "x")
+    // raw2.alter { val in
+    //     val = "Hello world!"
+    // }
 
-// }
+    // var val2 = raw2.upgrade(FooFlags.self)
+    // #expect(val2.certify(Proof_FooVerified.self) == nil)
+
+    // let not_ok = validate(validated: &val2, 2)
+    // #expect(!not_ok)
+
+}

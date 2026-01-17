@@ -46,7 +46,6 @@ protocol Facts<T> {
     static func requirement(for proof: any Proof.Type) -> Flags
 }
 
-
 @discardableResult
 func validate<T, P: Proof, F: Facts>(
     validated: inout Validated<T, P, F>,
@@ -60,16 +59,21 @@ func validate<T, P: Proof, F: Facts>(
 extension Validated {
     /// 如果條件不符合，會回傳 nil (或拋出錯誤) 
     /// 會改成 throws Errors 的
-    consuming func certify<NewP: Proof>(_ target: NewP.Type) -> Validated<T, NewP, F>? {
+    consuming func certify<NewP: Proof>(_ target: NewP.Type) 
+    -> CertiftyResult<T, NewP, F>
+    {
         let requiredFlags = F.requirement(for: target)
         if self.facts.flags.isSuperset(of: requiredFlags) {
-            return Validated<T, NewP, F>(
-                value: self.value,
-                facts: self.facts
-            )
+            return .success(Validated<T, NewP, F>(value: self.value, facts: self.facts))
         }
         
-        return nil
+        // 這裡不再回傳 nil，而是誠實回報缺了什麼
+        let missing = requiredFlags.subtracting(self.facts.flags)
+        return .failure(missingFlags: missing, proofName: "\(target)")
     }
 }
 
+enum CertiftyResult <T, P: Proof, F: Facts> where T == F.Value {
+    case success(Validated<T, P, F>)
+    case failure(missingFlags: F.Flags, proofName: String)
+}
