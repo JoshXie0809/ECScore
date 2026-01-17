@@ -8,26 +8,49 @@ class BasePlatform : Platform {
     }
 }
 
+
+
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的
 typealias ComponentManifest = Array<any Component.Type>
 
+// struct InteropToken {
+//     let rids: [RegistryId]
+//     let ridToAt: [Int:Int]
+//     fileprivate init(
+//         rids: [RegistryId],
+//         ridToAt: [Int:Int]
+//     ) {
+//         self.rids = rids
+//         self.ridToAt = ridToAt
+//     }
+// }
+
 func interop(
     _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Flags>,
-    _ manifest_val: Validated<ComponentManifest, Proof_Unique, Manifest_Flags>
-) {
+    _ manifest_val: Validated<ComponentManifest, Proof_Unique, Manifest_Facts>
+)
+{
     // prove to can handshake
     let base = pf_val.value
     let registry = pf_val.value.registry!
     let manifest = manifest_val.value
 
     var newRids: [(RegistryId, any Component.Type)] = []
+    var rids: [RegistryId] = []
+    // rid.id -> at
+    var ridToAt: [Int:Int] = [:]
 
-    for type in manifest {
+    for (at, type) in manifest.enumerated() {
         if !registry.contains(type) {
             // not contains, so register the type
             let rid = registry.register(type)
             newRids.append((rid, type))
         }
+        // search registry rid
+        let rid = registry.register(type)
+
+        rids.append(rid)
+        ridToAt[rid.id] = at
     }
 
     // ensure storages length
@@ -36,8 +59,9 @@ func interop(
     for (rid, type) in newRids {
         base.storages[rid.id] = type.createPFStorage()
     }
-}
 
+    // return InteropToken(rids: rids, ridToAt: ridToAt)
+}
 
 fileprivate func ensureStorageCapacity(base: BasePlatform) {
     let registry = base.registry! // check while interop start

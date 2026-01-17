@@ -1,7 +1,12 @@
-struct Manifest_Flags: Flags {
-    var rawValue: Int
-
+struct Manifest_Facts: Facts 
+{
     typealias Value = ComponentManifest
+    typealias Flags = CaseFlags
+    private(set) var flags: Flags
+
+    init() {
+        self.flags = Flags()
+    }
 
     static func validator(_ at: Int) -> ((Self.Value, inout Self) -> Bool)? {
         guard let PFCase = FlagCase(rawValue: at) else {
@@ -21,7 +26,7 @@ struct Manifest_Flags: Flags {
                 }
 
                 // pf can handshake
-                mask.insert([.unique])
+                mask.flags.insert([.unique])
                 return true
             }
         }
@@ -29,10 +34,10 @@ struct Manifest_Flags: Flags {
         return fn
     }
 
-    static func requirement(for proof: any Proof.Type) -> Self {
+    static func requirement(for proof: any Proof.Type) -> Flags {
         switch proof {
         case is Proof_Unique.Type:
-            return [.unique]
+            return [Flags.unique]
         default:
             return []
         }
@@ -42,7 +47,13 @@ struct Manifest_Flags: Flags {
         case unique = 0
     }
 
-    static let unique = Self(rawValue: 1 << FlagCase.unique.rawValue)
+    struct CaseFlags: OptionSet {
+        var rawValue: Int
+        static let unique = CaseFlags(rawValue: 1 << FlagCase.unique.rawValue)
+    }
 }
+
+
+
 
 enum Proof_Unique: Proof {}

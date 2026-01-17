@@ -1,7 +1,11 @@
-struct Platform_Flags: Flags {
-    var rawValue: Int
-
+struct Platform_Flags: Facts {
     typealias Value = BasePlatform
+    typealias Flags = CaseFlags
+    private(set) var flags: Flags
+
+    init() {
+        self.flags = Flags()
+    }
 
     static func validator(_ at: Int) -> ((Self.Value, inout Self) -> Bool)? {
         guard let PFCase = FlagCase(rawValue: at) else {
@@ -16,7 +20,7 @@ struct Platform_Flags: Flags {
                 guard pf.registry != nil else {return false}
                 guard pf.entities != nil else {return false}
                 // pf can handshake
-                mask.insert([.handshake])
+                mask.flags.insert([.handshake])
                 return true
             }
         }
@@ -24,7 +28,7 @@ struct Platform_Flags: Flags {
         return fn
     }
 
-    static func requirement(for proof: any Proof.Type) -> Platform_Flags {
+    static func requirement(for proof: any Proof.Type) -> CaseFlags {
         switch proof {
         case is Proof_Handshake.Type:
             return [.handshake]
@@ -37,7 +41,11 @@ struct Platform_Flags: Flags {
         case handshake = 0
     }
 
-    static let handshake = Platform_Flags(rawValue: 1 << FlagCase.handshake.rawValue)
+    struct CaseFlags: OptionSet {
+        var rawValue: Int
+        static let handshake = Self(rawValue: 1 << FlagCase.handshake.rawValue )
+    }
+
 }
 
 enum Proof_Handshake: Proof {}
