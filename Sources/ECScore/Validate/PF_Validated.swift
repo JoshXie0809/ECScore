@@ -45,3 +45,20 @@ struct Platform_Facts: Facts {
 }
 
 enum Proof_Handshake: Proof {}
+
+extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
+    @inlinable
+    var registry: any Platform_Registry {
+        value.registry!
+    }
+    
+    @inlinable
+    var entities: any Platform_Entity {
+        value.entities!
+    }
+
+    @inlinable
+    var storages: [AnyPlatformStorage?] {
+        value.storages
+    }
+}

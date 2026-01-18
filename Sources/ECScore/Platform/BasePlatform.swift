@@ -8,6 +8,9 @@ class BasePlatform : Platform {
     }
 }
 
+enum BasePlatformError: Error {
+    case invalidEID
+}
 
 
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的
@@ -32,9 +35,7 @@ func interop(
 )
     -> InteropToken
 {
-    // prove to can handshake
-    let base = pf_val.value
-    let registry = pf_val.value.registry!
+    let registry = pf_val.registry
     let manifest = manifest_val.value
 
     var newRids: [(RegistryId, any Component.Type)] = []
@@ -56,22 +57,24 @@ func interop(
     }
 
     // ensure storages length
-    ensureStorageCapacity(base: base)
+    ensureStorageCapacity(base: pf_val)
 
     for (rid, type) in newRids {
-        base.storages[rid.id] = type.createPFStorage()
+        pf_val.value.storages[rid.id] = type.createPFStorage()
     }
 
     return InteropToken(rids: rids, ridToAt: ridToAt)
 }
 
-fileprivate func ensureStorageCapacity(base: BasePlatform) {
-    let registry = base.registry! // check while interop start
-    let rid_count = registry.count
-    let needed = rid_count - base.storages.count
+fileprivate func ensureStorageCapacity(
+    base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
+) {
+    
+    let rid_count = base.registry.count
+    let needed = rid_count - base.value.storages.count
     
     if needed > 0 {
-        base.storages.append( contentsOf: repeatElement(nil, count: needed) )
+        base.value.storages.append( contentsOf: repeatElement(nil, count: needed) )
     }
 }
 
@@ -80,20 +83,43 @@ func spawnEntity(
     _ n: Int = 1
 ) -> [EntityId]
 {
-    let entities = base.value.entities!
-    return entities.spawn(n)
+    return base.entities.spawn(n)
 }
 
-func createEntityHandle(
+struct EntityHandle {
+    private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
+    private let eid: EntityId
+    fileprivate init(base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>, eid: EntityId) {
+        self.base = base
+        self.eid = eid
+    }
+}
+
+func getEntityHandle(
     _ base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ eid: EntityId
-) {
-    let pf = base.value
-    let entities = pf.entities!
-
-    guard entities.isValid(eid) else { return }
-    
+)  -> Result<EntityHandle, BasePlatformError>
+{
+    guard base.entities.isValid(eid) else { return .failure(.invalidEID) }
+    return .success(EntityHandle(base: base, eid: eid))   
 }
+
+extension EntityHandle {
+    // can use this to put data on eid
+    // 概念草稿
+    @inlinable
+    func mount<T: Component>(comp: T) {
+        guard base.registry.contains(T.self) else { return }
+        let rid = base.registry.register(T.self)
+        
+        guard let storage = base.storages[rid.id] else { return }
+        // guard storage.storageType == T.self else { return }
+        storage.rawAdd(eid: self.eid, component: comp)
+    }
+}
+
+
+
 
 
 

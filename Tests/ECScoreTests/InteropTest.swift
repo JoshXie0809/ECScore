@@ -58,7 +58,7 @@ struct PlatformTests {
     }
 
     @Test("test Validated Platform to spawn entities")
-    func testSpawn() {
+    func testSpawn() throws {
         let (base, _ ) = makeBootedPlatform()
         var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
         validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
@@ -68,8 +68,16 @@ struct PlatformTests {
             fatalError()
         }
 
-        let e = spawnEntity(pf_handshake, 10)
+        let e = spawnEntity(pf_handshake, 3)
         print(e)
+
+        let eh = try getEntityHandle(pf_handshake, e[2]).get()
+        print(eh)
+
+        let e_pf2 = EntityPlatForm_Ver0()
+        eh.mount(comp: e_pf2)
+
+        print(base.storages[1]!.get(EntityId(id: 3, version: 0))!)
 
     }
 }

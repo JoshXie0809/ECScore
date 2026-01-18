@@ -14,4 +14,6 @@ protocol AnyPlatformStorage {
 
     func getWithDenseIndex_Uncheck(_ index: Int) -> Any?
     func get(_ eid: EntityId) -> Any?
+
+    var storageType: any Component.Type { get }
 }

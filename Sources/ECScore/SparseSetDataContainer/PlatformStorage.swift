@@ -1,5 +1,6 @@
 final class PFStorage<T: Component>: AnyPlatformStorage {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
+    var storageType: any Component.Type { T.self }
 
     init() {
         self.segments = ContiguousArray<SparseSet_L2<T>?>(repeating: nil, count: 1)
@@ -13,7 +14,6 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
         if blockIdx >= segments.count {
             let needed = blockIdx - segments.count + 1
             segments.append(contentsOf: repeatElement(nil, count: needed))
-
         }
 
         if segments[blockIdx] == nil {
