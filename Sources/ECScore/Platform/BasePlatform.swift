@@ -13,22 +13,24 @@ class BasePlatform : Platform {
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的
 typealias ComponentManifest = Array<any Component.Type>
 
-// struct InteropToken {
-//     let rids: [RegistryId]
-//     let ridToAt: [Int:Int]
-//     fileprivate init(
-//         rids: [RegistryId],
-//         ridToAt: [Int:Int]
-//     ) {
-//         self.rids = rids
-//         self.ridToAt = ridToAt
-//     }
-// }
+struct InteropToken {
+    let rids: [RegistryId]
+    let ridToAt: [Int:Int]
+    fileprivate init(
+        rids: [RegistryId],
+        ridToAt: [Int:Int]
+    ) {
+        self.rids = rids
+        self.ridToAt = ridToAt
+    }
+}
 
+@discardableResult
 func interop(
     _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ manifest_val: Validated<ComponentManifest, Proof_Unique, Manifest_Facts>
 )
+    -> InteropToken
 {
     // prove to can handshake
     let base = pf_val.value
@@ -60,7 +62,7 @@ func interop(
         base.storages[rid.id] = type.createPFStorage()
     }
 
-    // return InteropToken(rids: rids, ridToAt: ridToAt)
+    return InteropToken(rids: rids, ridToAt: ridToAt)
 }
 
 fileprivate func ensureStorageCapacity(base: BasePlatform) {
@@ -74,61 +76,13 @@ fileprivate func ensureStorageCapacity(base: BasePlatform) {
 }
 
 
+func createSubPF(
+    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ interop_token: InteropToken
+) {
 
+}
 
-
-// extension BasePlatform {
-// func interop(manifest: Manifest) -> EntityBuildTokens {
-
-//         // ✅ Preflight: duplicated component type check
-//         do {
-//             try manifest.validateNoDuplicateTypes()
-//         } catch {
-//             fatalError("Invalid Manifest:\n\(error)")
-//         }
-
-//         guard let registry = registry else {
-//             fatalError("Platform Registry not found during interop phase")
-//         }
-
-//         var rids: [RegistryId] = []
-//         var ridToAt: [Int:Int] = [:]
-
-//         // ✅ record newly-registered (type, rid) pairs to avoid double-register assumptions
-//         var newTypeRids: [(type: any Component.Type, rid: RegistryId)] = []
-
-//         for (idx, item) in manifest.requirements.enumerated() {
-//             let type = item.componentType
-
-//             // Check "newness" BEFORE registering
-//             let wasNew = !registry.contains(type)
-
-//             // Register exactly once per requirement
-//             let rid = registry.register(type)
-
-//             rids.append(rid)
-//             ridToAt[rid.id] = idx
-
-//             // Only create storage for truly-new types (capture rid now)
-//             if wasNew {
-//                 newTypeRids.append((type: type, rid: rid))
-//             }
-//         }
-
-//         // Ensure base storage capacity AFTER registry size is updated by registrations above
-//         Self.ensureStorageCapacity(base: self)
-
-//         // Build storages for newly-registered types using the captured rid
-//         for pair in newTypeRids {
-//             // storages length is ensured
-//             self.storages[pair.rid.id] = pair.type.createPFStorage()
-//         }
-
-//         return EntityBuildTokens(manifest: manifest, ridToAt: ridToAt, rids: rids)
-//     }
-
-    
-// }
 
             
 
@@ -169,7 +123,6 @@ fileprivate func ensureStorageCapacity(base: BasePlatform) {
 
 
 // too-complex-so-I-will-rebuild
-
 
 // enum ManifestItem {
 //     case Public_Component( (Component.Type, (() -> any Component) ) )

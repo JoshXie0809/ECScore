@@ -16,13 +16,7 @@ struct Validated<T, P: Proof, F: Facts> where F.Value == T {
     let value: T
     var facts: F
 
-    // 限制只能在檔案內或模組內初始化
-    fileprivate init(value: T) {
-        self.value = value
-        self.facts = F()
-    }
-
-    fileprivate init(value: T, facts: F) {
+    fileprivate init(value: T, facts: F = F()) {
         self.value = value
         self.facts = facts
     }
@@ -57,8 +51,6 @@ func validate<T, P: Proof, F: Facts>(
 
 // certify
 extension Validated {
-    /// 如果條件不符合，會回傳 nil (或拋出錯誤) 
-    /// 會改成 throws Errors 的
     consuming func certify<NewP: Proof>(_ target: NewP.Type) 
     -> CertiftyResult<T, NewP, F>
     {

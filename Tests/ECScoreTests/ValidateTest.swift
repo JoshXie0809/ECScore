@@ -6,11 +6,7 @@ struct FooFacts<T> : Facts {
 
     typealias Value = T
     typealias Flags = FooCaseFlags
-    private(set) var flags: Flags
-
-    init() {
-        self.flags = Flags()
-    }
+    private(set) var flags = Flags()
 
     static func validator(_ at: Int) -> ((Value, inout Self) -> Bool)? {
         guard let fooCase = FooFlagCase(rawValue: at) else {
@@ -77,7 +73,7 @@ enum Proof_FooVerified: Proof {}
 
     // // validate
     let before = val1.facts.flags
-    let ok = validate(validated: &val1, FooFlagCase.foo.rawValue /* rule: isFoo */)
+    let ok = validate(validated: &val1, FooFlagCase.foo.rawValue /* rule: .foo */)
 
     #expect(ok)
     #expect(val1.facts.flags != before)

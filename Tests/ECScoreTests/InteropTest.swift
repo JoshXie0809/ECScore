@@ -30,28 +30,32 @@ struct PlatformTests {
     }
 
     @Test("驗證 Interop 使用 Validated<T, P, F>")
-    func testInteropRegistration() {
+    func testInterop() {
         let (base, _ ) = makeBootedPlatform()
         var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
-        // validate(validated: &pf_val, 0)
-        
+        validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
         
         // 被驗證可以 handshake 的平台
-        let pf_handshake = pf_val.certify(Proof_Handshake.self)
-        print(pf_handshake)
-        // let before_interop = pf_handshake.value.storages.count
+        guard case let .success(pf_handshake) = pf_val.certify(Proof_Handshake.self) else {
+            fatalError()
+        }
 
-        // // 未驗證的 input
-        // let manifest: ComponentManifest = [MockComponentA.self, MockComponentB.self]
-        // // 驗證流程
-        // var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
-        // let ok = validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
-        // #expect(ok)
-        // let manifest_unique = manifest_val.certify(Proof_Unique.self)!
+        print(pf_handshake)
+        let before_interop = pf_handshake.value.storages.count
+
+        // 未驗證的 input
+        let manifest: ComponentManifest = [MockComponentA.self, MockComponentB.self]
+        // 驗證流程
+        var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
+        let ok = validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
+        #expect(ok)
+        guard case let .success(manifest_unique) = manifest_val.certify(Proof_Unique.self) else {
+            fatalError()
+        }
         
-        // // // 執行 Interop
-        // interop(pf_handshake, manifest_unique)
-        // #expect(pf_handshake.value.storages.count - before_interop == 2)
+        // // 執行 Interop
+        interop(pf_handshake, manifest_unique)
+        #expect(pf_handshake.value.storages.count - before_interop == 2)
     }
 }
 
