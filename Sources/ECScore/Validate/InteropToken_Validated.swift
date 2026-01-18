@@ -39,8 +39,6 @@ struct InteropToken_Facts: Facts {
         }
     }
 
-
-
     enum FlagCase: Int {
         case noRegistryPF = 0
         case hasEntityPF = 1

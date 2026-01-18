@@ -59,7 +59,8 @@ struct FooCaseFlags: OptionSet {
 enum Proof_FooVerified: Proof {}
 
 
-@Test func rawToValidatedToRaw() {
+@Test("測試 generics 的 facts")
+func rawToValidatedToRaw() {
     // read from edge
     let raw = Raw(value: "hello world")
     print(raw)
@@ -74,6 +75,7 @@ enum Proof_FooVerified: Proof {}
     // // validate
     let before = val1.facts.flags
     let ok = validate(validated: &val1, FooFlagCase.foo.rawValue /* rule: .foo */)
+    validate(validated: &val1, FooFlagCase.bar.rawValue)
 
     #expect(ok)
     #expect(val1.facts.flags != before)
@@ -86,25 +88,14 @@ enum Proof_FooVerified: Proof {}
     let val1_c = val1.certify(Proof_FooVerified.self)
     print(val1_c)
     
-    
-    // #expect(val1_c == .failure)
+    // Int
+    var raw2 = Raw(value: 123)
+    raw2.alter { val in
+        val = 223456
+    }
 
+    let val2 = raw2.upgrade(FooFacts.self)
+    let val2_c = val2.certify(Proof_FooVerified.self)
 
-    // let _: Validated<String, Proof_FooVerified, FooFlags> = val1_c!
-    
-    // print(val1_c!)
-    // let raw1 = val1_c!.downgrade()
-    // print(raw1) 
-
-    // var raw2 = Raw(value: "x")
-    // raw2.alter { val in
-    //     val = "Hello world!"
-    // }
-
-    // var val2 = raw2.upgrade(FooFlags.self)
-    // #expect(val2.certify(Proof_FooVerified.self) == nil)
-
-    // let not_ok = validate(validated: &val2, 2)
-    // #expect(!not_ok)
-
+    print(val2_c)
 }

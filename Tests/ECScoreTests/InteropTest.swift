@@ -40,7 +40,6 @@ struct PlatformTests {
             fatalError()
         }
 
-        print(pf_handshake)
         let before_interop = pf_handshake.value.storages.count
 
         // 未驗證的 input
@@ -56,6 +55,22 @@ struct PlatformTests {
         // // 執行 Interop
         interop(pf_handshake, manifest_unique)
         #expect(pf_handshake.value.storages.count - before_interop == 2)
+    }
+
+    @Test("test Validated Platform to spawn entities")
+    func testSpawn() {
+        let (base, _ ) = makeBootedPlatform()
+        var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
+        validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
+        
+        // 被驗證可以 handshake 的平台
+        guard case let .success(pf_handshake) = pf_val.certify(Proof_Handshake.self) else {
+            fatalError()
+        }
+
+        let e = spawnEntity(pf_handshake, 10)
+        print(e)
+
     }
 }
 

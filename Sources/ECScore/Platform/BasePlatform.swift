@@ -75,26 +75,25 @@ fileprivate func ensureStorageCapacity(base: BasePlatform) {
     }
 }
 
-
-func createSubPF(
-    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    _ interop_token: InteropToken
-) {
-
+func spawnEntity(
+    _ base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ n: Int = 1
+) -> [EntityId]
+{
+    let entities = base.value.entities!
+    return entities.spawn(n)
 }
 
+func createEntityHandle(
+    _ base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ eid: EntityId
+) {
+    let pf = base.value
+    let entities = pf.entities!
 
-            
-
-
-
-
-
-
-
-
-
-
+    guard entities.isValid(eid) else { return }
+    
+}
 
 
 
