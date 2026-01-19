@@ -126,20 +126,16 @@ extension EntityHandle {
     @inlinable
     func mount<each T: Component>(_ comp: repeat @escaping (() -> each T)) {   
         let token = interop(self.base, repeat (each T).self)
-        var providers: [() -> any Component] = []
-        repeat providers.append(each comp)
-
-        addComponent(token: token, providers: providers)
-    }
-
-    @usableFromInline
-    internal func addComponent(token: InteropToken, providers: [() -> any Component]) {
-        // interop will ensure them
-        for (at, provider) in providers.enumerated() {
-            let rid = token.rids[at]
-            let storage = self.base.value.storages[rid.id]!
-            storage.rawAdd(eid: self.eid, component: provider())
+        var index = 0
+        
+        func apply<C: Component>(_ provider: () -> C) {
+            let rid = token.rids[index]
+            let storage = self.base.value.storages[rid.id] as! PFStorage<C>
+            storage.add(eid: self.eid, component: provider())
+            index += 1
         }
+        
+        repeat apply(each comp)
     }
 }
 
