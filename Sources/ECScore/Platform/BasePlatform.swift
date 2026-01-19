@@ -40,7 +40,6 @@ func interop(
 
     var newRids: [(RegistryId, any Component.Type)] = []
     var rids: [RegistryId] = []
-    // rid.id -> at
     var idToAt: [ObjectIdentifier:Int] = [:]
 
     for (at, type) in manifest.enumerated() {
@@ -124,27 +123,23 @@ func getEntityHandle(
 
 extension EntityHandle {
     // can use this to put data on eid
-    // 概念草稿
     @inlinable
-    func mount<each T: Component>(_ comp: repeat (() -> each T)) {   
-        let tokens = interop(self.base, repeat (each T).self)
+    func mount<each T: Component>(_ comp: repeat @escaping (() -> each T)) {   
+        let token = interop(self.base, repeat (each T).self)
+        var providers: [() -> any Component] = []
+        repeat providers.append(each comp)
 
-        repeat addOne(token: tokens, provider: each comp)
+        addComponent(token: token, providers: providers)
     }
 
     @usableFromInline
-    internal func addOne<C: Component>(token: InteropToken, provider: () -> C) {
-        // 透過 RegistryId 找到 Storage
-        // 這裡假設 base.value 有提供透過型別查找 RID 的方法
-        guard let at = token.idToAt[ ObjectIdentifier(C.self) ],
-              let storage = self.base.value.storages[token.rids[at].id] 
-        else {
-            return
+    internal func addComponent(token: InteropToken, providers: [() -> any Component]) {
+        // interop will ensure them
+        for (at, provider) in providers.enumerated() {
+            let rid = token.rids[at]
+            let storage = self.base.value.storages[rid.id]!
+            storage.rawAdd(eid: self.eid, component: provider())
         }
-        
-        // 執行 rawAdd
-        // rawAdd 內部會處理型別檢查與 ensureCapacity
-        storage.rawAdd(eid: self.eid, component: provider())
     }
 }
 
