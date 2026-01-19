@@ -78,6 +78,24 @@ fileprivate func ensureStorageCapacity(
     }
 }
 
+func interop<each T: Component>(
+    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ type: repeat (each T).Type
+) 
+    -> InteropToken
+{
+    var manifest: ComponentManifest = []
+    repeat manifest.append(each type)
+    var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
+    validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
+    
+    guard case let .success(manifest_unique) = manifest_val.certify(Proof_Unique.self) else {
+        fatalError("duplicate of type while using interop<T>")
+    }
+
+    return interop(pf_val, manifest_unique)
+}
+
 func spawnEntity(
     _ base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ n: Int = 1

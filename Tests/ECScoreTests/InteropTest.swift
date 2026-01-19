@@ -19,28 +19,29 @@ struct MockComponentB: Component {
 @Suite("BasePlatform Interop 測試")
 struct PlatformTests {
     // 輔助方法：快速初始化一個已 Boot 的平台
-    private func makeBootedPlatform() -> (BasePlatform, RegistryPlatform) {
+    private func makeBootedPlatform() -> Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
         let base = BasePlatform()
         let registry = RegistryPlatform()
         let entities = EntityPlatForm_Ver0()
         
         // 建立初始環境：Registry(0), Entities(1)
         base.boot(registry: registry, entities: entities)
-        return (base, registry)
-    }
 
-    @Test("驗證 Interop 使用 Validated<T, P, F>")
-    func testInterop() {
-        let (base, _ ) = makeBootedPlatform()
         var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
         validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
-        
+
         // 被驗證可以 handshake 的平台
         guard case let .success(pf_handshake) = pf_val.certify(Proof_Handshake.self) else {
             fatalError()
         }
 
-        let before_interop = pf_handshake.value.storages.count
+        return pf_handshake
+    }
+
+    @Test("驗證 Interop 使用 Validated<T, P, F>")
+    func testInterop() {
+        let base = makeBootedPlatform()
+        let before_interop = base.value.storages.count
 
         // 未驗證的 input
         let manifest: ComponentManifest = [MockComponentA.self, MockComponentB.self]
@@ -53,25 +54,27 @@ struct PlatformTests {
         }
         
         // // 執行 Interop
-        interop(pf_handshake, manifest_unique)
-        #expect(pf_handshake.value.storages.count - before_interop == 2)
+        interop(base, manifest_unique)
+        #expect(base.value.storages.count - before_interop == 2)
+    }
+
+    @Test("static version of interop")
+    func static_interop() {
+        let base = makeBootedPlatform()
+        
+
+        let token = interop(base, MockComponentA.self, MockComponentB.self, Position.self)
+        print(token)
     }
 
     @Test("test Validated Platform to spawn entities")
     func testSpawn() throws {
-        let (base, _ ) = makeBootedPlatform()
-        var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
-        validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
-        
-        // 被驗證可以 handshake 的平台
-        guard case let .success(pf_handshake) = pf_val.certify(Proof_Handshake.self) else {
-            fatalError()
-        }
+        let base = makeBootedPlatform()
 
-        let e = spawnEntity(pf_handshake, 3)
+        let e = spawnEntity(base, 3)
         print(e)
 
-        let eh = try getEntityHandle(pf_handshake, e[2]).get()
+        let eh = try getEntityHandle(base, e[2]).get()
         print(eh)
 
         let e_pf2 = EntityPlatForm_Ver0()
