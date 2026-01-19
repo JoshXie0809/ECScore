@@ -61,7 +61,6 @@ struct PlatformTests {
     @Test("static version of interop")
     func static_interop() {
         let base = makeBootedPlatform()
-        
 
         let token = interop(base, MockComponentA.self, MockComponentB.self, Position.self)
         print(token)
@@ -77,11 +76,22 @@ struct PlatformTests {
         let eh = try getEntityHandle(base, e[2]).get()
         print(eh)
 
-        let e_pf2 = EntityPlatForm_Ver0()
-        eh.mount(comp: e_pf2)
+        let fn1 =  { EntityPlatForm_Ver0() }
+        let fn2 = { Position(x: 1.2, y: 22.3)}
+        
+        eh.mount(fn1, fn2)
 
-        print(base.storages[1]!.get(EntityId(id: 3, version: 0))!)
+        let e_pf_rid = base.registry.register(EntityPlatForm_Ver0.self)
+        let postion_rid = base.registry.register(Position.self)
 
+        #expect(base.storages[e_pf_rid.id]!.get(e[2]) != nil)
+        #expect(base.storages[postion_rid.id]!.get(e[2]) != nil)
+
+        let a = base.storages[postion_rid.id]!.get(e[2]) as! Position
+        #expect(a.x == 1.2)
+        #expect(a.y == 22.3)
+
+        print(a)
     }
 }
 

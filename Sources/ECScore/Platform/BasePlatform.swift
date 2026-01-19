@@ -18,13 +18,13 @@ typealias ComponentManifest = Array<any Component.Type>
 
 struct InteropToken {
     let rids: [RegistryId]
-    let ridToAt: [Int:Int]
+    let idToAt: [ObjectIdentifier:Int]
     fileprivate init(
         rids: [RegistryId],
-        ridToAt: [Int:Int]
+        idToAt: [ObjectIdentifier:Int]
     ) {
         self.rids = rids
-        self.ridToAt = ridToAt
+        self.idToAt = idToAt
     }
 }
 
@@ -41,7 +41,7 @@ func interop(
     var newRids: [(RegistryId, any Component.Type)] = []
     var rids: [RegistryId] = []
     // rid.id -> at
-    var ridToAt: [Int:Int] = [:]
+    var idToAt: [ObjectIdentifier:Int] = [:]
 
     for (at, type) in manifest.enumerated() {
         if !registry.contains(type) {
@@ -51,9 +51,9 @@ func interop(
         }
         // search registry rid
         let rid = registry.register(type)
-
         rids.append(rid)
-        ridToAt[rid.id] = at
+        let type_id = ObjectIdentifier(type)
+        idToAt[type_id] = at
     }
 
     // ensure storages length
@@ -63,7 +63,7 @@ func interop(
         pf_val.value.storages[rid.id] = type.createPFStorage()
     }
 
-    return InteropToken(rids: rids, ridToAt: ridToAt)
+    return InteropToken(rids: rids, idToAt: idToAt)
 }
 
 fileprivate func ensureStorageCapacity(
@@ -126,13 +126,25 @@ extension EntityHandle {
     // can use this to put data on eid
     // 概念草稿
     @inlinable
-    func mount<T: Component>(comp: T) {
-        guard base.registry.contains(T.self) else { return }
-        let rid = base.registry.register(T.self)
+    func mount<each T: Component>(_ comp: repeat (() -> each T)) {   
+        let tokens = interop(self.base, repeat (each T).self)
+
+        repeat addOne(token: tokens, provider: each comp)
+    }
+
+    @usableFromInline
+    internal func addOne<C: Component>(token: InteropToken, provider: () -> C) {
+        // 透過 RegistryId 找到 Storage
+        // 這裡假設 base.value 有提供透過型別查找 RID 的方法
+        guard let at = token.idToAt[ ObjectIdentifier(C.self) ],
+              let storage = self.base.value.storages[token.rids[at].id] 
+        else {
+            return
+        }
         
-        guard let storage = base.storages[rid.id] else { return }
-        // guard storage.storageType == T.self else { return }
-        storage.rawAdd(eid: self.eid, component: comp)
+        // 執行 rawAdd
+        // rawAdd 內部會處理型別檢查與 ensureCapacity
+        storage.rawAdd(eid: self.eid, component: provider())
     }
 }
 
