@@ -12,7 +12,6 @@ enum BasePlatformError: Error {
     case invalidEID
 }
 
-
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的
 typealias ComponentManifest = Array<any Component.Type>
 
@@ -103,9 +102,10 @@ func spawnEntity(
     return base.entities.spawn(n)
 }
 
-struct EntityHandle {
+struct EntityHandle: ~Copyable {
     private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
     private let eid: EntityId
+    
     fileprivate init(base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>, eid: EntityId) {
         self.base = base
         self.eid = eid
@@ -124,23 +124,20 @@ func getEntityHandle(
 extension EntityHandle {
     // can use this to put data on eid
     @inlinable
-    func mount<each T: Component>(_ comp: repeat @escaping (() -> each T)) {   
+    func mount<each T: Component>(_ comp: repeat (() -> each T)) {   
         let token = interop(self.base, repeat (each T).self)
-        var index = 0
+        var at = 0
         
         func apply<C: Component>(_ provider: () -> C) {
-            let rid = token.rids[index]
+            let rid = token.rids[at]
             let storage = self.base.value.storages[rid.id] as! PFStorage<C>
             storage.add(eid: self.eid, component: provider())
-            index += 1
+            at += 1
         }
         
         repeat apply(each comp)
     }
 }
-
-
-
 
 
 

@@ -69,17 +69,15 @@ struct PlatformTests {
     @Test("test Validated Platform to spawn entities")
     func testSpawn() throws {
         let base = makeBootedPlatform()
-
         let e = spawnEntity(base, 3)
-        print(e)
-
         let eh = try getEntityHandle(base, e[2]).get()
-        print(eh)
 
         let fn1 =  { EntityPlatForm_Ver0() }
-        let fn2 = { Position(x: 1.2, y: 22.3)}
+        let fn2 = { Position(x: 1.2, y: 22.3) }
+        let fn3 = { MockComponentA() }
+        let fn4 = { MockComponentB() }
         
-        eh.mount(fn1, fn2)
+        eh.mount(fn1, fn2, fn3, fn4)
 
         let e_pf_rid = base.registry.register(EntityPlatForm_Ver0.self)
         let postion_rid = base.registry.register(Position.self)
@@ -91,17 +89,16 @@ struct PlatformTests {
         #expect(a.x == 1.2)
         #expect(a.y == 22.3)
 
-        print(a)
+        // for (idx, st) in base.storages.enumerated() {
+        //     let comp = st!.get(e[2])
+        //     print("\(idx):", comp != nil)
+        // }
     }
 }
 
 
 // @Suite("BasePlatform Interop 測試")
 // struct PlatformTests {
-    
-
-
-
 
 //     @Test("驗證多個組件同時註冊時的 Storage 容量與順序")
 //     func testMultipleComponents() {
