@@ -3,15 +3,16 @@ final class ArenaAllocator {
     private let capacity: Int
     private var offset: Int = 0
 
-    init(capacity: Int) {
+    init(capacity: Int, alignment: Int) {
         self.capacity = capacity
-        self.start = UnsafeMutableRawPointer.allocate(byteCount: capacity, alignment: 8)
+        self.start = UnsafeMutableRawPointer.allocate(byteCount: capacity, alignment: alignment)
     }
 
     deinit {
         start.deallocate()
     }
 
+    @inlinable
     func alloc(size: Int, alignment: Int) -> UnsafeMutableRawPointer? {
         let currentAddress = Int(bitPattern: start + offset)
         let alignedAddress = (currentAddress + (alignment - 1)) & ~(alignment - 1)
@@ -33,19 +34,71 @@ final class ArenaAllocator {
 
 }
 
-class PageNode<T> {
-    let allocator = ArenaAllocator(capacity: 1024 * 16) // 16 KB
+struct PageNodeStat {
+    let elementCount: Int
+    let maximumCount: Int
+    let elementType: Any.Type
+}
+
+// 16 KB
+fileprivate let capacity = 1024 * 16 
+
+struct PageNode<T> : ~Copyable {
+    let allocator = ArenaAllocator(capacity: capacity, alignment: MemoryLayout<T>.alignment)
     let alignment = MemoryLayout<T>.alignment
     let size = MemoryLayout<T>.size
+    let stride = MemoryLayout<T>.stride
+    let maximumCount = capacity / MemoryLayout<T>.stride
+
+    private var count = 0
     
-    func add(_ new: T) -> UnsafeMutablePointer<T> {
+    mutating func add(_ new: T) {
         guard let ptr = allocator.alloc(size: self.size, alignment: self.alignment)?.bindMemory(to: T.self, capacity: 1) else {
             // 測試所以粗暴一點
             fatalError()
         }
 
+        count += 1
         ptr.initialize(to: new)
-        return ptr
     }
 
+    var stat: PageNodeStat {
+        PageNodeStat(
+            elementCount: count, 
+            maximumCount: maximumCount,
+            elementType: T.self,
+        )
+    }
+
+    var hasCapcity: Bool {
+        count < maximumCount
+    }
+}
+
+class PageNodeHandle<T> {
+    fileprivate var node = PageNode<T>()
+
+    func withNode(_ fn: (inout PageNode<T>) -> ()) {
+        fn(&node)
+    }
+
+    var access: PageNode<T> {
+        _read {
+            yield node
+        }
+    }
+}
+
+struct HandleBox<T>: ~Copyable {
+    private let _handle: PageNodeHandle<T>
+
+    var handle: PageNodeHandle<T> {
+        _read {
+            yield _handle
+        }
+    }
+
+    init(_ h: PageNodeHandle<T>) {
+        self._handle = h
+    }
 }
