@@ -78,10 +78,6 @@ struct PageNode<T> : ~Copyable {
 class PageNodeHandle<T> {
     fileprivate var node = PageNode<T>()
 
-    func withNode(_ fn: (inout PageNode<T>) -> ()) {
-        fn(&node)
-    }
-
     var access: PageNode<T> {
         _read {
             yield node
@@ -101,4 +97,10 @@ struct HandleBox<T>: ~Copyable {
     init(_ h: PageNodeHandle<T>) {
         self._handle = h
     }
+
+    @inlinable
+    func withNode(_ fn: (inout PageNode<T>) -> ()) {
+        fn(&_handle.node)
+    }
+
 }
