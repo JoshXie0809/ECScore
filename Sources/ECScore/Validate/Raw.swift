@@ -52,7 +52,7 @@ func validate<T, P: Proof, F: Facts>(
 // certify
 extension Validated {
     consuming func certify<NewP: Proof>(_ target: NewP.Type) 
-    -> CertiftyResult<T, NewP, F>
+    -> CertifyResult<T, NewP, F>
     {
         let requiredFlags = F.requirement(for: target)
         if self.facts.flags.isSuperset(of: requiredFlags) {
@@ -65,7 +65,7 @@ extension Validated {
     }
 }
 
-enum CertiftyResult <T, P: Proof, F: Facts> where T == F.Value {
+enum CertifyResult <T, P: Proof, F: Facts> where T == F.Value {
     case success(Validated<T, P, F>)
     case failure(missingFlags: F.Flags, proofName: String)
 }
