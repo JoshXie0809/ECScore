@@ -1,6 +1,6 @@
-protocol Platform: ~Copyable {}
+protocol Platform {}
 
-protocol AnyPlatformStorage: ~Copyable {
+protocol AnyPlatformStorage {
     mutating func remove(eid: EntityId)
     mutating func rawAdd(eid: EntityId, component: Any)
 

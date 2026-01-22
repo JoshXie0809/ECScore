@@ -140,4 +140,10 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
     }
 
     var storageType: any Component.Type { T.self }
+
+    var view: PFStorage<T> {
+        _read {
+            yield handle.pfstorage
+        }
+    }
 }

@@ -87,7 +87,8 @@ class PageNodeHandle<T> {
 
 struct HandleBox<T>: ~Copyable {
     private let _handle: PageNodeHandle<T>
-
+    
+    @inlinable
     var handle: PageNodeHandle<T> {
         _read {
             yield _handle

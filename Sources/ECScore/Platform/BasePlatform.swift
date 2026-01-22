@@ -126,6 +126,7 @@ extension EntityHandle {
         func apply<C: Component>(_ provider: () -> C) {
             let rid = token.rids[at]
             self.base.value.storages[rid.id]!.rawAdd(eid: self.eid, component: provider())
+
             at += 1
         }
         

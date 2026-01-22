@@ -12,7 +12,6 @@ extension BasePlatform {
         // create storage for base pf
         var r_storage = R.createPFStorage()
         var e_storage = E.createPFStorage()
-
         
         // entityId 0
         let eid0 = entities.spawn(1)[0]
@@ -31,24 +30,24 @@ extension BasePlatform {
     @inlinable
     var registry: Platform_Registry? {
         let rid0 = RegistryId(id: 0, version: 0)
+        let eid0 = EntityId(id: 0, version: 0)
         // 直接找 0 號位並嘗試轉型
         guard let storage = self.storages[rid0.id] else {
             return nil
         }
 
-        
-
-        return storage.getWithDenseIndex_Uncheck(0) as? Platform_Registry
+        return storage.get(eid0) as? Platform_Registry
     }
 
     @inlinable
     var entities: Platform_Entity? {
         let rid1 =  RegistryId(id: 1, version: 0)
+        let eid0 = EntityId(id: 0, version: 0)
         guard let storage = self.storages[rid1.id] else {
             return nil
         }
 
-        return storage.getWithDenseIndex_Uncheck(0) as? Platform_Entity
+        return storage.get(eid0) as? Platform_Entity
     }
 }
 
