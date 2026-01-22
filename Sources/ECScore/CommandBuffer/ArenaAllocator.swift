@@ -85,7 +85,7 @@ class PageNodeHandle<T> {
     }
 }
 
-struct HandleBox<T>: ~Copyable {
+struct HandleBox<T> {
     private let _handle: PageNodeHandle<T>
     
     @inlinable

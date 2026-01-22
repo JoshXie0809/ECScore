@@ -1,6 +1,10 @@
 struct Raw<T> {
     var value: T
 
+    init(value: consuming T) {
+        self.value = value
+    }
+
     mutating func alter(_ fn: ((inout T) -> Void)) {
         fn(&self.value)
     }
