@@ -14,9 +14,10 @@ import Testing
     struct TestComponent: Component, Equatable { 
         var test: Int 
         static func createPFStorage() -> any AnyPlatformStorage {
-            return PFStorage<Self>()
+            return PFStorageBox(PFStorageHandle<Self>())
         }
     }
+    
     let storage = Storage<TestComponent>(  )
     let e = EntityId(id: 1111, version: 2222)
     
@@ -60,9 +61,10 @@ import Testing
 
     struct TestComponent: Component {
         static func createPFStorage() -> any AnyPlatformStorage {
-            return PFStorage<Self>()
+            return PFStorageBox(PFStorageHandle<Self>())
         }
     }
+
     let storage = Storage<TestComponent>()
     w.addStorage(storage)
 
@@ -77,12 +79,12 @@ import Testing
 
 struct Comp1: Component {
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorage<Self>()
+        return PFStorageBox(PFStorageHandle<Self>())
     }
 }
 struct Comp2: Component {
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorage<Self>()
+        return PFStorageBox(PFStorageHandle<Self>())
     }
 }
 

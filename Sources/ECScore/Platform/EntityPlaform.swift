@@ -7,9 +7,9 @@ protocol Platform_Entity: Platform, Component, AnyObject {
 
 class EntityPlatForm_Ver0: Platform_Entity, Component {
     private var entities = Entities()
-    private lazy var selfStorage: PFStorage<EntityPlatForm_Ver0> = 
+    private lazy var selfStorage: PFStorageBox<EntityPlatForm_Ver0> = 
     {
-        let s = PFStorage<EntityPlatForm_Ver0>()
+        let s =  PFStorageBox(PFStorageHandle<EntityPlatForm_Ver0>())
         return s
     }()
 
@@ -26,7 +26,7 @@ class EntityPlatForm_Ver0: Platform_Entity, Component {
     }
 
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorage<Self>()
+        return PFStorageBox(PFStorageHandle<Self>())
     }
 
     func forEachLiveId(_ body: (EntityId) -> Void) {

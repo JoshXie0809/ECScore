@@ -1,12 +1,4 @@
-protocol Platform {
-    func rawGetStorage(for id : RegistryId) -> AnyPlatformStorage?
-}
-
-extension Platform {
-    func rawGetStorage(for id : RegistryId) -> AnyPlatformStorage? {
-        return nil
-    }
-}
+protocol Platform: ~Copyable {}
 
 protocol AnyPlatformStorage: ~Copyable {
     mutating func remove(eid: EntityId)

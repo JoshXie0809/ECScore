@@ -27,14 +27,16 @@ extension BasePlatform {
     }
 }
 
-extension Platform {
+extension BasePlatform {
     @inlinable
     var registry: Platform_Registry? {
         let rid0 = RegistryId(id: 0, version: 0)
         // 直接找 0 號位並嘗試轉型
-        guard let storage = self.rawGetStorage(for: rid0) else {
+        guard let storage = self.storages[rid0.id] else {
             return nil
         }
+
+        
 
         return storage.getWithDenseIndex_Uncheck(0) as? Platform_Registry
     }
@@ -42,7 +44,7 @@ extension Platform {
     @inlinable
     var entities: Platform_Entity? {
         let rid1 =  RegistryId(id: 1, version: 0)
-        guard let storage = self.rawGetStorage(for: rid1) else {
+        guard let storage = self.storages[rid1.id] else {
             return nil
         }
 

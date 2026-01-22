@@ -1,6 +1,20 @@
-protocol Component {
+protocol Component: ~Copyable {
     static func createPFStorage() -> any AnyPlatformStorage
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 struct ComponentId: Hashable, Sendable {
     let raw: ObjectIdentifier

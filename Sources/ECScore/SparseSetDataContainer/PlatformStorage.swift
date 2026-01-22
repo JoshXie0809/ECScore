@@ -1,4 +1,4 @@
-struct PFStorage<T: Component>: AnyPlatformStorage {
+struct PFStorage<T: Component>: ~Copyable {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
     var storageType: any Component.Type { T.self }
 
@@ -99,12 +99,12 @@ struct PFStorage<T: Component>: AnyPlatformStorage {
 
 extension PFStorage: Component where T: Component {
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorageBox(PFStorageHandle<Self>())
+        return PFStorageBox(PFStorageHandle<T>())
     }
 }
 
 // 定義一個協議，用來獲取內部泛型 T 的類型
-protocol StorageTypeProvider {
+protocol StorageTypeProvider: ~Copyable {
     /// 告訴外界，這個 Storage 裡面管理的 Component 型別是什麼
     var storedComponentType: any Component.Type { get }
 }
@@ -119,9 +119,8 @@ final class PFStorageHandle<T: Component> {
     fileprivate var pfstorage = PFStorage<T>()
 }
 
-
 struct PFStorageBox<T: Component>: AnyPlatformStorage {
-    private var handle: PFStorageHandle<T>
+    private let handle: PFStorageHandle<T>
     init(_ h: PFStorageHandle<T>) { self.handle = h}
 
     mutating func rawAdd(eid: EntityId, component: Any) {

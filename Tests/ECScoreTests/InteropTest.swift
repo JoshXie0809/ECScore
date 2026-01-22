@@ -5,14 +5,14 @@ import Testing
 // 模擬組件 A
 struct MockComponentA: Component {
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorage<MockComponentA>()
+        return PFStorageBox(PFStorageHandle<Self>())
     }
 }
 
 // 模擬組件 B
 struct MockComponentB: Component {
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorage<MockComponentB>()
+        return PFStorageBox(PFStorageHandle<Self>())
     }
 }
 
