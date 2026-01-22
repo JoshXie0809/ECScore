@@ -83,7 +83,7 @@ func interop<each T: Component>(
     validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
     
     guard case let .success(manifest_unique) = manifest_val.certify(Proof_Unique.self) else {
-        fatalError("duplicate of type while using interop<T>")
+        fatalError("duplicate of type while using interop<each T>")
     }
 
     return interop(pf_val, manifest_unique)

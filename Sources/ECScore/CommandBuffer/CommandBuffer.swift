@@ -3,6 +3,15 @@ final class CommandBuffer<each T: Component> {
 
     @inlinable
     init(_ type: repeat (each T).Type) {
+        var manifest: ComponentManifest = []
+        repeat manifest.append(each type)
+        var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
+        validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
+        
+        guard case .success = manifest_val.certify(Proof_Unique.self) else {
+            fatalError("duplicate of type while using CommandBuffer<each T>")
+        }
+
         self.commands = ( repeat Self.boxInit( each type ) )
     }
 
