@@ -6,7 +6,7 @@ import Foundation
     // ----------------------------------------------------------------
     // 1. 初始化戰場：建立 50,000 個實體
     // ----------------------------------------------------------------
-    let storage = PFStorage<Position>()
+    var storage = PFStorage<Position>()
     let entities = Entities()
     let initialCount = 50000
     

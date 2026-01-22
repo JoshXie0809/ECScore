@@ -8,9 +8,9 @@ extension Platform {
     }
 }
 
-protocol AnyPlatformStorage {
+protocol AnyPlatformStorage: ~Copyable {
     mutating func remove(eid: EntityId)
-    func rawAdd(eid: EntityId, component: Any)
+    mutating func rawAdd(eid: EntityId, component: Any)
 
     func getWithDenseIndex_Uncheck(_ index: Int) -> Any?
     func get(_ eid: EntityId) -> Any?

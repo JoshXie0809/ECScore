@@ -130,8 +130,7 @@ extension EntityHandle {
         
         func apply<C: Component>(_ provider: () -> C) {
             let rid = token.rids[at]
-            let storage = self.base.value.storages[rid.id] as! PFStorage<C>
-            storage.add(eid: self.eid, component: provider())
+            self.base.value.storages[rid.id]!.rawAdd(eid: self.eid, component: provider())
             at += 1
         }
         

@@ -1,4 +1,4 @@
-final class PFStorage<T: Component>: AnyPlatformStorage {
+struct PFStorage<T: Component>: AnyPlatformStorage {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
     var storageType: any Component.Type { T.self }
 
@@ -8,7 +8,7 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
     }
 
     @inlinable
-    func ensureCapacity(for eid: EntityId) {
+    mutating func ensureCapacity(for eid: EntityId) {
         let blockIdx = eid.id >> 12
 
         if blockIdx >= segments.count {
@@ -23,7 +23,7 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
     }
 
     @inlinable
-    func add(eid: EntityId, component: T) {
+    mutating func add(eid: EntityId, component: T) {
         ensureCapacity(for: eid) // ensure segments is not nil
         let blockIdx = eid.id >> 12
 
@@ -31,7 +31,7 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
     }
 
     @inlinable
-    func remove(eid: EntityId) {
+    mutating func remove(eid: EntityId) {
         let blockIdx = Int(eid.id >> 12)
         guard blockIdx < segments.count, let storage = segments[blockIdx] else { return }
         _ = storage // not nil
@@ -89,7 +89,7 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
     }
 
     @inlinable
-    func rawAdd(eid: EntityId, component: Any) {
+    mutating func rawAdd(eid: EntityId, component: Any) {
         guard let typedComponent = component as? T else {
             fatalError("the type mismatched while using rawAdd")
         }
@@ -99,7 +99,7 @@ final class PFStorage<T: Component>: AnyPlatformStorage {
 
 extension PFStorage: Component where T: Component {
     static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorage<Self>()
+        return PFStorageBox(PFStorageHandle<Self>())
     }
 }
 
@@ -113,4 +113,32 @@ extension PFStorage: StorageTypeProvider {
     var storedComponentType: any Component.Type {
         return T.self // 直接回傳泛型 T 的型別
     }
+}
+
+final class PFStorageHandle<T: Component> {
+    fileprivate var pfstorage = PFStorage<T>()
+}
+
+
+struct PFStorageBox<T: Component>: AnyPlatformStorage {
+    private var handle: PFStorageHandle<T>
+    init(_ h: PFStorageHandle<T>) { self.handle = h}
+
+    mutating func rawAdd(eid: EntityId, component: Any) {
+        handle.pfstorage.rawAdd(eid: eid, component: component)
+    }
+
+    mutating func remove(eid: EntityId) {
+        handle.pfstorage.remove(eid: eid)
+    }
+
+    func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
+        handle.pfstorage.getWithDenseIndex_Uncheck(index)
+    }
+
+    func get(_ eid: EntityId) -> Any? {
+        handle.pfstorage.get(eid)
+    }
+
+    var storageType: any Component.Type { T.self }
 }

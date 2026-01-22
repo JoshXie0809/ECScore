@@ -131,7 +131,7 @@ struct Block64Tests {
 struct PFStorageTests {
     @Test("大跨度 ID 導致的 Segments 擴增與回收")
     func segmentExpansionAndRecycle() async throws {
-        let storage = PFStorage<Position>()
+        var storage = PFStorage<Position>()
         
         // 1. 新增一個 ID 非常大的實體 (跨 Block)
         let bigId = 5000 // 5000 >> 12 = 1, 會落入第 2 個 segment (index 1)
@@ -153,7 +153,7 @@ struct PFStorageTests {
     
     @Test("大量數據分頁壓力測試", arguments: [0, 4095, 4096, 8191, 8192])
     func boundaryTests(id: Int) async throws {
-        let storage = PFStorage<Position>()
+        var storage = PFStorage<Position>()
         let eid = EntityId(id: id, version: 1)
         
         storage.add(eid: eid, component: Position(x: 0, y: 0))
@@ -185,7 +185,7 @@ func testForceSwapLogic() async throws {
 
 
 @Test func testSwapAndPopEfficiency() async throws {
-    let storage = PFStorage<Position>()
+    var storage = PFStorage<Position>()
     let entities = Entities()
     
     // 1. 產生三個實體
@@ -213,7 +213,7 @@ func testForceSwapLogic() async throws {
 
 
 @Test func testLargeScalePerformance() async throws {
-    let storage = PFStorage<Position>()
+    var storage = PFStorage<Position>()
     let entities = Entities()
     let count = 50000
     let eids = entities.spawn(count)

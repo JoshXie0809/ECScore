@@ -10,16 +10,16 @@ extension BasePlatform {
         let entityPlatformId = registry.register(E.self)
 
         // create storage for base pf
-        let r_storage = PFStorage<R>()
-        let e_storage = PFStorage<E>()
+        var r_storage = R.createPFStorage()
+        var e_storage = E.createPFStorage()
 
         
         // entityId 0
         let eid0 = entities.spawn(1)[0]
         // add eid 0 to r_storage, e_storage
         // they are public resourse (or at eid 0, it will be plublic resource)
-        r_storage.add(eid: eid0, component: registry)
-        e_storage.add(eid: eid0, component: entities)
+        r_storage.rawAdd(eid: eid0, component: registry)
+        e_storage.rawAdd(eid: eid0, component: entities)
 
         // add two storage to list
         self.storages[registryPlatformId.id] = r_storage
