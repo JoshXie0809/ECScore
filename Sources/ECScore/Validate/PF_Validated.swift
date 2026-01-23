@@ -49,12 +49,12 @@ enum Proof_Handshake: Proof {}
 extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
     @inlinable
     var registry: any Platform_Registry {
-        value.registry!
+        value.storages[0]!.get(EntityId(id: 0, version: 0)) as! Platform_Registry
     }
     
     @inlinable
     var entities: any Platform_Entity {
-        value.entities!
+        value.storages[1]!.get(EntityId(id: 0, version: 0)) as! Platform_Entity
     }
 
     @inlinable

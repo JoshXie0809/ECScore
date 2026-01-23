@@ -83,5 +83,4 @@ class Entities {
     func getVersion(_ id: Int) -> Int {
         return versions[id]
     }
-
 }

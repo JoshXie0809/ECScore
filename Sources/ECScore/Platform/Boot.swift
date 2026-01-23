@@ -15,6 +15,11 @@ extension BasePlatform {
         
         // entityId 0
         let eid0 = entities.spawn(1)[0]
+        
+        precondition(eid0 == EntityId(id: 0, version: 0))
+        precondition(registryPlatformId == RegistryId(id: 0, version: 0))
+        precondition(entityPlatformId == RegistryId(id: 1, version: 0))
+
         // add eid 0 to r_storage, e_storage
         // they are public resourse (or at eid 0, it will be plublic resource)
         r_storage.rawAdd(eid: eid0, component: registry)

@@ -7,11 +7,6 @@ protocol Platform_Entity: Platform, Component, AnyObject {
 
 class EntityPlatForm_Ver0: Platform_Entity, Component {
     private var entities = Entities()
-    private lazy var selfStorage: PFStorageBox<EntityPlatForm_Ver0> = 
-    {
-        let s =  PFStorageBox(PFStorageHandle<EntityPlatForm_Ver0>())
-        return s
-    }()
 
     func isValid(_ eid: EntityId) -> Bool {
         return entities.isValid(eid)

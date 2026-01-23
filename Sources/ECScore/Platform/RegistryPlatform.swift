@@ -2,35 +2,34 @@ typealias RegistryId = EntityId
 
 protocol Platform_Registry: AnyObject, Component {
     func register(_ type: Any.Type) -> RegistryId
+    func lookup(_ type: Any.Type) -> RegistryId?
     func contains(_ type: Any.Type) -> Bool
     var count: Int { get }
 }
 
-final class RegistryPlatform : Platform, Platform_Registry, Component {
+class RegistryPlatform : Platform, Platform_Registry, Component {
     let entities: Entities = Entities()
-    private var typeToId: [ObjectIdentifier: EntityId] = [:]
+    private var typeToRId: [ObjectIdentifier: RegistryId] = [:]
     var count : Int { entities.liveCount }
 
-    // 唯一的具體存儲：只存 Registry 自己
-    private lazy var selfStorage: PFStorageBox<RegistryPlatform> = 
-    {
-        let s =  PFStorageBox(PFStorageHandle<RegistryPlatform>())
-        return s
-    }()
-
-    func register(_ type: Any.Type) -> RegistryId 
-    {
+    func register(_ type: Any.Type) -> RegistryId {
         let typeId = ObjectIdentifier(type)
-        if let tid = typeToId[typeId] { return tid }
+        if let rid = typeToRId[typeId] { return rid }
         
-        let eid = entities.spawn(1)[0]
-        typeToId[typeId] = eid
-        return eid
+        let rid: RegistryId = entities.spawn(1)[0]  
+        typeToRId[typeId] = rid
+        return rid
+    }
+
+    func lookup(_ type: any Any.Type) -> RegistryId? {
+        let typeId = ObjectIdentifier(type)
+        if let rid = typeToRId[typeId] { return rid }
+        return nil
     }
 
     func contains(_ type: Any.Type) -> Bool {
         let typeId = ObjectIdentifier(type)
-        return typeToId[typeId] != nil
+        return typeToRId[typeId] != nil
     }
 
     static func createPFStorage() -> any AnyPlatformStorage {
