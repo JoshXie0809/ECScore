@@ -198,13 +198,12 @@ func testForceSwapLogic() async throws {
     storage.add(eid: e3, component: Position(x: 3, y: 3))
     
     // 3. 刪除中間的 e2 (DenseIndex: 1)
-    // 這會觸發 image_74540c.png 第 47 行：removeIdx(1) < lastIdx(2)
     storage.remove(eid: e2)
     
     // 4. 驗證補位邏輯
     // 原本最後一個 e3 應該被搬移到索引 1 的位置
     let movedComponent = storage.getWithDenseIndex_Uncheck(1) as? Position
-    #expect(movedComponent?.x == 3) // 確認數據搬過來了
+    #expect(movedComponent?.x == 3.0) // 確認數據搬過來了
     
     // 5. 驗證總數與結構
     // 剩下的應該只有 2 個，且 e2 徹底消失
@@ -243,4 +242,39 @@ func testForceSwapLogic() async throws {
     
     // 驗證計算結果正確
     #expect(sum > 0)
+}
+
+@Test func doubleAddCheck() async throws {
+    var box = Position.createPFStorage() as! PFStorageBox<Position>
+    let entities = Entities()
+
+    let eid = entities.spawn(1)[0]
+
+    var comp: Position? = box.view.storage.get(eid)
+    #expect(comp == nil)
+    #expect(box.activeEntityCount == 0)
+
+    box.rawAdd(eid: eid, component: Position(x: -23.23, y: 32.32))
+    comp = box.view.storage.get(eid)
+
+    #expect(comp != nil)
+    #expect(comp!.x == -23.23)
+    #expect(box.activeEntityCount == 1)
+
+    box.rawAdd(eid: eid, component: Position(x: -111.0, y: -222.0))
+    comp = box.view.storage.get(eid)
+    // double add will not effect
+    #expect(comp!.x == -23.23)
+    #expect(comp!.x != -111.0)
+    #expect(box.activeEntityCount == 1)
+
+    box.remove(eid: eid)
+    #expect(box.activeEntityCount == 0)
+
+    box.rawAdd(eid: eid, component: Position(x: -111.0, y: -222.0))
+    comp = box.view.storage.get(eid)
+    // double add will not effect
+    #expect(comp!.x != -23.23)
+    #expect(comp!.x == -111.0 && comp!.y == -222.0)
+    #expect(box.activeEntityCount == 1)
 }

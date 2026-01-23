@@ -8,4 +8,5 @@ protocol AnyPlatformStorage {
     func get(_ eid: EntityId) -> Any?
 
     var storageType: any Component.Type { get }
+    var activeEntityCount: Int {get}
 }

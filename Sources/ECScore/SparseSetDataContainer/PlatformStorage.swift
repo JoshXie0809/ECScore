@@ -1,5 +1,6 @@
 struct PFStorage<T: Component>: ~Copyable {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
+    private(set) var activeEntityCount = 0
     var storageType: any Component.Type { T.self }
 
     init() {
@@ -19,15 +20,16 @@ struct PFStorage<T: Component>: ~Copyable {
         if segments[blockIdx] == nil {
             segments[blockIdx] = SparseSet_L2<T>()
         }
-
     }
 
     @inlinable
     mutating func add(eid: EntityId, component: T) {
         ensureCapacity(for: eid) // ensure segments is not nil
         let blockIdx = eid.id >> 12
-
+        
+        let beforeCount = segments[blockIdx]!.count
         segments[blockIdx]!.add(eid, component)
+        self.activeEntityCount += (segments[blockIdx]!.count - beforeCount)
     }
 
     @inlinable
@@ -36,10 +38,12 @@ struct PFStorage<T: Component>: ~Copyable {
         guard blockIdx < segments.count, let storage = segments[blockIdx] else { return }
         _ = storage // not nil
 
+        let beforeCount = segments[blockIdx]!.count
         segments[blockIdx]!.remove(eid)
-        
-        // 選配優化：如果該 L2 完全空了，可以釋放掉來省記憶體
-        if segments[blockIdx]!.sparse.activeEntityCount == 0 {
+        self.activeEntityCount += (segments[blockIdx]!.count - beforeCount)
+
+        // if segment has no active member
+        if segments[blockIdx]!.count == 0 {
             segments[blockIdx] = nil
         }
     }
@@ -136,6 +140,7 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
     }
 
     var storageType: any Component.Type { T.self }
+    var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
 
     var view: PFStorageView<T> {
         PFStorageView(handle)
