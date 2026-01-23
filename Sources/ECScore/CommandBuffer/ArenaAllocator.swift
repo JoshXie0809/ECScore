@@ -34,74 +34,128 @@ final class ArenaAllocator {
 
 }
 
-struct PageNodeStat {
+struct PagesStat {
     let elementCount: Int
     let maximumCount: Int
     let elementType: Any.Type
+    let totalPages: Int
 }
 
 // 16 KB
 fileprivate let capacity = 1024 * 16 
 
 struct PageNode<T> : ~Copyable {
-    let allocator = ArenaAllocator(capacity: capacity, alignment: MemoryLayout<T>.alignment)
+    private let allocator = ArenaAllocator(capacity: capacity, alignment: MemoryLayout<T>.alignment)
+    
+    mutating func add(_ new: T, _ header: borrowing PageHeader<T>) {
+        guard let ptr = allocator
+            .alloc(size: header.size, alignment: header.alignment)?
+            .bindMemory(to: T.self, capacity: 1) 
+        
+        else {
+            // 測試所以粗暴一點
+            fatalError("arena mem is out of memory")
+        }
+
+        ptr.initialize(to: new)
+    }
+
+    mutating func reset() {
+        allocator.reset()
+    }
+}
+
+struct PageHeader<T>: ~Copyable {
     let alignment = MemoryLayout<T>.alignment
     let size = MemoryLayout<T>.size
     let stride = MemoryLayout<T>.stride
     let maximumCount = capacity / MemoryLayout<T>.stride
+}
 
+final class Commands<T> {
+    let header = PageHeader<T>()
+    var pages: [PageNodeHandle<T>] = []
     private var count = 0
-    
-    mutating func add(_ new: T) {
-        guard let ptr = allocator.alloc(size: self.size, alignment: self.alignment)?.bindMemory(to: T.self, capacity: 1) else {
-            // 測試所以粗暴一點
-            fatalError()
-        }
 
-        count += 1
-        ptr.initialize(to: new)
+    init() {
+        assert(header.maximumCount > 0)
     }
 
-    var stat: PageNodeStat {
-        PageNodeStat(
+    @inline(__always)
+    var currentPageIndex: Int {
+        count / header.maximumCount
+    }
+
+    @inline(__always)
+    private static func ensureCapacity(commands: Commands<T>) {
+        if !commands.hasCapcity {
+            commands.pages.append(PageNodeHandle<T>())
+        }
+    }
+
+    @inlinable
+    func add(_ new: T) {
+        Self.ensureCapacity(commands: self)
+        let currentPage = pages[currentPageIndex]
+        currentPage.mut.add(new, self.header)
+        count += 1
+    }
+
+    @inlinable
+    func reset() {
+        count = 0
+        for page in pages {
+            page.mut.reset()
+        }
+    }
+
+    var stat: PagesStat {
+        PagesStat(
             elementCount: count, 
-            maximumCount: maximumCount,
+            maximumCount: (header.maximumCount * pages.count),
             elementType: T.self,
+            totalPages: pages.count
         )
     }
 
     var hasCapcity: Bool {
-        count < maximumCount
+        count < (header.maximumCount * pages.count)
     }
+
 }
 
 class PageNodeHandle<T> {
     fileprivate var node = PageNode<T>()
-
-    var access: PageNode<T> {
+    var view: PageNode<T> {
         _read {
             yield node
         }
     }
-}
 
-struct HandleBox<T> {
-    private let _handle: PageNodeHandle<T>
-    
-    @inlinable
-    var handle: PageNodeHandle<T> {
+    var mut: PageNode<T> {
         _read {
-            yield _handle
+            yield node
+        }
+
+        _modify {
+            yield &node
         }
     }
-
-    init(_ h: PageNodeHandle<T>) {
-        self._handle = h
-    }
-
-    @inlinable
-    func withNode(_ fn: (inout PageNode<T>) -> ()) {
-        fn(&_handle.node)
-    }
-
 }
+
+// struct HandleBox<T> {
+//     private let _handle: PageNodeHandle<T>
+//     @inlinable
+//     var handle: PageNodeHandle<T> {
+//         _read {
+//             yield _handle
+//         }
+//     }
+//     init(_ h: PageNodeHandle<T>) {
+//         self._handle = h
+//     }
+//     @inlinable
+//     func withNode(_ fn: (inout PageNode<T>) -> ()) {
+//         fn(&_handle.node)
+//     }
+// }

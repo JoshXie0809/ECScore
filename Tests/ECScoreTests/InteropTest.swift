@@ -44,7 +44,7 @@ struct PlatformTests {
         let before_interop = base.value.storages.count
 
         // 未驗證的 input
-        let manifest: ComponentManifest = [MockComponentA.self, MockComponentB.self]
+        let manifest: ComponentManifest = [MockComponentA.self, MockComponentB.self, PFStorageBox<Position>.self]
         // 驗證流程
         var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
         let ok = validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
@@ -55,15 +55,21 @@ struct PlatformTests {
         
         // // 執行 Interop
         interop(base, manifest_unique)
-        #expect(base.value.storages.count - before_interop == 2)
+        #expect(base.value.storages.count - before_interop == 3)
     }
 
     @Test("static version of interop")
     func static_interop() {
         let base = makeBootedPlatform()
 
-        let token = interop(base, MockComponentA.self, MockComponentB.self, Position.self)
+        let token = interop(base, 
+            MockComponentA.self, MockComponentB.self, 
+            Position.self, PFStorageBox<Position>.self, PFStorageBox<PFStorageBox<Position>>.self
+        )
         print(token)
+        typealias R = PFStorageBox<PFStorageBox<Position>>
+
+        print(R.createPFStorage())
     }
 
     @Test("test Validated Platform to spawn entities")

@@ -97,11 +97,7 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 }
 
-extension PFStorage: Component where T: Component {
-    static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorageBox(PFStorageHandle<T>())
-    }
-}
+
 
 // 定義一個協議，用來獲取內部泛型 T 的類型
 protocol StorageTypeProvider: ~Copyable {
@@ -141,9 +137,30 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
 
     var storageType: any Component.Type { T.self }
 
-    var view: PFStorage<T> {
+    var view: PFStorageView<T> {
+        PFStorageView(handle)
+    }
+}
+
+struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
+    private let handle: PFStorageHandle<T>
+
+    init(_ handle: PFStorageHandle<T>) {
+        self.handle = handle
+    }
+
+    @inlinable
+    var storage: PFStorage<T> {
         _read {
+            // 在這裡可以加入讀取鎖的邏輯，或者配合系統的 Phase 檢查
             yield handle.pfstorage
         }
+    }
+}
+
+extension PFStorageBox: Component where T: Component {
+    static func createPFStorage() -> any AnyPlatformStorage {
+        // 核心修正：使用 Self 而不是 T
+        return PFStorageBox<Self>(PFStorageHandle<Self>())
     }
 }
