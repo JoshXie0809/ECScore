@@ -98,43 +98,84 @@ func spawnEntity(
 }
 
 struct EntityHandle: ~Copyable {
-    private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
-    private let eid: EntityId
+    fileprivate let eid: EntityId
     
-    fileprivate init(base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>, eid: EntityId) {
-        self.base = base
+    fileprivate init(eid: EntityId) {
         self.eid = eid
     }
 }
 
-func getEntityHandle(
-    _ base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    _ eid: EntityId
-)  -> Result<EntityHandle, BasePlatformError>
-{
-    guard base.entities.isValid(eid) else { return .failure(.invalidEID) }
-    return .success(EntityHandle(base: base, eid: eid))   
+extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
+    borrowing func getEntityHandle(
+        _ eid: EntityId
+    )  -> Result<EntityHandle, BasePlatformError>
+    {
+        guard entities.isValid(eid) else { return .failure(.invalidEID) }
+        return .success(EntityHandle(eid: eid))   
+    }
 }
 
-extension EntityHandle {
+struct MounterCache: ~Copyable {
+    let providers: [() -> any Component]
+    let token: InteropToken
+    fileprivate init(_ p: consuming [() -> any Component], _ t: InteropToken ) {
+        self.providers = p
+        self.token = t
+    }
+}
+
+struct Mounter: ~Copyable {
+    private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
+    private var eh: EntityHandle
+
+    init(_ base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ eh: consuming EntityHandle) {
+        self.base = base
+        self.eh = eh
+    }
+
+
+    @discardableResult
     // can use this to put data on eid
     @inlinable
-    func mount<each T: Component>(_ comp: repeat (() -> each T)) {   
-        let token = interop(self.base, repeat (each T).self)
+    borrowing func mount<each T: Component>(_ comp: repeat @escaping (() -> each T)) -> InteropToken
+    {
+        let token = interop(base, repeat (each T).self)
         var at = 0
         
+        @inline(__always)
         func apply<C: Component>(_ provider: () -> C) {
             let rid = token.rids[at]
-            self.base.value.storages[rid.id]!.rawAdd(eid: self.eid, component: provider())
-
+            base.value.storages[rid.id]!.rawAdd(eid: eh.eid, component: provider())
             at += 1
         }
         
         repeat apply(each comp)
+        return token
+    }
+
+    @discardableResult
+    @inlinable
+    @_disfavoredOverload
+    borrowing func mount<each T: Component>(_ comp: repeat @escaping (() -> each T)) -> MounterCache {
+        let token: InteropToken = mount(repeat each comp)
+        var providers: [() -> any Component] = []
+        repeat providers.append(each comp)
+        return MounterCache(consume providers, token)
+    }
+
+    mutating func replaceEntityHandle(_ new_eh: consuming EntityHandle) {
+        self.eh = new_eh
+    }
+
+    @inlinable 
+    borrowing func mountWithCached(_ cache: borrowing MounterCache) {
+        for at in 0..<cache.providers.count {
+            let rid = cache.token.rids[at]
+            let provider = cache.providers[at]
+            base.value.storages[rid.id]!.rawAdd(eid: eh.eid, component: provider())
+        }
     }
 }
-
-
 
 
 

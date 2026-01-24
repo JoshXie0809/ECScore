@@ -75,31 +75,38 @@ struct PlatformTests {
     @Test("test Validated Platform to spawn entities")
     func testSpawn() throws {
         let base = makeBootedPlatform()
-
-        let e = spawnEntity(base, 3)
-        let eh = try getEntityHandle(base.clone(), e[2]).get()
-
         let fn1 =  { EntityPlatForm_Ver0() }
         let fn2 = { Position(x: 1.2, y: 22.3) }
         let fn3 = { MockComponentA() }
         let fn4 = { MockComponentB() }
+
+        let eids = spawnEntity(base, 3)
+        let eh = try base.getEntityHandle(eids[2]).get()
         
-        eh.mount(fn1, fn2, fn3, fn4)
+        var mounter = Mounter(base.clone(), eh)
+        let cache: MounterCache = mounter.mount(fn1, fn2, fn3, fn4)
 
         let e_pf_rid = base.registry.register(EntityPlatForm_Ver0.self)
         let postion_rid = base.registry.register(Position.self)
 
-        #expect(base.storages[e_pf_rid.id]!.get(e[2]) != nil)
-        #expect(base.storages[postion_rid.id]!.get(e[2]) != nil)
+        #expect(base.storages[e_pf_rid.id]!.get(eids[2]) != nil)
+        #expect(base.storages[postion_rid.id]!.get(eids[2]) != nil)
 
-        let a = base.storages[postion_rid.id]!.get(e[2]) as! Position
+        var a = base.storages[postion_rid.id]!.get(eids[2]) as! Position
         #expect(a.x == 1.2)
         #expect(a.y == 22.3)
 
-        // for (idx, st) in base.storages.enumerated() {
-        //     let comp = st!.get(e[2])
-        //     print("\(idx):", comp != nil)
-        // }
+        // replace eid
+        let eh2 = try base.getEntityHandle(eids[1]).get()
+        mounter.replaceEntityHandle(eh2)
+        mounter.mountWithCached(cache)
+
+        #expect(base.storages[e_pf_rid.id]!.get(eids[1]) != nil)
+        #expect(base.storages[postion_rid.id]!.get(eids[1]) != nil)
+
+        a = base.storages[postion_rid.id]!.get(eids[1]) as! Position
+        #expect(a.x == 1.2)
+        #expect(a.y == 22.3)
     }
 }
 
