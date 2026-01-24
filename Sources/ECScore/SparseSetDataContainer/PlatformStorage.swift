@@ -127,6 +127,10 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
         handle.pfstorage.rawAdd(eid: eid, component: component)
     }
 
+    mutating func add(eid: EntityId, component: T) {
+        handle.pfstorage.add(eid: eid, component: component)
+    }
+
     mutating func remove(eid: EntityId) {
         handle.pfstorage.remove(eid: eid)
     }

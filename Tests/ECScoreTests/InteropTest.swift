@@ -84,7 +84,7 @@ struct PlatformTests {
         let eh = try base.getEntityHandle(eids[2]).get()
         
         var mounter = Mounter(base.clone(), eh)
-        let cache: MounterCache = mounter.mount(fn1, fn2, fn3, fn4)
+        let cache: MounterCache = mounter.mountAndCache(fn1, fn2, fn3, fn4)
 
         let e_pf_rid = base.registry.register(EntityPlatForm_Ver0.self)
         let postion_rid = base.registry.register(Position.self)
@@ -96,10 +96,10 @@ struct PlatformTests {
         #expect(a.x == 1.2)
         #expect(a.y == 22.3)
 
-        // replace eid
+        // get new eid
         let eh2 = try base.getEntityHandle(eids[1]).get()
-        mounter.replaceEntityHandle(eh2)
-        mounter.mountWithCached(cache)
+        // replace mounter eid and mount using cache
+        mounter = mounter.replaceEntityHandle(eh2).mountWithCached(cache)
 
         #expect(base.storages[e_pf_rid.id]!.get(eids[1]) != nil)
         #expect(base.storages[postion_rid.id]!.get(eids[1]) != nil)
@@ -107,6 +107,25 @@ struct PlatformTests {
         a = base.storages[postion_rid.id]!.get(eids[1]) as! Position
         #expect(a.x == 1.2)
         #expect(a.y == 22.3)
+
+
+        // get new eid
+        let eh3 = try base.getEntityHandle(eids[0]).get()
+        // replace mounter eid and mount using cache
+        mounter = mounter.replaceEntityHandle(eh3).mountWithValuesWithCached(
+            cache.token,
+            EntityPlatForm_Ver0(),
+            Position(x: -12345.0, y: 0.0),
+            MockComponentA(),
+            MockComponentB()
+        )
+
+        #expect(base.storages[e_pf_rid.id]!.get(eids[0]) != nil)
+        #expect(base.storages[postion_rid.id]!.get(eids[0]) != nil)
+
+        a = base.storages[postion_rid.id]!.get(eids[0]) as! Position
+        #expect(a.x == -12345.0)
+        #expect(a.y == 0.0)
     }
 }
 
