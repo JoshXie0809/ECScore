@@ -62,14 +62,14 @@ import Foundation
     var iterateCount = 0
     
     // 模擬 System 的遍歷邏輯
-    for segment in storage.segments {
+    for i in 0..<storage.segments.count {
         // 核心優化：你的架構允許直接跳過 nil 的大區塊 (L1 Skip)
-        guard let l2 = segment else { continue }
+        guard let l2 = storage.segments[i] else { continue }
         
         // L2 內部遍歷 (SIMD Friendly)
-        for i in 0..<l2.count {
-            let comp = l2.components[i]
-            checksum += comp.x
+        for j in 0..<l2.count {
+            let comp = l2.components[j]
+            checksum += (comp.x) * (comp.y)
             iterateCount += 1
         }
     }

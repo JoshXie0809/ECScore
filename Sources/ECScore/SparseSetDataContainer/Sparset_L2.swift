@@ -57,7 +57,6 @@ struct SparseSet_L2<T: Component>: SparseSet {
         components.removeLast()
         reverseEntities.removeLast()
         // sparse is remove before
-
     }
 
     @inlinable
