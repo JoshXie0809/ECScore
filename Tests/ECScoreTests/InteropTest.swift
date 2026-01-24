@@ -86,8 +86,8 @@ struct PlatformTests {
         var mounter = Mounter(base.clone(), eh)
         let cache: MounterCache = mounter.mountAndCache(fn1, fn2, fn3, fn4)
 
-        let e_pf_rid = base.registry.register(EntityPlatForm_Ver0.self)
-        let postion_rid = base.registry.register(Position.self)
+        let e_pf_rid = base.registry.lookup(EntityPlatForm_Ver0.self)!
+        let postion_rid = base.registry.lookup(Position.self)!
 
         #expect(base.storages[e_pf_rid.id]!.get(eids[2]) != nil)
         #expect(base.storages[postion_rid.id]!.get(eids[2]) != nil)
@@ -107,7 +107,6 @@ struct PlatformTests {
         a = base.storages[postion_rid.id]!.get(eids[1]) as! Position
         #expect(a.x == 1.2)
         #expect(a.y == 22.3)
-
 
         // get new eid
         let eh3 = try base.getEntityHandle(eids[0]).get()

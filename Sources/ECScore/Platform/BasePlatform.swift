@@ -82,7 +82,8 @@ func interop<each T: Component>(
     var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
     validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
     
-    guard case let .success(manifest_unique) = manifest_val.certify(Proof_Unique.self) else {
+    guard case let .success(manifest_unique) = manifest_val.certify(Proof_Unique.self) 
+    else {
         fatalError("duplicate of type while using interop<each T>")
     }
 
@@ -130,12 +131,10 @@ struct MounterCache<each T: Component>: ~Copyable {
 struct Mounter: ~Copyable {
     private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
     private var eh: EntityHandle
-
     init(_ base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ eh: consuming EntityHandle) {
         self.base = base
         self.eh = eh
     }
-
 
     // can use this to put data on eid
     @inlinable
@@ -146,7 +145,6 @@ struct Mounter: ~Copyable {
         repeat Self.apply1(mounter: self, token: token, at: &at, each comp)
     }
 
-    @discardableResult
     @inlinable
     func mountAndCache<each T: Component>(_ comp: repeat @escaping (() -> each T)) -> MounterCache<repeat each T>
     {
@@ -185,12 +183,11 @@ struct Mounter: ~Copyable {
     }
 
     @inlinable
-    consuming func mountWithValuesWithCached<each T: Component>(_ token: InteropToken, _ comp: repeat consuming each T) -> Self {
+    consuming func mountWithValuesWithCached<each T: Component>(_ token: borrowing InteropToken, _ comp: repeat consuming each T) -> Self {
         var at = 0
         repeat Self.apply3(mounter: self, token: token, at: &at, each comp)
         return self
     }
-
 
     @inline(__always)
     static private func apply1<C: Component>(mounter: borrowing Mounter, token: borrowing InteropToken, at: inout Int, _ provider: () -> C) 
@@ -198,9 +195,9 @@ struct Mounter: ~Copyable {
         let rid = token.rids[at]
         var box = mounter.base.value.storages[rid.id] as! PFStorageBox<C>
         box.add(eid: mounter.eh.eid, component: provider())
+        // mounter.base.value.storages[rid.id]!.rawAdd(eid: mounter.eh.eid, component: provider())
         at += 1
     }
-
 
     @inline(__always)
     static private func apply2<C: Component>(mounter: borrowing Mounter, token: borrowing InteropToken, at: inout Int, _ provider: @escaping () -> C) 

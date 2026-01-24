@@ -23,7 +23,7 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
-    mutating func add(eid: EntityId, component: T) {
+    mutating func add(eid: borrowing EntityId, component: consuming T) {
         ensureCapacity(for: eid) // ensure segments is not nil
         let blockIdx = eid.id >> 12
         
@@ -33,7 +33,7 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
-    mutating func remove(eid: EntityId) {
+    mutating func remove(eid: borrowing EntityId) {
         let blockIdx = Int(eid.id >> 12)
         guard blockIdx < segments.count, let storage = segments[blockIdx] else { return }
         _ = storage // not nil
@@ -65,9 +65,9 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
-    func get<U: Component>(_ eid: EntityId) -> U? {
+    func get<U: Component>(_ eid: borrowing EntityId) -> U? {
         let (blockIdx, offset) = (eid.id >> 12, eid.id & 4095)
-        return segments[blockIdx]?.get(offset: offset) as? U
+        return segments[blockIdx]?.get(offset: offset, version: eid.version) as? U
     }
 
     @inlinable
@@ -87,13 +87,13 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
-    func get(_ eid: EntityId) -> Any? {
+    func get(_ eid: borrowing EntityId) -> Any? {
         let (blockIdx, offset) = (eid.id >> 12, eid.id & 4095)
-        return segments[blockIdx]?.get(offset: offset)
+        return segments[blockIdx]?.get(offset: offset, version: eid.version)
     }
 
     @inlinable
-    mutating func rawAdd(eid: EntityId, component: Any) {
+    mutating func rawAdd(eid: borrowing EntityId, component: consuming Any) {
         guard let typedComponent = component as? T else {
             fatalError("the type mismatched while using rawAdd")
         }

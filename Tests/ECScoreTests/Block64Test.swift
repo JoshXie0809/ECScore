@@ -69,7 +69,7 @@ struct SparseSetL2Tests {
         
         // 驗證：B 消失了，總數變 2
         #expect(storage.count == 2)
-        #expect(storage.get(offset: 20) == nil)
+        #expect(storage.get(offset: 20, version: 1) == nil)
         
         // 驗證核心 Swap & Pop：原本最後一個 C (3,3) 應該被搬到了索引 1 (原 B 的位置)
         // 1. 數據內容搬移
@@ -92,7 +92,7 @@ struct SparseSetL2Tests {
             pos.x = 99
         }
         
-        #expect(storage.get(offset: 5)?.x == 99)
+        #expect(storage.get(offset: 5, version: 1)?.x == 99)
     }
 }
 

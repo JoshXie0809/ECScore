@@ -76,12 +76,17 @@ struct SparseSet_L2<T: Component>: SparseSet {
     }
 
     @inlinable 
-    func get(offset: Int) -> T? {        
+    func get(offset: Int, version: Int) -> T? {        
         guard sparse.contains(offset) else {
             return nil
         }
 
-        return components[Int(sparse.getUnchecked(offset).compArrIdx)]
+        let idx = Int(sparse.getUnchecked(offset).compArrIdx)
+        guard reverseEntities[idx].version == version else {
+            return nil
+        }
+        
+        return components[idx]
     }
 
     @inlinable
