@@ -63,14 +63,12 @@ enum Proof_FooVerified: Proof {}
 func rawToValidatedToRaw() {
     // read from edge
     let raw = Raw(value: "hello world")
-    print(raw)
 
     // first validate system
     var val1 = raw.upgrade(FooFacts.self)
     #expect(val1.facts.flags.isEmpty)
 
-    // // init status
-    print(val1) // simu do sth
+    
 
     // // validate
     let before = val1.facts.flags
@@ -81,21 +79,18 @@ func rawToValidatedToRaw() {
     #expect(val1.facts.flags != before)
     #expect(val1.facts.flags.isSuperset(of: [.foo]))
 
-    // // after validator
-    print(val1) 
 
     // // certify
     let val1_c = val1.certify(Proof_FooVerified.self)
-    print(val1_c)
+    guard case .success = val1_c else { fatalError() }
     
     // Int
     var raw2 = Raw(value: 123)
-    raw2.alter { val in
-        val = 223456
-    }
+    raw2.value = 787878
 
     let val2 = raw2.upgrade(FooFacts.self)
     let val2_c = val2.certify(Proof_FooVerified.self)
 
-    print(val2_c)
+    guard case .failure = val2_c else { fatalError() }
+
 }

@@ -24,8 +24,8 @@ struct InteropToken {
 
 @discardableResult
 func interop(
-    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    _ manifest_val: Validated<ComponentManifest, Proof_Unique, Manifest_Facts>
+    _ pf_val: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ manifest_val: consuming Validated<ComponentManifest, Proof_Unique, Manifest_Facts>
 )
     -> InteropToken
 {
@@ -60,7 +60,7 @@ func interop(
 }
 
 fileprivate func ensureStorageCapacity(
-    base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>
 ) {
     
     let rid_count = base.registry.count
@@ -72,7 +72,7 @@ fileprivate func ensureStorageCapacity(
 }
 
 func interop<each T: Component>(
-    _ pf_val: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ pf_val: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ type: repeat (each T).Type
 ) 
     -> InteropToken
@@ -90,7 +90,7 @@ func interop<each T: Component>(
 }
 
 func spawnEntity(
-    _ base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ n: Int = 1
 ) -> [EntityId]
 {
@@ -101,14 +101,14 @@ struct EntityHandle: ~Copyable {
     private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
     private let eid: EntityId
     
-    fileprivate init(base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>, eid: EntityId) {
+    fileprivate init(base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>, eid: EntityId) {
         self.base = base
         self.eid = eid
     }
 }
 
 func getEntityHandle(
-    _ base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ eid: EntityId
 )  -> Result<EntityHandle, BasePlatformError>
 {

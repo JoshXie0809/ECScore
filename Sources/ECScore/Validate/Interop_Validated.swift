@@ -8,16 +8,16 @@ struct Manifest_Facts: Facts
         self.flags = Flags()
     }
 
-    static func validator(_ at: Int) -> ((Self.Value, inout Self) -> Bool)? {
+    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self) -> Bool)? {
         guard let flagCase = FlagCase(rawValue: at) else {
             return nil
         }
 
-        var fn: (Self.Value, inout Self) -> Bool
+        var fn: (borrowing Self.Value, inout Self) -> Bool
 
         switch flagCase {
         case .unique: 
-            fn = { (_ arr, _ mask) in
+            fn = { (_ arr, _ facts) in
                 var seen = Set<ObjectIdentifier>()
                 for type in arr {
                     let type_id = ObjectIdentifier(type)
@@ -26,7 +26,7 @@ struct Manifest_Facts: Facts
                 }
 
                 // pf can handshake
-                mask.flags.insert([.unique])
+                facts.flags.insert([.unique])
                 return true
             }
         }

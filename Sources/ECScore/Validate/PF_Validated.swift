@@ -3,12 +3,12 @@ struct Platform_Facts: Facts {
     typealias Flags = CaseFlags
     private(set) var flags = Flags()
 
-    static func validator(_ at: Int) -> ((Self.Value, inout Self) -> Bool)? {
+    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self) -> Bool)? {
         guard let flagCase = FlagCase(rawValue: at) else {
             return nil
         }
 
-        var fn: (Self.Value, inout Self) -> Bool
+        var fn: (borrowing Self.Value, inout Self) -> Bool
 
         switch flagCase {
         case .handshake: 

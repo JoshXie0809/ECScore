@@ -75,8 +75,9 @@ struct PlatformTests {
     @Test("test Validated Platform to spawn entities")
     func testSpawn() throws {
         let base = makeBootedPlatform()
+
         let e = spawnEntity(base, 3)
-        let eh = try getEntityHandle(base, e[2]).get()
+        let eh = try getEntityHandle(base.clone(), e[2]).get()
 
         let fn1 =  { EntityPlatForm_Ver0() }
         let fn2 = { Position(x: 1.2, y: 22.3) }

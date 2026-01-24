@@ -1,13 +1,13 @@
-struct Raw<T> {
+struct Raw<T>: ~Copyable {
     var value: T
 
     init(value: consuming T) {
         self.value = value
     }
 
-    mutating func alter(_ fn: ((inout T) -> Void)) {
-        fn(&self.value)
-    }
+    // mutating func alter(_ fn: ((inout T) -> Void)) {
+    //     fn(&self.value)
+    // }
 
     consuming func upgrade<F: Facts>(_ flagType: F.Type) -> Validated<T, Proof_Init, F> 
     where T == F.Value
@@ -16,7 +16,7 @@ struct Raw<T> {
     }
 }
 
-struct Validated<T, P: Proof, F: Facts> where F.Value == T {
+struct Validated<T, P: Proof, F: Facts>: ~Copyable where F.Value == T {
     let value: T
     var facts: F
 
@@ -40,7 +40,7 @@ protocol Facts<T> {
     var flags: Flags { get }
 
     init()
-    static func validator(_ at: Int) -> ((_: Value, _: inout Self) -> Bool)?
+    static func validator(_ at: Int) -> ((_: borrowing Value, _: inout Self) -> Bool)?
     static func requirement(for proof: any Proof.Type) -> Flags
 }
 
@@ -69,7 +69,14 @@ extension Validated {
     }
 }
 
-enum CertifyResult <T, P: Proof, F: Facts> where T == F.Value {
+enum CertifyResult <T, P: Proof, F: Facts>: ~Copyable where T == F.Value {
     case success(Validated<T, P, F>)
     case failure(missingFlags: F.Flags, proofName: String)
+}
+
+// clone
+extension Validated {
+    borrowing func clone() -> Validated<T, P, F> {
+        return Validated<T, P, F>(value: self.value)
+    }
 }
