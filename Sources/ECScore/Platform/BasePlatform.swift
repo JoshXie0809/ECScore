@@ -10,15 +10,13 @@ enum BasePlatformError: Error {
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的
 typealias ComponentManifest = Array<any Component.Type>
 
-struct InteropToken {
+struct InteropTokens {
     let rids: [RegistryId]
-    let idToAt: [ObjectIdentifier:Int]
+    // let idToAt: [ObjectIdentifier:Int]
     fileprivate init(
         rids: [RegistryId],
-        idToAt: [ObjectIdentifier:Int]
     ) {
         self.rids = rids
-        self.idToAt = idToAt
     }
 }
 
@@ -27,16 +25,17 @@ func interop(
     _ pf_val: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ manifest_val: consuming Validated<ComponentManifest, Proof_Unique, Manifest_Facts>
 )
-    -> InteropToken
+    -> InteropTokens
 {
     let registry = pf_val.registry
     let manifest = manifest_val.value
 
     var newRids: [(RegistryId, any Component.Type)] = []
     var rids: [RegistryId] = []
-    var idToAt: [ObjectIdentifier:Int] = [:]
+    // var idToAt: [ObjectIdentifier:Int] = [:]
 
     for (at, type) in manifest.enumerated() {
+        _ = at
         if !registry.contains(type) {
             // not contains, so register the type
             let rid = registry.register(type)
@@ -45,8 +44,8 @@ func interop(
         // search registry rid, because registered before, not nil
         let rid = registry.lookup(type)!
         rids.append(rid)
-        let type_id = ObjectIdentifier(type)
-        idToAt[type_id] = at
+        // let type_id = ObjectIdentifier(type)
+        // idToAt[type_id] = at
     }
 
     // ensure storages length
@@ -56,7 +55,7 @@ func interop(
         pf_val.value.storages[rid.id] = type.createPFStorage()
     }
 
-    return InteropToken(rids: rids, idToAt: idToAt)
+    return InteropTokens(rids: rids)
 }
 
 fileprivate func ensureStorageCapacity(
@@ -71,11 +70,17 @@ fileprivate func ensureStorageCapacity(
     }
 }
 
+struct TypeToken<T: Component> {
+    let rid: RegistryId
+    fileprivate init(rid: RegistryId) { self.rid = rid}
+    var type: T.Type { T.self }
+}
+
 func interop<each T: Component>(
     _ pf_val: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ type: repeat (each T).Type
 ) 
-    -> InteropToken
+    -> (repeat TypeToken<each T>)
 {
     var manifest: ComponentManifest = []
     repeat manifest.append(each type)
@@ -86,8 +91,19 @@ func interop<each T: Component>(
     else {
         fatalError("duplicate of type while using interop<each T>")
     }
+    let tokens = interop(pf_val, manifest_unique)
+    var at = 0
 
-    return interop(pf_val, manifest_unique)
+    return (repeat helper(tokens, &at, each type))
+}
+
+@inline(__always)
+private func helper<C: Component>(_ tokens: borrowing InteropTokens, _ at: inout Int, _: C.Type) 
+    -> TypeToken<C>
+{
+    let ttoken = TypeToken<C>(rid: tokens.rids[at])
+    at += 1
+    return ttoken
 }
 
 func spawnEntity(
@@ -121,102 +137,102 @@ extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
 
 struct MounterCache<each T: Component>: ~Copyable {
     let providers: (repeat (() -> each T))
-    let token: InteropToken
-    fileprivate init(_ p: repeat @escaping (() -> each T), t: InteropToken ) {
+    let token: InteropTokens
+    fileprivate init(_ p: repeat @escaping (() -> each T), t: InteropTokens ) {
         self.providers = (repeat each p)
         self.token = t
     }
 }
 
-struct Mounter: ~Copyable {
-    private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
-    private var eh: EntityHandle
-    init(_ base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ eh: consuming EntityHandle) {
-        self.base = base
-        self.eh = eh
-    }
+// struct Mounter: ~Copyable {
+//     private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
+//     private var eh: EntityHandle
+//     init(_ base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ eh: consuming EntityHandle) {
+//         self.base = base
+//         self.eh = eh
+//     }
 
-    // can use this to put data on eid
-    @inlinable
-    func mount<each T: Component>(_ comp: repeat (() -> each T))
-    {
-        let token = interop(base, repeat (each T).self)
-        var at = 0
-        repeat Self.apply1(mounter: self, token: token, at: &at, each comp)
-    }
+//     // can use this to put data on eid
+//     @inlinable
+//     func mount<each T: Component>(_ comp: repeat (() -> each T))
+//     {
+//         let token = interop(base, repeat (each T).self)
+//         var at = 0
+//         repeat Self.apply1(mounter: self, token: token, at: &at, each comp)
+//     }
 
-    @inlinable
-    func mountAndCache<each T: Component>(_ comp: repeat @escaping (() -> each T)) -> MounterCache<repeat each T>
-    {
-        let token = interop(base, repeat (each T).self)
-        var at = 0
-        repeat Self.apply2(mounter: self, token: token, at: &at, each comp)
-        return MounterCache(repeat each comp, t: token)
-    }
+//     @inlinable
+//     func mountAndCache<each T: Component>(_ comp: repeat @escaping (() -> each T)) -> MounterCache<repeat each T>
+//     {
+//         let token = interop(base, repeat (each T).self)
+//         var at = 0
+//         repeat Self.apply2(mounter: self, token: token, at: &at, each comp)
+//         return MounterCache(repeat each comp, t: token)
+//     }
 
-    @inlinable
-    func mountWithValues<each T: Component>(_ comp: repeat consuming each T) {
-        let token = interop(base, repeat (each T).self)
-        var at = 0
-        repeat Self.apply3(mounter: self, token: token, at: &at, each comp)
-    }
+//     @inlinable
+//     func mountWithValues<each T: Component>(_ comp: repeat consuming each T) {
+//         let token = interop(base, repeat (each T).self)
+//         var at = 0
+//         repeat Self.apply3(mounter: self, token: token, at: &at, each comp)
+//     }
 
-    @inlinable
-    func mountWithValuesAndCache<each T: Component>(_ comp: repeat consuming each T) -> InteropToken {
-        let token = interop(base, repeat (each T).self)
-        var at = 0
-        repeat Self.apply3(mounter: self, token: token, at: &at, each comp)
-        return token
-    }
+//     @inlinable
+//     func mountWithValuesAndCache<each T: Component>(_ comp: repeat consuming each T) -> InteropTokens {
+//         let token = interop(base, repeat (each T).self)
+//         var at = 0
+//         repeat Self.apply3(mounter: self, token: token, at: &at, each comp)
+//         return token
+//     }
 
-    @inlinable
-    consuming func replaceEntityHandle(_ new_eh: consuming EntityHandle) -> Self {
-        self.eh = new_eh
-        return self
-    }
+//     @inlinable
+//     consuming func replaceEntityHandle(_ new_eh: consuming EntityHandle) -> Self {
+//         self.eh = new_eh
+//         return self
+//     }
 
-    @inlinable
-    consuming func mountWithCached<each T: Component>(_ cache: borrowing MounterCache<repeat each T>) -> Self {
-        var at = 0
-        repeat Self.apply2(mounter: self, token: cache.token, at: &at, each cache.providers)
-        return self
-    }
+//     @inlinable
+//     consuming func mountWithCached<each T: Component>(_ cache: borrowing MounterCache<repeat each T>) -> Self {
+//         var at = 0
+//         repeat Self.apply2(mounter: self, token: cache.token, at: &at, each cache.providers)
+//         return self
+//     }
 
-    @inlinable
-    consuming func mountWithValuesWithCached<each T: Component>(_ token: borrowing InteropToken, _ comp: repeat consuming each T) -> Self {
-        var at = 0
-        repeat Self.apply3(mounter: self, token: token, at: &at, each comp)
-        return self
-    }
+//     @inlinable
+//     consuming func mountWithValuesWithCached<each T: Component>(_ token: borrowing InteropTokens, _ comp: repeat consuming each T) -> Self {
+//         var at = 0
+//         repeat Self.apply3(mounter: self, token: token, at: &at, each comp)
+//         return self
+//     }
 
-    @inline(__always)
-    static private func apply1<C: Component>(mounter: borrowing Mounter, token: borrowing InteropToken, at: inout Int, _ provider: () -> C) 
-    {
-        let rid = token.rids[at]
-        var box = mounter.base.value.storages[rid.id] as! PFStorageBox<C>
-        box.add(eid: mounter.eh.eid, component: provider())
-        // mounter.base.value.storages[rid.id]!.rawAdd(eid: mounter.eh.eid, component: provider())
-        at += 1
-    }
+//     @inline(__always)
+//     static private func apply1<C: Component>(mounter: borrowing Mounter, token: borrowing InteropTokens, at: inout Int, _ provider: () -> C) 
+//     {
+//         let rid = token.rids[at]
+//         var box = mounter.base.value.storages[rid.id] as! PFStorageBox<C>
+//         box.add(eid: mounter.eh.eid, component: provider())
+//         // mounter.base.value.storages[rid.id]!.rawAdd(eid: mounter.eh.eid, component: provider())
+//         at += 1
+//     }
 
-    @inline(__always)
-    static private func apply2<C: Component>(mounter: borrowing Mounter, token: borrowing InteropToken, at: inout Int, _ provider: @escaping () -> C) 
-    {
-        let rid = token.rids[at]
-        var box = mounter.base.value.storages[rid.id] as! PFStorageBox<C>
-        box.add(eid: mounter.eh.eid, component: provider())
-        at += 1
-    }
+//     @inline(__always)
+//     static private func apply2<C: Component>(mounter: borrowing Mounter, token: borrowing InteropTokens, at: inout Int, _ provider: @escaping () -> C) 
+//     {
+//         let rid = token.rids[at]
+//         var box = mounter.base.value.storages[rid.id] as! PFStorageBox<C>
+//         box.add(eid: mounter.eh.eid, component: provider())
+//         at += 1
+//     }
 
-    @inline(__always)
-    static private func apply3<C: Component>(mounter: borrowing Mounter, token: borrowing InteropToken, at: inout Int, _ values: consuming C) 
-    {
-        let rid = token.rids[at]
-        var box = mounter.base.value.storages[rid.id] as! PFStorageBox<C>
-        box.add(eid: mounter.eh.eid, component: values)
-        at += 1
-    }
-}
+//     @inline(__always)
+//     static private func apply3<C: Component>(mounter: borrowing Mounter, token: borrowing InteropTokens, at: inout Int, _ values: consuming C) 
+//     {
+//         let rid = token.rids[at]
+//         var box = mounter.base.value.storages[rid.id] as! PFStorageBox<C>
+//         box.add(eid: mounter.eh.eid, component: values)
+//         at += 1
+//     }
+// }
 
 
 
