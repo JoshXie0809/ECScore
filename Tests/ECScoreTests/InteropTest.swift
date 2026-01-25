@@ -72,6 +72,16 @@ struct PlatformTests {
         #expect(t1.type == MockComponentA.self)
         #expect(t3.type == Position.self)
         #expect(t5.type == PFStorageBox<PFStorageBox<Position>>.self)
+
+
+        #expect(t1.type == base.value.storages[t1.rid.id]!.storageType)
+        #expect(t3.type == base.value.storages[t3.rid.id]!.storageType)
+        #expect(t5.type == base.value.storages[t5.rid.id]!.storageType)
+
+        #expect(base.value.storages[t1.rid.id] is PFStorageBox<MockComponentA>)
+        #expect(base.value.storages[t3.rid.id] is PFStorageBox<Position>)
+        #expect(base.value.storages[t5.rid.id] is PFStorageBox<PFStorageBox<PFStorageBox<Position>>>)
+
     }
 
     @Test("test Validated Platform to spawn entities")

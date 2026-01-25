@@ -94,11 +94,11 @@ func interop<each T: Component>(
     let tokens = interop(pf_val, manifest_unique)
     var at = 0
 
-    return (repeat helper(tokens, &at, each type))
+    return (repeat interopHelper(tokens, &at, each type))
 }
 
 @inline(__always)
-private func helper<C: Component>(_ tokens: borrowing InteropTokens, _ at: inout Int, _: C.Type) 
+private func interopHelper<C: Component>(_ tokens: borrowing InteropTokens, _ at: inout Int, _: C.Type) 
     -> TypeToken<C>
 {
     let ttoken = TypeToken<C>(rid: tokens.rids[at])
@@ -135,14 +135,14 @@ extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
     }
 }
 
-struct MounterCache<each T: Component>: ~Copyable {
-    let providers: (repeat (() -> each T))
-    let token: InteropTokens
-    fileprivate init(_ p: repeat @escaping (() -> each T), t: InteropTokens ) {
-        self.providers = (repeat each p)
-        self.token = t
-    }
-}
+// struct MounterCache<each T: Component>: ~Copyable {
+//     let providers: (repeat (() -> each T))
+//     let token: InteropTokens
+//     fileprivate init(_ p: repeat @escaping (() -> each T), t: InteropTokens ) {
+//         self.providers = (repeat each p)
+//         self.token = t
+//     }
+// }
 
 // struct Mounter: ~Copyable {
 //     private let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
