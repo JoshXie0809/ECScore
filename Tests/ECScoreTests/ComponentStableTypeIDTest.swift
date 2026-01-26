@@ -7,6 +7,7 @@ struct TypeStringTest_Special: Component {
     }
 
     static let typeIdString: String = "hello world"
+    static let _hs: TypeStrIdHashed_FNV1A_64 = #hs_fnv1a64("hello world")
 }
 
 struct TypeStringTest_Default: Component {
@@ -29,7 +30,7 @@ struct TypeHashedStringTest {
 
     @Test func hashStringTest() async throws {
         let type = TypeStringTest_Special.self
-        #expect(type._hs == "hello world"._hs_fnv1a_64)
+        #expect(type._hs == #hs_fnv1a64("hello world"))
     }
 
     @Test func registryUniquenessTest() {
