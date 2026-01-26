@@ -124,6 +124,23 @@ struct PlatformTests {
         #expect(eids.count == 3)
     }
 
+    @Test func emplaceTest() async throws {
+        let base = makeBootedPlatform()
+        let ttokens = interop(
+            base, MockComponentA.self, MockComponentB.self,  Position.self,
+        )
+
+        emplace(base: base, tokens: ttokens) { 
+            (entities, pack) in
+            var (_, _, p3) = pack.storages
+            
+            for i in 0..<30 {
+                let e = entities.create()
+                p3.addComponet(e, Position.init(x: 3.43 + Float(i), y: 43.3))
+            }
+        }
+    }
+
     @Test func mounterTest() async throws {
 
         // let fn1 =  { EntityPlatForm_Ver0() }

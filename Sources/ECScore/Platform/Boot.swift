@@ -1,3 +1,5 @@
+enum PlatformReservedSlot: Int { case registry = 0, entities = 1 }
+
 extension BasePlatform {
     func boot<R: Platform_Registry, E: Platform_Entity>(registry: R, entities: E) {
         self.storages = [nil, nil]
@@ -17,8 +19,8 @@ extension BasePlatform {
         let eid0 = entities.spawn(1)[0]
         
         precondition(eid0 == EntityId(id: 0, version: 0))
-        precondition(registryPlatformId == RegistryId(id: 0, version: 0))
-        precondition(entityPlatformId == RegistryId(id: 1, version: 0))
+        precondition(registryPlatformId == RegistryId(id: PlatformReservedSlot.registry.rawValue, version: 0))
+        precondition(entityPlatformId == RegistryId(id: PlatformReservedSlot.entities.rawValue, version: 0))
 
         // add eid 0 to r_storage, e_storage
         // they are public resourse (or at eid 0, it will be plublic resource)

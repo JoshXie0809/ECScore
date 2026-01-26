@@ -1,12 +1,12 @@
 extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
     @inlinable
     var registry: any Platform_Registry {
-        value.storages[0]!.get(EntityId(id: 0, version: 0)) as! Platform_Registry
+        value.storages[PlatformReservedSlot.registry.rawValue]!.get(EntityId(id: 0, version: 0)) as! Platform_Registry
     }
     
     @inlinable
     var entities: any Platform_Entity {
-        value.storages[1]!.get(EntityId(id: 0, version: 0)) as! Platform_Entity
+        value.storages[PlatformReservedSlot.entities.rawValue]!.get(EntityId(id: 0, version: 0)) as! Platform_Entity
     }
 
     fileprivate func mount(rid: RegistryId, storage: AnyPlatformStorage) {
@@ -145,3 +145,4 @@ extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
         return .success(EntityHandle(eid: eid))   
     }
 }
+
