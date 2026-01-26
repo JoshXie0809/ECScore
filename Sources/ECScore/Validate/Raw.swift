@@ -100,6 +100,6 @@ enum CertifyResult <T, P: Proof, F: Facts>: ~Copyable where T == F.Value {
 // clone
 extension Validated {
     borrowing func clone() -> Validated<T, P, F> {
-        return Validated<T, P, F>(value: self.value)
+        return Validated<T, P, F>(value: self.value, facts: self.facts)    
     }
 }
