@@ -127,18 +127,32 @@ struct PlatformTests {
     @Test func emplaceTest() async throws {
         let base = makeBootedPlatform()
         let ttokens = interop(
-            base, MockComponentA.self, MockComponentB.self,  Position.self,
+            base, MockComponentA.self, MockComponentB.self, Position.self,
         )
 
-        emplace(base: base, tokens: ttokens) { 
+        emplace(base, tokens: ttokens) { 
             (entities, pack) in
-            var (_, _, p3) = pack.storages
+            var (p1, p2, p3) = pack.storages
             
             for i in 0..<30 {
                 let e = entities.create()
                 p3.addComponet(e, Position.init(x: 3.43 + Float(i), y: 43.3))
+
+                if (i+1) % 5 == 0 { 
+                    p1.addComponet(e, MockComponentA())
+                }
+
+                if i % 18 == 9 {
+                    p2.addComponet(e, MockComponentB())
+                }
             }
         }
+        
+        let (t1, t2, t3) = ttokens
+
+        #expect(base.getStorage(token: t3).activeEntityCount == 30)
+        #expect(base.getStorage(token: t1).activeEntityCount == 6)
+        #expect(base.getStorage(token: t2).activeEntityCount == 2)
     }
 
     @Test func mounterTest() async throws {

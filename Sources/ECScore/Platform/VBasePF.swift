@@ -27,6 +27,11 @@ extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
     {
         return entities.spawn(n)
     }
+
+    @inlinable
+    func getStorage<C: Component>(token: TypeToken<C>) -> PFStorageBox<C> {
+        value.storages[token.rid.id] as! PFStorageBox<C>
+    }
 }
 
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的

@@ -9,11 +9,11 @@ extension TypeToken {
 }
 
 func emplace<each T>(
-    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     tokens: (repeat TypeToken<each T>),
-    _ fn: (borrowing EmplaceEntities, borrowing EmplacePack<repeat each T> ) -> Void) 
+    _ fn: (borrowing EmplaceEntities, consuming EmplacePack<repeat each T> ) -> Void) 
 {
-    let pack = EmplacePack(storages: (repeat EmplaceStorage((each tokens).getStorage(base: base))))
+    let pack = EmplacePack((repeat EmplaceStorage((each tokens).getStorage(base: base))))
     fn( EmplaceEntities(base.entities), pack)
 }
 
@@ -25,6 +25,7 @@ struct EmplaceEntityId {
 struct EmplaceEntities: ~Copyable {
     private let entities: Platform_Entity
     fileprivate init(_ entities: Platform_Entity) { self.entities = entities}
+    @inlinable
     func create() -> EmplaceEntityId {
         EmplaceEntityId(entities.spawn(1)[0])
     }
@@ -33,7 +34,7 @@ struct EmplaceEntities: ~Copyable {
 struct EmplaceStorage<T: Component> {
     private var storage: PFStorageBox<T>
     fileprivate init(_ st: PFStorageBox<T>) { self.storage = st}
-
+    @inlinable
     mutating func addComponet(_ eeid: EmplaceEntityId, _ comp: T) {
         storage.add(eid: eeid.entity, component: comp)
     }
@@ -41,5 +42,6 @@ struct EmplaceStorage<T: Component> {
 
 struct EmplacePack<each T: Component>: ~Copyable {
     // 將所有 Storage 放在一個元組裡
-    var storages: (repeat EmplaceStorage<each T>)
+    let storages: (repeat EmplaceStorage<each T>)
+    fileprivate init(_ sts: (repeat EmplaceStorage<each T>)) { self.storages = sts}
 }
