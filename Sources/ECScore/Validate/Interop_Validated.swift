@@ -18,7 +18,7 @@ struct Manifest_Facts: Facts
 
         switch flagCase {
         case .unique: 
-            fn = { (_ arr, _ facts, _) in
+            fn = { (arr, facts, _) in
                 var seen = Set<ObjectIdentifier>()
                 for type in arr {
                     let type_id = ObjectIdentifier(type)
@@ -30,6 +30,32 @@ struct Manifest_Facts: Facts
                 facts.flags.insert([.unique])
                 return true
             }
+
+        case .noTypeStringCollisoin: 
+            fn = { (arr, facts, env) in
+                guard let register = env.registry else { return false }
+                var localNames = [String: any Component.Type]()
+                
+                for type in arr {
+                    let name = String(reflecting: type) // 取得型別名稱
+                    
+                    // A. 檢查是否與 Registry 內已有的資料碰撞
+                    if let rid = register.lookup(type) {
+                        let storedType = register.lookup(rid)!
+                        if storedType != type { return false }
+                    }
+                    
+                    // B. 檢查這批 Manifest 內部是否自相矛盾
+                    if let firstType = localNames[name] {
+                        if firstType != type { return false }
+                    }
+                    
+                    localNames[name] = type
+                }
+                
+                facts.flags.insert([.noTypeStringCollisoin])
+                return true
+            }
         }
         
         return fn
@@ -37,8 +63,8 @@ struct Manifest_Facts: Facts
 
     static func requirement(for proof: any Proof.Type) -> Flags {
         switch proof {
-        case is Proof_Unique.Type:
-            return [Flags.unique]
+        case is Proof_Ok_Manifest.Type:
+            return [Flags.unique, Flags.noTypeStringCollisoin]
         default:
             return []
         }
@@ -46,19 +72,21 @@ struct Manifest_Facts: Facts
 
     enum FlagCase: Int {
         case unique = 0
+        case noTypeStringCollisoin = 1
     }
 
     struct CaseFlags: OptionSet {
         var rawValue: Int
-        static let unique = CaseFlags(rawValue: 1 << FlagCase.unique.rawValue)
+        static let unique = Flags(rawValue: 1 << FlagCase.unique.rawValue)
+        static let noTypeStringCollisoin = Flags(rawValue: 1 << FlagCase.noTypeStringCollisoin.rawValue)
     }
 
     struct MF_Env: Default {
-        let registry: RegistryPlatform?
+        var registry: Platform_Registry?
         static func _default() -> Self {
             return Self(registry: nil)
         }
     }
 }
 
-enum Proof_Unique: Proof {}
+enum Proof_Ok_Manifest: Proof {}

@@ -1,7 +1,8 @@
 struct QueryPlanFacts: Facts {
     typealias Value = QueryPlan
     typealias Flags = CaseFlags
-    typealias Env = F_Void
+    typealias Env = Env_Void
+    
     private(set) var flags = Flags()
 
     static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, Env) -> Bool)? {

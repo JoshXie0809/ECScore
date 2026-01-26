@@ -1,14 +1,16 @@
 struct Platform_Facts: Facts {
     typealias Value = BasePlatform
     typealias Flags = CaseFlags
+    typealias Env = Env_Void
+
     private(set) var flags = Flags()
 
-    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, borrowing F_Void) -> Bool)? {
+    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, borrowing Env) -> Bool)? {
         guard let flagCase = FlagCase(rawValue: at) else {
             return nil
         }
 
-        var fn: (borrowing Self.Value, inout Self, borrowing F_Void) -> Bool
+        var fn: (borrowing Self.Value, inout Self, borrowing Env) -> Bool
 
         switch flagCase {
         case .handshake: 
@@ -41,24 +43,6 @@ struct Platform_Facts: Facts {
         var rawValue: Int
         static let handshake = Self(rawValue: 1 << FlagCase.handshake.rawValue )
     }
-
 }
 
 enum Proof_Handshake: Proof {}
-
-extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
-    @inlinable
-    var registry: any Platform_Registry {
-        value.storages[0]!.get(EntityId(id: 0, version: 0)) as! Platform_Registry
-    }
-    
-    @inlinable
-    var entities: any Platform_Entity {
-        value.storages[1]!.get(EntityId(id: 0, version: 0)) as! Platform_Entity
-    }
-
-    @inlinable
-    var storages: [AnyPlatformStorage?] {
-        value.storages
-    }
-}

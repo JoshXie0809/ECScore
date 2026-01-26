@@ -5,21 +5,24 @@ struct Raw<T>: ~Copyable {
         self.value = value
     }
 
-    // mutating func alter(_ fn: ((inout T) -> Void)) {
-    //     fn(&self.value)
-    // }
+    mutating func alter(_ fn: ((inout T) -> Void)) {
+        fn(&self.value)
+    }
 
     consuming func upgrade<F: Facts>(_ flagType: F.Type) -> Validated<T, Proof_Init, F> 
-    where T == F.Value
+        where T == F.Value
     {
         Validated(value: value)
+    }
+
+    consuming func downgrade() -> T {
+        return value
     }
 }
 
 struct Validated<T, P: Proof, F: Facts>: ~Copyable where F.Value == T {
     let value: T
-    var facts: F
-
+    fileprivate var facts: F
     fileprivate init(value: T, facts: F = F()) {
         self.value = value
         self.facts = facts
@@ -42,6 +45,7 @@ protocol Facts<T> {
     var flags: Flags { get }
 
     init()
+
     static func validator(_ at: Int) -> ((_: borrowing Value, _: inout Self,  _: borrowing Env) -> Bool)?
     static func requirement(for proof: any Proof.Type) -> Flags
 }
@@ -50,30 +54,19 @@ protocol Default {
     static func _default() -> Self
 }
 
-struct F_Void {}
-extension F_Void: Default {
+struct Env_Void {}
+extension Env_Void: Default {
     static func _default() -> Self { Self() }
 }
 
 @discardableResult
 func validate<T, P: Proof, F: Facts>(
     validated: inout Validated<T, P, F>,
+    other_validated_resource: borrowing F.Env = F.Env._default(),
     _ at: Int,
-    _ other_validated_resource: borrowing F.Env = F.Env._default()
 ) -> Bool {
     guard let validator = F.validator(at) else { return false }
     return validator(validated.value, &validated.facts, other_validated_resource)
-}
-
-@discardableResult
-func validate<T, P: Proof, F: Facts>(
-    validated: inout Validated<T, P, F>,
-    _ at: Int,
-) -> Bool 
-    where F.Env == F_Void
-{
-    guard let validator = F.validator(at) else { return false }
-    return validator(validated.value, &validated.facts, F_Void())
 }
 
 // certify
@@ -101,5 +94,13 @@ enum CertifyResult <T, P: Proof, F: Facts>: ~Copyable where T == F.Value {
 extension Validated {
     borrowing func clone() -> Validated<T, P, F> {
         return Validated<T, P, F>(value: self.value, facts: self.facts)    
+    }
+}
+
+extension Validated {
+    var flags: F.Flags {
+        get {
+            facts.flags
+        }
     }
 }

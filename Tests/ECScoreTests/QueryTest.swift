@@ -33,6 +33,6 @@ func queryPlanTest() async throws {
         fatalError()
     }
 
-    #expect(!result.facts.flags.isEmpty)
+    #expect(!result.flags.isEmpty)
 
 }

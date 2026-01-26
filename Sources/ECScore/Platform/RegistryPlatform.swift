@@ -16,14 +16,7 @@ class RegistryPlatform : Platform, Platform_Registry, Component {
 
     func register(_ type: any Component.Type) -> RegistryId {
         let _hs = type._hs
-        if let rid = typeToRId[_hs] {
-            precondition(
-                ridToType[rid]! == type, 
-                "hashed String collision occur in register, \(ridToType[rid]!) and \(type) has same hashed String: \(_hs)"
-            )
-
-            return rid 
-        }
+        if let rid = typeToRId[_hs] { return rid }
         
         let rid: RegistryId = entities.spawn(1)[0]
         ridToType[rid] = type

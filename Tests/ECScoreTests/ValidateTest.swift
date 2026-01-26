@@ -5,7 +5,7 @@ import Testing
 struct FooFacts<T> : Facts {
     typealias Value = T
     typealias Flags = FooCaseFlags
-    typealias Env = F_Void
+    typealias Env = Env_Void
 
     private(set) var flags = Flags()
 
@@ -65,18 +65,16 @@ func rawToValidatedToRaw() {
 
     // first validate system
     var val1 = raw.upgrade(FooFacts.self)
-    #expect(val1.facts.flags.isEmpty)
-
-    
+    #expect(val1.flags.isEmpty)
 
     // // validate
-    let before = val1.facts.flags
+    let before = val1.flags
     let ok = validate(validated: &val1, FooFlagCase.foo.rawValue)
     validate(validated: &val1, FooFlagCase.bar.rawValue)
 
     #expect(ok)
-    #expect(val1.facts.flags != before)
-    #expect(val1.facts.flags.isSuperset(of: [.foo]))
+    #expect(val1.flags != before)
+    #expect(val1.flags.isSuperset(of: [.foo]))
 
 
     // // certify
@@ -85,7 +83,7 @@ func rawToValidatedToRaw() {
     
     // Int
     var raw2 = Raw(value: 123)
-    raw2.value = 787878
+    raw2.alter { val in  val = 23435435}
 
     let val2 = raw2.upgrade(FooFacts.self)
     let val2_c = val2.certify(Proof_FooVerified.self)

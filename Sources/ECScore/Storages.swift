@@ -16,7 +16,7 @@ extension Component {
     }
 }
 
-extension String {
+extension String {    
     var _hs_fnv1a_64: TypeStrIdHashed_FNV1A_64 {
         fnv1a_64(self)
     }

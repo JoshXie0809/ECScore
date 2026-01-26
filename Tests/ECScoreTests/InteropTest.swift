@@ -47,14 +47,21 @@ struct PlatformTests {
         let manifest: ComponentManifest = [MockComponentA.self, MockComponentB.self, PFStorageBox<Position>.self]
         // 驗證流程
         var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
-        let ok = validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
-        #expect(ok)
-        guard case let .success(manifest_unique) = manifest_val.certify(Proof_Unique.self) else {
-            fatalError()
+        
+        let ok1 = validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
+        var env = Manifest_Facts.Env._default()
+        
+        env.registry = base.registry
+        let ok2 = validate(validated: &manifest_val, other_validated_resource: env, Manifest_Facts.FlagCase.noTypeStringCollisoin.rawValue)
+
+        #expect(ok1 && ok2)
+
+        guard case let .success(ok_manifest) = manifest_val.certify(Proof_Ok_Manifest.self) else {
+            fatalError("???")
         }
         
         // // 執行 Interop
-        interop(base, manifest_unique)
+        interop(base, ok_manifest)
         #expect(base.value.storages.count - before_interop == 3)
     }
 
@@ -113,7 +120,7 @@ struct PlatformTests {
     @Test("test Validated Platform to spawn entities")
     func testSpawn() throws {
         let base = makeBootedPlatform()
-        let eids = spawnEntity(base, 3)
+        let eids = base.spawnEntity(3)
         #expect(eids.count == 3)
     }
 
