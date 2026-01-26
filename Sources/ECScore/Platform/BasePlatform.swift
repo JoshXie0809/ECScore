@@ -12,11 +12,18 @@ typealias ComponentManifest = Array<any Component.Type>
 
 struct InteropTokens {
     let rids: [RegistryId]
-    // let idToAt: [ObjectIdentifier:Int]
+    let idToAt: [ObjectIdentifier:Int]
     fileprivate init(
         rids: [RegistryId],
+        idToAt: [ObjectIdentifier:Int]
     ) {
         self.rids = rids
+        self.idToAt = idToAt
+    }
+
+    func getRid(_ type: Any.Type) -> RegistryId? {
+        guard let at = idToAt[ObjectIdentifier(type)] else { return nil }
+        return rids[at]
     }
 }
 
@@ -32,10 +39,9 @@ func interop(
 
     var newRids: [(RegistryId, any Component.Type)] = []
     var rids: [RegistryId] = []
-    // var idToAt: [ObjectIdentifier:Int] = [:]
+    var idToAt: [ObjectIdentifier:Int] = [:]
 
     for (at, type) in manifest.enumerated() {
-        _ = at
         if !registry.contains(type) {
             // not contains, so register the type
             let rid = registry.register(type)
@@ -44,8 +50,8 @@ func interop(
         // search registry rid, because registered before, not nil
         let rid = registry.lookup(type)!
         rids.append(rid)
-        // let type_id = ObjectIdentifier(type)
-        // idToAt[type_id] = at
+        let type_id = ObjectIdentifier(type)
+        idToAt[type_id] = at
     }
 
     // ensure storages length
@@ -55,7 +61,7 @@ func interop(
         pf_val.value.storages[rid.id] = type.createPFStorage()
     }
 
-    return InteropTokens(rids: rids)
+    return InteropTokens(rids: rids, idToAt: idToAt)
 }
 
 fileprivate func ensureStorageCapacity(
@@ -92,18 +98,7 @@ func interop<each T: Component>(
         fatalError("duplicate of type while using interop<each T>")
     }
     let tokens = interop(pf_val, manifest_unique)
-    var at = 0
-
-    return (repeat interopHelper(tokens, &at, each type))
-}
-
-@inline(__always)
-private func interopHelper<C: Component>(_ tokens: borrowing InteropTokens, _ at: inout Int, _: C.Type) 
-    -> TypeToken<C>
-{
-    let ttoken = TypeToken<C>(rid: tokens.rids[at])
-    at += 1
-    return ttoken
+    return ( repeat TypeToken(rid: tokens.getRid(each type)!) )
 }
 
 func spawnEntity(
@@ -127,7 +122,7 @@ struct EntityHandle: ~Copyable {
 
 extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
     borrowing func getEntityHandle(
-        _ eid: EntityId
+        _ eid: consuming EntityId
     )  -> Result<EntityHandle, BasePlatformError>
     {
         guard entities.isValid(eid) else { return .failure(.invalidEID) }

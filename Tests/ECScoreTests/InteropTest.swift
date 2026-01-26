@@ -82,6 +82,32 @@ struct PlatformTests {
         #expect(base.value.storages[t3.rid.id] is PFStorageBox<Position>)
         #expect(base.value.storages[t5.rid.id] is PFStorageBox<PFStorageBox<PFStorageBox<Position>>>)
 
+        // double register to check RID is static
+
+        let ttokens2 = interop(base, 
+            MockComponentA.self, MockComponentB.self, 
+            Position.self, PFStorageBox<Position>.self, PFStorageBox<PFStorageBox<Position>>.self
+        )
+        
+        let (t1_2, _, t3_2, _, t5_2) = ttokens2
+
+        #expect(t1_2.type == MockComponentA.self)
+        #expect(t3_2.type == Position.self)
+        #expect(t5_2.type == PFStorageBox<PFStorageBox<Position>>.self)
+
+        #expect(t1_2.rid == t1.rid)
+        #expect(t3_2.rid == t3.rid)
+        #expect(t5_2.rid == t5.rid)
+
+
+        #expect(t1_2.type == base.value.storages[t1.rid.id]!.storageType)
+        #expect(t3_2.type == base.value.storages[t3.rid.id]!.storageType)
+        #expect(t5_2.type == base.value.storages[t5.rid.id]!.storageType)
+
+        #expect(base.value.storages[t1_2.rid.id] is PFStorageBox<MockComponentA>)
+        #expect(base.value.storages[t3_2.rid.id] is PFStorageBox<Position>)
+        #expect(base.value.storages[t5_2.rid.id] is PFStorageBox<PFStorageBox<PFStorageBox<Position>>>)
+
     }
 
     @Test("test Validated Platform to spawn entities")
