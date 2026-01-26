@@ -1,27 +1,28 @@
 struct QueryPlanFacts: Facts {
     typealias Value = QueryPlan
     typealias Flags = CaseFlags
+    typealias Env = F_Void
     private(set) var flags = Flags()
 
-    static func validator(_ at: Int) -> ((borrowing Value, inout QueryPlanFacts) -> Bool)? {
+    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, Env) -> Bool)? {
         guard let flagCase = FlagCase(rawValue: at) else {
             return nil
         }
-        var fn: (borrowing Self.Value, inout Self) -> Bool
+        var fn: (borrowing Self.Value, inout Self, Env) -> Bool
 
         switch flagCase {
         case .include_list_unique:
-            fn = { (_ qp, _ facts) in
+            fn = { (_ qp, _ facts, _) in
                 return Self.unique(arr: qp.with, flags: &facts.flags, caseFlag: .include_list_unique)
             }
         
         case .exclude_list_unique:
-            fn = { (_ qp, _ facts) in
+            fn = { (_ qp, _ facts, _) in
                 return Self.unique(arr: qp.without, flags: &facts.flags, caseFlag: .exclude_list_unique)
             }
 
         case .both_list_merged_unique:
-            fn = { (_ qp, _ facts) in
+            fn = { (_ qp, _ facts, _) in
                 return Self.unique2(arr1: qp.with, arr2: qp.without, flags: &facts.flags, caseFlag: .both_list_merged_unique)
             }
         }

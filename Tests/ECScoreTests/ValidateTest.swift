@@ -3,26 +3,27 @@ import Testing
 
 // test Foo Case
 struct FooFacts<T> : Facts {
-
     typealias Value = T
     typealias Flags = FooCaseFlags
+    typealias Env = F_Void
+
     private(set) var flags = Flags()
 
-    static func validator(_ at: Int) -> ((Value, inout Self) -> Bool)? {
+    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, Env) -> Bool)? {
         guard let fooCase = FooFlagCase(rawValue: at) else {
             return nil
         }
-        var fn: (Self.Value, inout Self) -> Bool
+        var fn: (Self.Value, inout Self, Env) -> Bool
 
         switch fooCase {
         case .foo :
-            fn = { (_ val: Value, facts: inout Self) in
+            fn = { (_ val: Value, facts: inout Self, _) in
                 facts.flags.insert(.foo)
                 return true
             }
 
         case .bar :
-            fn = { (_ val: Value, facts: inout Self) in
+            fn = { (_ val: Value, facts: inout Self, _) in
                 facts.flags.insert(.bar)
                 return true
             }
@@ -40,8 +41,6 @@ struct FooFacts<T> : Facts {
             return []    // 預設不需要任何旗標
         }
     }
-
-
 }
 
 // lower bit at
@@ -72,7 +71,7 @@ func rawToValidatedToRaw() {
 
     // // validate
     let before = val1.facts.flags
-    let ok = validate(validated: &val1, FooFlagCase.foo.rawValue /* rule: .foo */)
+    let ok = validate(validated: &val1, FooFlagCase.foo.rawValue)
     validate(validated: &val1, FooFlagCase.bar.rawValue)
 
     #expect(ok)

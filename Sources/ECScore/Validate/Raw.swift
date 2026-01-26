@@ -36,21 +36,44 @@ enum Proof_Init: Proof {}
 protocol Facts<T> {
     associatedtype T
     associatedtype Flags: OptionSet
+    associatedtype Env: Default
+
     typealias Value = T
     var flags: Flags { get }
 
     init()
-    static func validator(_ at: Int) -> ((_: borrowing Value, _: inout Self) -> Bool)?
+    static func validator(_ at: Int) -> ((_: borrowing Value, _: inout Self,  _: borrowing Env) -> Bool)?
     static func requirement(for proof: any Proof.Type) -> Flags
+}
+
+protocol Default {
+    static func _default() -> Self
+}
+
+struct F_Void {}
+extension F_Void: Default {
+    static func _default() -> Self { Self() }
 }
 
 @discardableResult
 func validate<T, P: Proof, F: Facts>(
     validated: inout Validated<T, P, F>,
-    _ at: Int
+    _ at: Int,
+    _ other_validated_resource: borrowing F.Env = F.Env._default()
 ) -> Bool {
     guard let validator = F.validator(at) else { return false }
-    return validator(validated.value, &validated.facts)
+    return validator(validated.value, &validated.facts, other_validated_resource)
+}
+
+@discardableResult
+func validate<T, P: Proof, F: Facts>(
+    validated: inout Validated<T, P, F>,
+    _ at: Int,
+) -> Bool 
+    where F.Env == F_Void
+{
+    guard let validator = F.validator(at) else { return false }
+    return validator(validated.value, &validated.facts, F_Void())
 }
 
 // certify

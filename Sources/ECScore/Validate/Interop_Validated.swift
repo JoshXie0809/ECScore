@@ -2,22 +2,23 @@ struct Manifest_Facts: Facts
 {
     typealias Value = ComponentManifest
     typealias Flags = CaseFlags
-    private(set) var flags: Flags
+    typealias Env = MF_Env
 
+    private(set) var flags: Flags
     init() {
         self.flags = Flags()
     }
 
-    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self) -> Bool)? {
+    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, Env) -> Bool)? {
         guard let flagCase = FlagCase(rawValue: at) else {
             return nil
         }
 
-        var fn: (borrowing Self.Value, inout Self) -> Bool
+        var fn: (borrowing Self.Value, inout Self, Env) -> Bool
 
         switch flagCase {
         case .unique: 
-            fn = { (_ arr, _ facts) in
+            fn = { (_ arr, _ facts, _) in
                 var seen = Set<ObjectIdentifier>()
                 for type in arr {
                     let type_id = ObjectIdentifier(type)
@@ -50,6 +51,13 @@ struct Manifest_Facts: Facts
     struct CaseFlags: OptionSet {
         var rawValue: Int
         static let unique = CaseFlags(rawValue: 1 << FlagCase.unique.rawValue)
+    }
+
+    struct MF_Env: Default {
+        let registry: RegistryPlatform?
+        static func _default() -> Self {
+            return Self(registry: nil)
+        }
     }
 }
 
