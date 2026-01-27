@@ -12,35 +12,43 @@ extension SparseSet_L2 {
     }
 
     @inlinable // should: 0 <= i <= 63
-    func page_I_MaskOut_With(pageMask: inout UInt64, i: Int) {
+    func page_I_MaskOut_With(pageMask: inout UInt64, _ i: Int) {
         pageMask &= sparse.pageOnBlock[i].pageMask
     }
+
     @inlinable // should: 0 <= i <= 63
-    func page_I_MaskOut_NotWith(pageMask: inout UInt64, i: Int) {
+    func page_I_MaskOut_NotWith(pageMask: inout UInt64, _ i: Int) {
         pageMask &= ~sparse.pageOnBlock[i].pageMask
     }
 }
 
+func getStorages<each T>(
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ tokens: borrowing (repeat TypeToken<each T>)
+) -> (repeat PFStorageBox<each T>)
+{
+    (repeat (each tokens).getStorage(base: base))
+}
+
 func getMinimum_ActiveMember_NumberOfStorages<each T>(
-    _ storage: borrowing (repeat PFStorageBox<each T>)
+    _ storages: borrowing (repeat PFStorageBox<each T>)
 ) -> Int 
 {
-    var minimum: Int = Int.max
-    repeat minHelper(minimum: &minimum, new: (each storage).activeEntityCount)
+    var minimum = Int.max
+    repeat minHelper(&minimum, (each storages).activeEntityCount)
     return minimum
 }
 
 func getMinimum_Section_NumberOfStorages<each T>(
-    _ storage: borrowing (repeat PFStorageBox<each T>)
+    _ storages: borrowing (repeat PFStorageBox<each T>)
 ) -> Int 
 {
-    var minimum: Int = Int.max
-    repeat minHelper(minimum: &minimum, new: (each storage).segmentCount)
+    var minimum = Int.max
+    repeat minHelper(&minimum, (each storages).segmentCount)
     return minimum
 }
 
-
 @inline(__always)
-private func minHelper(minimum: inout Int, new: Int) {
+private func minHelper(_ minimum: inout Int, _ new: Int) {
     minimum = min(minimum, new)
 }

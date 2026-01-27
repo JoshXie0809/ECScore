@@ -142,7 +142,6 @@ struct PFStorageTests {
         // 驗證：segments 長度應該變為 2 (index 0, index 1)
         #expect(storage.segments.count == 2)
         #expect(storage.segments[1] != nil)
-        #expect(storage.segments[0] != nil) // 初始化會預留第一個
         
         // 2. 移除該實體
         storage.remove(eid: eidBig)
@@ -202,12 +201,12 @@ func testForceSwapLogic() async throws {
     
     // 4. 驗證補位邏輯
     // 原本最後一個 e3 應該被搬移到索引 1 的位置
-    let movedComponent = storage.getWithDenseIndex_Uncheck(1) as? Position
+    let movedComponent = storage.getWithDenseIndex_Uncheck_Typed(1)
     #expect(movedComponent?.x == 3.0) // 確認數據搬過來了
     
     // 5. 驗證總數與結構
     // 剩下的應該只有 2 個，且 e2 徹底消失
-    #expect(storage.getWithDenseIndex_Uncheck(2) == nil)
+    #expect(storage.getWithDenseIndex_Uncheck_Typed(2) == nil)
 }
 
 

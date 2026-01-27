@@ -1,16 +1,19 @@
 struct PFStorage<T: Component>: ~Copyable {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
     private(set) var activeEntityCount = 0
+    private(set) var firstActiveSegment: Int = Int.max
+    private(set) var lastActiveSegment: Int = Int.min
+    
     var storageType: any Component.Type { T.self }
     var segmentCount : Int { segments.count }
-
+    
     init() {
         self.segments = ContiguousArray<SparseSet_L2<T>?>(repeating: nil, count: 1)
-        self.segments[0] = SparseSet_L2<T>()
+        // self.segments[0] = SparseSet_L2<T>()
     }
 
-    @inlinable
-    mutating func ensureCapacity(for eid: EntityId) {
+    @inline(__always)
+    private mutating func ensureCapacity(for eid: EntityId) -> Int {
         let blockIdx = eid.id >> 12
 
         if blockIdx >= segments.count {
@@ -21,13 +24,40 @@ struct PFStorage<T: Component>: ~Copyable {
         if segments[blockIdx] == nil {
             segments[blockIdx] = SparseSet_L2<T>()
         }
+
+        updateFirstLast_Add(blockIdx: blockIdx)
+        return blockIdx
+    }
+
+    @inline(__always)
+    private mutating func updateFirstLast_Add(blockIdx: Int) {
+        firstActiveSegment = min(firstActiveSegment, blockIdx)
+        lastActiveSegment = max(lastActiveSegment, blockIdx)
+    }
+
+    @inline(__always)
+    private mutating func updateFirstLast_Remove(blockIdx: Int) {
+        if blockIdx == firstActiveSegment {
+            for i in (blockIdx+1)...lastActiveSegment {
+                if segments[i] != nil {
+                    firstActiveSegment = i
+                    return
+                } 
+            }
+        }
+        else if blockIdx == lastActiveSegment {
+            for i in stride(from: lastActiveSegment, through: firstActiveSegment, by: -1) {
+                if segments[i] != nil {
+                    lastActiveSegment = i
+                    return
+                }
+            }
+        }
     }
 
     @inlinable
     mutating func add(eid: borrowing EntityId, component: consuming T) {
-        ensureCapacity(for: eid) // ensure segments is not nil
-        let blockIdx = eid.id >> 12
-        
+        let blockIdx = ensureCapacity(for: eid) // ensure segments is not nil and return eid's blockId
         let beforeCount = segments[blockIdx]!.count
         segments[blockIdx]!.add(eid, component)
         self.activeEntityCount += (segments[blockIdx]!.count - beforeCount)
@@ -46,11 +76,18 @@ struct PFStorage<T: Component>: ~Copyable {
         // if segment has no active member
         if segments[blockIdx]!.count == 0 {
             segments[blockIdx] = nil
+
+            if activeEntityCount == 0 {
+                firstActiveSegment = Int.max
+                lastActiveSegment = Int.min
+            } else {
+                updateFirstLast_Remove(blockIdx: blockIdx)
+            }
         }
     }
 
     @inlinable
-    func getWithDenseIndex_Uncheck<U: Component>(_ index: Int) -> U? {
+    func getWithDenseIndex_Uncheck_Typed(_ index: Int) -> T? {
         var temp_index = index
         for segment: SparseSet_L2<T>? in segments {
             if (segment == nil) { continue }
@@ -59,16 +96,17 @@ struct PFStorage<T: Component>: ~Copyable {
                 continue
             }
             // temp_index < segment.count
-            return segment!.components[temp_index] as? U
+            return segment!.components[temp_index]
         }
 
         return nil
     }
 
     @inlinable
-    func get<U: Component>(_ eid: borrowing EntityId) -> U? {
+    func get(_ eid: borrowing EntityId) -> T? {
         let (blockIdx, offset) = (eid.id >> 12, eid.id & 4095)
-        return segments[blockIdx]?.get(offset: offset, version: eid.version) as? U
+        guard blockIdx < segments.count else { return nil }
+        return segments[blockIdx]?.get(offset: offset, version: eid.version)
     }
 
     @inlinable
@@ -90,6 +128,7 @@ struct PFStorage<T: Component>: ~Copyable {
     @inlinable
     func get(_ eid: borrowing EntityId) -> Any? {
         let (blockIdx, offset) = (eid.id >> 12, eid.id & 4095)
+        guard blockIdx < segments.count else { return nil }
         return segments[blockIdx]?.get(offset: offset, version: eid.version)
     }
 
@@ -101,8 +140,6 @@ struct PFStorage<T: Component>: ~Copyable {
         self.add(eid: eid, component: typedComponent)
     }
 }
-
-
 
 // 定義一個協議，用來獲取內部泛型 T 的類型
 protocol StorageTypeProvider: ~Copyable {

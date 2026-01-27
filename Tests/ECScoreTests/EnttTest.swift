@@ -43,8 +43,7 @@ struct Name: Component {
         }
     }
     
-    let (t1, t2, t3) = ttokens
-    let (st1, st2, st3) = (base.getStorage(token: t1), base.getStorage(token: t2), base.getStorage(token: t3))
+    let (st1, st2, st3) = getStorages(base: base, ttokens)
 
     #expect(st1.activeEntityCount == 6)
     #expect(st2.activeEntityCount == 2)
