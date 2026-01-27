@@ -3,18 +3,10 @@ import Testing
 
 
 // 模擬組件 A
-struct MockComponentA: Component {
-    static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorageBox(PFStorageHandle<Self>())
-    }
-}
+struct MockComponentA: Component {}
 
 // 模擬組件 B
-struct MockComponentB: Component {
-    static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorageBox(PFStorageHandle<Self>())
-    }
-}
+struct MockComponentB: Component {}
 
 // 輔助方法：快速初始化一個已 Boot 的平台
 func makeBootedPlatform() -> Validated<BasePlatform, Proof_Handshake, Platform_Facts> {

@@ -4,23 +4,14 @@ import Foundation
 
 struct Velocity: Component {
     let val: Double
-    static func createPFStorage() -> any AnyPlatformStorage {
-        PFStorageBox(PFStorageHandle<Self>())
-    }
 }
 
 struct Age: Component {
     let val: Int
-    static func createPFStorage() -> any AnyPlatformStorage {
-        PFStorageBox(PFStorageHandle<Self>())
-    }
 }
 
 struct Name: Component {
     let val: String
-    static func createPFStorage() -> any AnyPlatformStorage {
-        PFStorageBox(PFStorageHandle<Self>())
-    }
 }
 
 @Test func emplaceTest() async throws {
