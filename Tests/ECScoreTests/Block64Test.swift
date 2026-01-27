@@ -277,3 +277,57 @@ func testForceSwapLogic() async throws {
     #expect(comp!.x == -111.0 && comp!.y == -222.0)
     #expect(box.activeEntityCount == 1)
 }
+
+@Test("檢查 First/Last 的生命週期演變")
+func testBoundaryLifecycle() {
+    var storage = PFStorage<MockComponentA>()
+    
+    // 1. 初始狀態檢查
+    #expect(storage.firstActiveSegment == Int.max)
+    #expect(storage.lastActiveSegment == Int.min)
+    #expect(storage.activeEntityCount == 0)
+    
+    // 2. 插入首個元素 (Block 5)
+    // 假設 EntityId 的 id >> 12 會對應到 blockIdx
+    let eid5 = EntityId(id: 5 << 12, version: 1)
+    storage.add(eid: eid5, component: MockComponentA())
+    
+    #expect(storage.firstActiveSegment == 5)
+    #expect(storage.lastActiveSegment == 5)
+    
+    // 3. 擴展邊界 (加入 Block 0 和 Block 10)
+    let eid0 = EntityId(id: 0 << 12, version: 1)
+    let eid10 = EntityId(id: 10 << 12, version: 1)
+    storage.add(eid: eid0, component: MockComponentA())
+    storage.add(eid: eid10, component: MockComponentA())
+    
+    #expect(storage.firstActiveSegment == 0)
+    #expect(storage.lastActiveSegment == 10)
+    
+    // 4. 插入中間元素 (不應改變邊界)
+    let eid7 = EntityId(id: 7 << 12, version: 1)
+    storage.add(eid: eid7, component: MockComponentA())
+    #expect(storage.firstActiveSegment == 0)
+    #expect(storage.lastActiveSegment == 10)
+    
+    // 5. 移除非邊界元素 (不應觸發掃描)
+    storage.remove(eid: eid7)
+    #expect(storage.firstActiveSegment == 0)
+    #expect(storage.lastActiveSegment == 10)
+    
+    // 6. 移除左邊界 (應觸發正向掃描，跳轉到 Block 5)
+    storage.remove(eid: eid0)
+    #expect(storage.firstActiveSegment == 5, "移除 Block 0 後 first 應跳轉到下一個活躍的 Block 5")
+    #expect(storage.lastActiveSegment == 10)
+    
+    // 7. 移除右邊界 (應觸發逆向 stride 掃描，跳轉回 Block 5)
+    storage.remove(eid: eid10)
+    #expect(storage.firstActiveSegment == 5)
+    #expect(storage.lastActiveSegment == 5, "移除 Block 10 後 last 應跳轉回上一個活躍的 Block 5")
+    
+    // 8. 完全清空 (應觸發重置)
+    storage.remove(eid: eid5)
+    #expect(storage.activeEntityCount == 0)
+    #expect(storage.firstActiveSegment == Int.max)
+    #expect(storage.lastActiveSegment == Int.min)
+}

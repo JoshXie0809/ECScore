@@ -38,7 +38,7 @@ struct PFStorage<T: Component>: ~Copyable {
     @inline(__always)
     private mutating func updateFirstLast_Remove(blockIdx: Int) {
         if blockIdx == firstActiveSegment {
-            for i in (blockIdx+1)...lastActiveSegment {
+            for i in stride(from: firstActiveSegment, through: lastActiveSegment, by: 1){
                 if segments[i] != nil {
                     firstActiveSegment = i
                     return
