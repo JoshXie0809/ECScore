@@ -1,5 +1,5 @@
 protocol Component: ~Copyable {
-    static func createPFStorage() -> any AnyPlatformStorage
+    static func createPFStorage() -> AnyPlatformStorage
     static var typeIdString: String { get }
     static var _hs: TypeStrIdHashed_FNV1A_64 { get } // hashed string of typeIdString
 }
@@ -16,7 +16,7 @@ extension Component {
     }
 }
 
-extension String {    
+extension String {
     var _hs_fnv1a_64: TypeStrIdHashed_FNV1A_64 {
         fnv1a_64(self)
     }

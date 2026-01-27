@@ -36,7 +36,7 @@ class RegistryPlatform : Platform, Platform_Registry, Component {
         return typeToRId[type._hs] != nil
     }
 
-    static func createPFStorage() -> any AnyPlatformStorage {
+    static func createPFStorage() -> AnyPlatformStorage {
         return PFStorageBox(PFStorageHandle<Self>())
     }
 }

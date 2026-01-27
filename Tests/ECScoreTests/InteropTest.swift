@@ -16,27 +16,29 @@ struct MockComponentB: Component {
     }
 }
 
+// 輔助方法：快速初始化一個已 Boot 的平台
+func makeBootedPlatform() -> Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
+    let base = BasePlatform()
+    let registry = RegistryPlatform()
+    let entities = EntityPlatForm_Ver0()
+    
+    // 建立初始環境：Registry(0), Entities(1)
+    base.boot(registry: registry, entities: entities)
+
+    var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
+    validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
+
+    // 被驗證可以 handshake 的平台
+    guard case let .success(pf_handshake) = pf_val.certify(Proof_Handshake.self) else {
+        fatalError()
+    }
+
+    return pf_handshake
+}
+
+
 @Suite("BasePlatform Interop 測試")
 struct PlatformTests {
-    // 輔助方法：快速初始化一個已 Boot 的平台
-    private func makeBootedPlatform() -> Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
-        let base = BasePlatform()
-        let registry = RegistryPlatform()
-        let entities = EntityPlatForm_Ver0()
-        
-        // 建立初始環境：Registry(0), Entities(1)
-        base.boot(registry: registry, entities: entities)
-
-        var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
-        validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
-
-        // 被驗證可以 handshake 的平台
-        guard case let .success(pf_handshake) = pf_val.certify(Proof_Handshake.self) else {
-            fatalError()
-        }
-
-        return pf_handshake
-    }
 
     @Test("驗證 Interop 使用 Validated<T, P, F>")
     func testInterop() {
@@ -124,87 +126,6 @@ struct PlatformTests {
         #expect(eids.count == 3)
     }
 
-    @Test func emplaceTest() async throws {
-        let base = makeBootedPlatform()
-        let ttokens = interop(
-            base, MockComponentA.self, MockComponentB.self, Position.self,
-        )
-
-        emplace(base, tokens: ttokens) { 
-            (entities, pack) in
-            var (p1, p2, p3) = pack.storages
-            
-            for i in 0..<30 {
-                let e = entities.create()
-                p3.addComponet(e, Position.init(x: 3.43 + Float(i), y: 43.3))
-
-                if (i+1) % 5 == 0 { 
-                    p1.addComponet(e, MockComponentA())
-                }
-
-                if i % 18 == 9 {
-                    p2.addComponet(e, MockComponentB())
-                }
-            }
-        }
-        
-        let (t1, t2, t3) = ttokens
-
-        #expect(base.getStorage(token: t3).activeEntityCount == 30)
-        #expect(base.getStorage(token: t1).activeEntityCount == 6)
-        #expect(base.getStorage(token: t2).activeEntityCount == 2)
-    }
-
-    @Test func mounterTest() async throws {
-
-        // let fn1 =  { EntityPlatForm_Ver0() }
-        // let fn2 = { Position(x: 1.2, y: 22.3) }
-        // let fn3 = { MockComponentA() }
-        // let fn4 = { MockComponentB() }
-
-        // var mounter = Mounter(base.clone(), eh)
-        // let cache: MounterCache = mounter.mountAndCache(fn1, fn2, fn3, fn4)
-
-        // let e_pf_rid = base.registry.lookup(EntityPlatForm_Ver0.self)!
-        // let postion_rid = base.registry.lookup(Position.self)!
-
-        // #expect(base.storages[e_pf_rid.id]!.get(eids[2]) != nil)
-        // #expect(base.storages[postion_rid.id]!.get(eids[2]) != nil)
-
-        // var a = base.storages[postion_rid.id]!.get(eids[2]) as! Position
-        // #expect(a.x == 1.2)
-        // #expect(a.y == 22.3)
-
-        // // get new eid
-        // let eh2 = try base.getEntityHandle(eids[1]).get()
-        // // replace mounter eid and mount using cache
-        // mounter = mounter.replaceEntityHandle(eh2).mountWithCached(cache)
-
-        // #expect(base.storages[e_pf_rid.id]!.get(eids[1]) != nil)
-        // #expect(base.storages[postion_rid.id]!.get(eids[1]) != nil)
-
-        // a = base.storages[postion_rid.id]!.get(eids[1]) as! Position
-        // #expect(a.x == 1.2)
-        // #expect(a.y == 22.3)
-
-        // // get new eid
-        // let eh3 = try base.getEntityHandle(eids[0]).get()
-        // // replace mounter eid and mount using cache
-        // mounter = mounter.replaceEntityHandle(eh3).mountWithValuesWithCached(
-        //     cache.token,
-        //     EntityPlatForm_Ver0(),
-        //     Position(x: -12345.0, y: 0.0),
-        //     MockComponentA(),
-        //     MockComponentB()
-        // )
-
-        // #expect(base.storages[e_pf_rid.id]!.get(eids[0]) != nil)
-        // #expect(base.storages[postion_rid.id]!.get(eids[0]) != nil)
-
-        // a = base.storages[postion_rid.id]!.get(eids[0]) as! Position
-        // #expect(a.x == -12345.0)
-        // #expect(a.y == 0.0)
-    }
 }
 
 
