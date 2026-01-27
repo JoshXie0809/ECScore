@@ -2,6 +2,7 @@ struct PFStorage<T: Component>: ~Copyable {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
     private(set) var activeEntityCount = 0
     var storageType: any Component.Type { T.self }
+    var segmentCount : Int { segments.count }
 
     init() {
         self.segments = ContiguousArray<SparseSet_L2<T>?>(repeating: nil, count: 1)
@@ -145,6 +146,7 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
 
     var storageType: any Component.Type { T.self }
     var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
+    var segmentCount : Int { handle.pfstorage.segmentCount }
 
     var view: PFStorageView<T> {
         PFStorageView(handle)

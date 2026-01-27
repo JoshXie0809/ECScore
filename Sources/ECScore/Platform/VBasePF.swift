@@ -113,11 +113,13 @@ func interop<each T: Component>(
         fatalError("duplicate of type while interop<each T>")
     }
     
-    var env = Manifest_Facts.Env._default()
-    env.registry = pf_val.registry
-
-    guard validate(validated: &manifest_val, other_validated_resource: env, Manifest_Facts.FlagCase.noTypeStringCollisoin.rawValue)
-    else {
+    var env = Manifest_Facts.Env._default(); env.registry = pf_val.registry;
+    
+    guard validate(
+        validated: &manifest_val, 
+        other_validated_resource: env, 
+        Manifest_Facts.FlagCase.noTypeStringCollisoin.rawValue
+    ) else {
         fatalError("TypeString hashed value collision while interop<each T>")
     }
 

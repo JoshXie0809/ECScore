@@ -36,13 +36,21 @@ struct Name: Component {
                 st2.addComponent(e, MockComponentB())
             }
         }
+
+        for i in 30..<(4_096*3) {
+            let e = entities.createEntity()
+            st3.addComponent(e, Position.init(x: 3.43 + Float(i), y: 43.3))
+        }
     }
     
     let (t1, t2, t3) = ttokens
+    let (st1, st2, st3) = (base.getStorage(token: t1), base.getStorage(token: t2), base.getStorage(token: t3))
 
-    #expect(base.getStorage(token: t3).activeEntityCount == 30)
-    #expect(base.getStorage(token: t1).activeEntityCount == 6)
-    #expect(base.getStorage(token: t2).activeEntityCount == 2)
+    #expect(st1.activeEntityCount == 6)
+    #expect(st2.activeEntityCount == 2)
+    #expect(st3.activeEntityCount == 4_096*3)
+    #expect(getMinimum_ActiveMember_NumberOfStorages((st1, st2, st3)) == 2)
+    #expect(getMinimum_Section_NumberOfStorages((st1, st2, st3)) == 1)
 }
 
 // @Test func emplaceSpeedTest1M() async throws {

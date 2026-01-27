@@ -99,8 +99,6 @@ extension Validated {
 
 extension Validated {
     var flags: F.Flags {
-        get {
-            facts.flags
-        }
+        facts.flags
     }
 }
