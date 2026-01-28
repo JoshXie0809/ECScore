@@ -3,9 +3,11 @@ struct PFStorage<T: Component>: ~Copyable {
     private(set) var activeEntityCount = 0
     private(set) var firstActiveSegment: Int = Int.max
     private(set) var lastActiveSegment: Int = Int.min
-    
+    private(set) var activeSegmentCount: Int = 0
+
     var storageType: any Component.Type { T.self }
     var segmentCount : Int { segments.count }
+    
     
     init() {
         self.segments = ContiguousArray<SparseSet_L2<T>?>(repeating: nil, count: 1)
@@ -23,6 +25,7 @@ struct PFStorage<T: Component>: ~Copyable {
 
         if segments[blockIdx] == nil {
             segments[blockIdx] = SparseSet_L2<T>()
+            activeSegmentCount += 1
             updateFirstLast_Add(blockIdx: blockIdx)
         }
 
@@ -76,8 +79,9 @@ struct PFStorage<T: Component>: ~Copyable {
         // if segment has no active member
         if segments[blockIdx]!.count == 0 {
             segments[blockIdx] = nil
+            activeSegmentCount -= 1
 
-            if activeEntityCount == 0 {
+            if activeSegmentCount == 0 {
                 firstActiveSegment = Int.max
                 lastActiveSegment = Int.min
             } else {
@@ -185,11 +189,25 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
         handle.pfstorage.get(eid)
     }
 
-    var storageType: any Component.Type { T.self }
-    var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
-    var segmentCount : Int { handle.pfstorage.segmentCount }
-    var firstActiveSegment: Int { handle.pfstorage.firstActiveSegment }
-    var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
+    @inlinable var storageType: any Component.Type { T.self }
+    @inlinable var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
+    @inlinable var segmentCount : Int { handle.pfstorage.segmentCount }
+    @inlinable var firstActiveSegment: Int { handle.pfstorage.firstActiveSegment }
+    @inlinable var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
+    @inlinable var activeSegmentCount: Int { handle.pfstorage.activeSegmentCount }
+    
+    @inlinable
+    func segmentBlockMaskWith(mask: inout UInt64, _ i: Int) {
+        if mask == 0 { return }
+        if i > handle.pfstorage.lastActiveSegment { mask = UInt64(0); return; } // for more segment
+        
+        if let segment = handle.pfstorage.segments[i] {
+            segment.block_MaskOut_With(blockMask: &mask)
+        } 
+        else {
+            mask = UInt64(0)
+        }
+    }
 
     var view: PFStorageView<T> {
         PFStorageView(handle)

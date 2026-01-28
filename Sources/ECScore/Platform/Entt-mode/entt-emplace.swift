@@ -8,6 +8,7 @@ extension TypeToken {
     }
 }
 
+@inline(__always)
 func emplace<each T>(
     _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     tokens: borrowing (repeat TypeToken<each T>),

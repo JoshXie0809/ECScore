@@ -62,3 +62,46 @@ func getMaximum_FirstActiveSection_OfStorages<each T>(
     }
     return maximum
 }
+
+struct ViewPlan {
+    let segmentIndex: Int
+    let mask: UInt64
+}
+
+@inline(__always)
+func viewPlans<each T>( 
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    _ with: borrowing (repeat TypeToken<each T>)
+) -> [ViewPlan]
+{
+    let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
+
+    var global_First = Int.min; repeat maxHelper(&global_First, (each storages).firstActiveSegment);
+    var global_Last = Int.max; repeat minHelper(&global_Last, (each storages).lastActiveSegment);
+    if global_First > global_Last { return [] }
+    
+    var global_Minimum_ActiveSegmentCount = Int.max; repeat minHelper(&global_Minimum_ActiveSegmentCount, (each storages).activeSegmentCount);
+    var viewPlans = [ViewPlan]()
+    let estimated_space = min(global_Minimum_ActiveSegmentCount, global_Last - global_First + 1)
+    viewPlans.reserveCapacity(estimated_space)
+
+    for i in stride(from: global_First, through: global_Last, by: 1) {
+        var segment_i_mask = SparseSet_L2_BaseMask
+        repeat (each storages).segmentBlockMaskWith(mask: &segment_i_mask, i)
+        if segment_i_mask != 0 {
+            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
+        }
+    }
+
+    return viewPlans
+}
+
+@inline(__always)
+func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
+    minimum = min(minimum, new)
+}
+
+@inline(__always)
+func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
+    maximum = max(maximum, new)
+}

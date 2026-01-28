@@ -51,6 +51,8 @@ struct Name: Component {
     #expect(getMinimum_ActiveMemberNumber_OfStorages((st1, st2, st3)) == 2)
     #expect(getMaximum_FirstActiveSection_OfStorages((st1, st2, st3)) == 0)
     #expect(getMinimum_LastActiveSection_OfStorages((st1, st2, st3)) == 0)
+
+    print(viewPlans(base: base, ttokens))
 }
 
 // @Test func emplaceSpeedTest1M() async throws {
