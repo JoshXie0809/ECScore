@@ -147,6 +147,13 @@ struct PFStorage<T: Component>: ~Copyable {
         }
         self.add(eid: eid, component: typedComponent)
     }
+
+    @inlinable
+    mutating func getRawPointer_Internal(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
+        // 這裡使用 Unsafe 存取來繞過 mutating 限制
+        // 既然你保證了 reserveCapacity，這是安全的
+        return segments[blockIdx]!.getRawDataPointer() 
+    }
 }
 
 // 定義一個協議，用來獲取內部泛型 T 的類型
@@ -221,10 +228,24 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
         segment.page_I_MaskOut_With(pageMask: &mask, pageIdx)
     }
 
+    @inlinable
+    func get_SparseSetL2MutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
+        handle.pfstorage.getRawPointer_Internal(blockIdx)
+    }
+    @inlinable
+    func getSparsePagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
+        PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
+    }
+
     var view: PFStorageView<T> {
         PFStorageView(handle)
     }
 }
+
+struct PagePtr<T> {
+    let ptr: UnsafePointer<Page64>
+}
+
 
 struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
     private let handle: PFStorageHandle<T>

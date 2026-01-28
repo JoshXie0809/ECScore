@@ -72,7 +72,6 @@ struct SparseSet_L2<T: Component>: SparseSet {
         self.components.append(component)
         self.reverseEntities.append(bId)
         sparse.addEntityOnBlock(offset, ssEntry: ssEntry)
-
     }
 
     @inlinable 
@@ -116,9 +115,18 @@ struct SparseSet_L2<T: Component>: SparseSet {
         action(&components[denseIdx])
     }
 
-     // 改成 mutating func
+    // 改成 mutating func
     @inlinable
     mutating func getRawDataPointer() -> UnsafeMutablePointer<T> {
         return components.withUnsafeMutableBufferPointer { $0.baseAddress! }
+    }   
+}
+
+extension Block64_L2 {
+    /// 獲取 Page 陣列的原始指標
+    @inline(__always)
+    func getPageRawPointer() -> UnsafePointer<Page64> {
+        // ContiguousArray 保證記憶體連續性，直接獲取基底地址
+        return pageOnBlock.withUnsafeBufferPointer { $0.baseAddress! }
     }
 }
