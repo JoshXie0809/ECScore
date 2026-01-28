@@ -26,7 +26,7 @@ struct Platform_Facts: Facts {
         case is Proof_Handshake.Type:
             return [.handshake]
         default:
-            return []
+            fatalError("does not contains \(proof) in \(Self.self)")
         }
     }
 

@@ -32,7 +32,7 @@ struct QueryPlanFacts: Facts {
         case is Proof_ValidQueryPlan.Type:
             return [.exclude_list_unique, .include_list_unique, .both_list_merged_unique]
         default:
-            return []
+            fatalError("does not contains \(proof) in \(Self.self)")
         }
     }
 
@@ -47,7 +47,6 @@ struct QueryPlanFacts: Facts {
         static let include_list_unique = Self(rawValue: 1 << FlagCase.include_list_unique.rawValue )
         static let exclude_list_unique = Self(rawValue: 1 << FlagCase.exclude_list_unique.rawValue )
         static let both_list_merged_unique = Self(rawValue: 1 << FlagCase.both_list_merged_unique.rawValue )
-
     }
 
     private static func unique(arr: borrowing ComponentManifest, flags: inout CaseFlags, caseFlag: CaseFlags) -> Bool 

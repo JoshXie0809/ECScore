@@ -169,22 +169,27 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
     private let handle: PFStorageHandle<T>
     init(_ h: PFStorageHandle<T>) { self.handle = h}
 
+    @inlinable
     mutating func rawAdd(eid: EntityId, component: Any) {
         handle.pfstorage.rawAdd(eid: eid, component: component)
     }
 
+    @inlinable
     mutating func add(eid: EntityId, component: T) {
         handle.pfstorage.add(eid: eid, component: component)
     }
 
+    @inlinable
     mutating func remove(eid: EntityId) {
         handle.pfstorage.remove(eid: eid)
     }
 
+    @inlinable
     func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
         handle.pfstorage.getWithDenseIndex_Uncheck(index)
     }
 
+    @inlinable
     func get(_ eid: EntityId) -> Any? {
         handle.pfstorage.get(eid)
     }
@@ -209,6 +214,13 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
         }
     }
 
+    @inlinable
+    func segmentPageMaskWith_Uncheck(mask: inout UInt64, blockIdx: Int, pageIdx: Int) {
+        if mask == 0 { return }
+        let segment = handle.pfstorage.segments[blockIdx]!
+        segment.page_I_MaskOut_With(pageMask: &mask, pageIdx)
+    }
+
     var view: PFStorageView<T> {
         PFStorageView(handle)
     }
@@ -224,7 +236,6 @@ struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
     @inlinable
     var storage: PFStorage<T> {
         _read {
-            // 在這裡可以加入讀取鎖的邏輯，或者配合系統的 Phase 檢查
             yield handle.pfstorage
         }
     }

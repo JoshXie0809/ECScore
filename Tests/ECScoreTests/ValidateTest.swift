@@ -35,7 +35,7 @@ struct FooFacts<T> : Facts {
         case is Proof_FooVerified.Type:
             return [.foo, .bar] // 必須擁有 foo 這個位元
         default:
-            return []    // 預設不需要任何旗標
+            fatalError("does not contains \(proof) in \(Self.self)")
         }
     }
 }

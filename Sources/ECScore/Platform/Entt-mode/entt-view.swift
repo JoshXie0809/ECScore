@@ -69,13 +69,12 @@ struct ViewPlan {
 }
 
 @inline(__always)
-func viewPlans<each T>( 
+func createViewPlans<each T>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ with: borrowing (repeat TypeToken<each T>)
 ) -> [ViewPlan]
 {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
-
     var global_First = Int.min; repeat maxHelper(&global_First, (each storages).firstActiveSegment);
     var global_Last = Int.max; repeat minHelper(&global_Last, (each storages).lastActiveSegment);
     if global_First > global_Last { return [] }
@@ -94,6 +93,34 @@ func viewPlans<each T>(
     }
 
     return viewPlans
+}
+
+@inline(__always)
+func executeViewPlans<each T> (
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    viewPlans: [ViewPlan],
+    _ with: borrowing (repeat TypeToken<each T>)
+) {
+    let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
+    
+    for vp in viewPlans {var blockMask = vp.mask    
+    while blockMask != 0 {
+        let pageIdx = blockMask.trailingZeroBitCount
+        var pageMask = SparseSet_L2_BaseMask; 
+        repeat (each storages)
+            .segmentPageMaskWith_Uncheck(mask: &pageMask, blockIdx: vp.segmentIndex, pageIdx: pageIdx)
+        while pageMask != 0 {
+            let slotIdx = pageMask.trailingZeroBitCount // 0 ~ 63
+            let offset = pageIdx << 6 | slotIdx
+            print((vp.segmentIndex, offset))
+            // logic here
+
+            // end
+            pageMask &= (pageMask - 1)
+        }
+        // end
+        blockMask &= (blockMask - 1)
+    }}
 }
 
 @inline(__always)

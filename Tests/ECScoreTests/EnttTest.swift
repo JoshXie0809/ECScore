@@ -24,20 +24,14 @@ struct Name: Component {
         (entities, pack) in
         var (st1, st2, st3) = pack.storages
         
-        for i in 0..<30 {
+        for i in 0..<5000 {
             let e = entities.createEntity()
             st3.addComponent(e, Position.init(x: 3.43 + Float(i), y: 43.3))
-
-            if (i+1) % 5 == 0 { 
-                st1.addComponent(e, MockComponentA())
-            }
-
-            if i % 18 == 9 {
-                st2.addComponent(e, MockComponentB())
-            }
+            st1.addComponent(e, MockComponentA())
+            st2.addComponent(e, MockComponentB())
         }
 
-        for i in 30..<(4_096*3) {
+        for i in 5000..<(4_096*3) {
             let e = entities.createEntity()
             st3.addComponent(e, Position.init(x: 3.43 + Float(i), y: 43.3))
         }
@@ -45,14 +39,25 @@ struct Name: Component {
     
     let (st1, st2, st3) = getStorages(base: base, ttokens)
 
-    #expect(st1.activeEntityCount == 6)
-    #expect(st2.activeEntityCount == 2)
+    #expect(st1.activeEntityCount == 5000)
+    #expect(st2.activeEntityCount == 5000)
     #expect(st3.activeEntityCount == 4_096*3)
-    #expect(getMinimum_ActiveMemberNumber_OfStorages((st1, st2, st3)) == 2)
-    #expect(getMaximum_FirstActiveSection_OfStorages((st1, st2, st3)) == 0)
-    #expect(getMinimum_LastActiveSection_OfStorages((st1, st2, st3)) == 0)
 
-    print(viewPlans(base: base, ttokens))
+    #expect(getMinimum_ActiveMemberNumber_OfStorages((st1, st2, st3)) == 5000)
+    #expect(getMaximum_FirstActiveSection_OfStorages((st1, st2, st3)) == 0)
+    #expect(getMinimum_LastActiveSection_OfStorages((st1, st2, st3)) == 1)
+
+    let vps = createViewPlans(base: base, ttokens)
+    print(vps)
+    executeViewPlans(base: base, viewPlans: vps, ttokens)
+}
+
+@Test func trailingZeroBitCountTest() async throws {
+    var mask: UInt64 = 0
+    #expect(mask.trailingZeroBitCount == 64)
+
+    mask = 1
+    #expect(mask.trailingZeroBitCount == 0)
 }
 
 // @Test func emplaceSpeedTest1M() async throws {

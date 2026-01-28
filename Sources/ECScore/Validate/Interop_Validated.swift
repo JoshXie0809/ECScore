@@ -60,7 +60,7 @@ struct Manifest_Facts: Facts {
         case is Proof_Ok_Manifest.Type:
             return [Flags.unique, Flags.noTypeStringCollisoin]
         default:
-            return []
+            fatalError("does not contains \(proof) in \(Self.self)")
         }
     }
 
