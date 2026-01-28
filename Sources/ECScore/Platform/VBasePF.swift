@@ -75,7 +75,7 @@ func interop(
             newRids.append((rid, type))
         }
         // search registry rid, because registered before, not nil
-        let rid = registry.lookup(type)!
+        let rid = registry.lookup(type._hs)!
         rids.append(rid)
         let type_id = ObjectIdentifier(type)
         idToAt[type_id] = at

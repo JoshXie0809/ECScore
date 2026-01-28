@@ -30,25 +30,35 @@ func getStorages<each T>(
     (repeat (each tokens).getStorage(base: base))
 }
 
-func getMinimum_ActiveMember_NumberOfStorages<each T>(
+func getMinimum_ActiveMemberNumber_OfStorages<each T>(
     _ storages: borrowing (repeat PFStorageBox<each T>)
 ) -> Int 
 {
     var minimum = Int.max
-    repeat minHelper(&minimum, (each storages).activeEntityCount)
+    for storage in repeat each storages {
+        minimum = min(minimum, storage.activeEntityCount)
+    }
     return minimum
 }
 
-func getMinimum_Section_NumberOfStorages<each T>(
+func getMinimum_LastActiveSection_OfStorages<each T>(
     _ storages: borrowing (repeat PFStorageBox<each T>)
 ) -> Int 
 {
     var minimum = Int.max
-    repeat minHelper(&minimum, (each storages).segmentCount)
+    for storage in repeat each storages {
+        minimum = min(minimum, storage.lastActiveSegment)
+    }
     return minimum
 }
 
-@inline(__always)
-private func minHelper(_ minimum: inout Int, _ new: Int) {
-    minimum = min(minimum, new)
+func getMaximum_FirstActiveSection_OfStorages<each T>(
+    _ storages: borrowing (repeat PFStorageBox<each T>)
+) -> Int 
+{
+    var maximum = Int.min
+    for storage in repeat each storages {
+        maximum = max(maximum, storage.firstActiveSegment)
+    }
+    return maximum
 }

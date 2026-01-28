@@ -40,7 +40,7 @@ struct Manifest_Facts: Facts
                     let name = String(reflecting: type) // 取得型別名稱
                     
                     // A. 檢查是否與 Registry 內已有的資料碰撞
-                    if let rid = register.lookup(type) {
+                    if let rid = register.lookup(type._hs) {
                         let storedType = register.lookup(rid)!
                         if storedType != type { return false }
                     }

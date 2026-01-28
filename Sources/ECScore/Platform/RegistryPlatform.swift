@@ -2,7 +2,7 @@ typealias RegistryId = EntityId
 
 protocol Platform_Registry: AnyObject, Component {
     func register(_ type: any Component.Type) -> RegistryId
-    func lookup(_ type: any Component.Type) -> RegistryId?
+    func lookup(_ type_rs: TypeStrIdHashed_FNV1A_64) -> RegistryId?
     func lookup(_ rid: RegistryId) -> Component.Type?
     func contains(_ type: any Component.Type) -> Bool
     var count: Int { get }
@@ -24,8 +24,8 @@ class RegistryPlatform : Platform, Platform_Registry, Component {
         return rid
     }
 
-    func lookup(_ type: any Component.Type) -> RegistryId? {
-        return typeToRId[type._hs]
+    func lookup(_ type_rs: TypeStrIdHashed_FNV1A_64) -> RegistryId? {
+        return typeToRId[type_rs]
     }
 
     func lookup(_ rid: RegistryId) -> (any Component.Type)? {

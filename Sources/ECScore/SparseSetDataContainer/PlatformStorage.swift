@@ -23,9 +23,9 @@ struct PFStorage<T: Component>: ~Copyable {
 
         if segments[blockIdx] == nil {
             segments[blockIdx] = SparseSet_L2<T>()
+            updateFirstLast_Add(blockIdx: blockIdx)
         }
 
-        updateFirstLast_Add(blockIdx: blockIdx)
         return blockIdx
     }
 
@@ -89,14 +89,16 @@ struct PFStorage<T: Component>: ~Copyable {
     @inlinable
     func getWithDenseIndex_Uncheck_Typed(_ index: Int) -> T? {
         var temp_index = index
-        for segment: SparseSet_L2<T>? in segments {
-            if (segment == nil) { continue }
-            if temp_index >= segment!.count {
-                temp_index -= segment!.count
-                continue
+        for i in stride(from: firstActiveSegment, through: lastActiveSegment, by: 1) 
+        {
+            if let segment = segments[i] {
+                if temp_index >= segment.count {
+                    temp_index -= segment.count
+                    continue
+                }
+                // temp_index < segment.count
+                return segment.components[temp_index]
             }
-            // temp_index < segment.count
-            return segment!.components[temp_index]
         }
 
         return nil
@@ -112,14 +114,16 @@ struct PFStorage<T: Component>: ~Copyable {
     @inlinable
     func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
         var temp_index = index
-        for segment: SparseSet_L2<T>? in segments {
-            if (segment == nil) { continue }
-            if temp_index >= segment!.count {
-                temp_index -= segment!.count
-                continue
+        for i in stride(from: firstActiveSegment, through: lastActiveSegment, by: 1) 
+        {
+            if let segment = segments[i] {
+                if temp_index >= segment.count {
+                    temp_index -= segment.count
+                    continue
+                }
+                // temp_index < segment.count
+                return segment.components[temp_index]
             }
-            // temp_index < segment.count
-            return segment!.components[temp_index]
         }
 
         return nil
@@ -184,6 +188,8 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
     var storageType: any Component.Type { T.self }
     var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
     var segmentCount : Int { handle.pfstorage.segmentCount }
+    var firstActiveSegment: Int { handle.pfstorage.firstActiveSegment }
+    var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
 
     var view: PFStorageView<T> {
         PFStorageView(handle)

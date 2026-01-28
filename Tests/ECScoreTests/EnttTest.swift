@@ -48,8 +48,9 @@ struct Name: Component {
     #expect(st1.activeEntityCount == 6)
     #expect(st2.activeEntityCount == 2)
     #expect(st3.activeEntityCount == 4_096*3)
-    #expect(getMinimum_ActiveMember_NumberOfStorages((st1, st2, st3)) == 2)
-    #expect(getMinimum_Section_NumberOfStorages((st1, st2, st3)) == 1)
+    #expect(getMinimum_ActiveMemberNumber_OfStorages((st1, st2, st3)) == 2)
+    #expect(getMaximum_FirstActiveSection_OfStorages((st1, st2, st3)) == 0)
+    #expect(getMinimum_LastActiveSection_OfStorages((st1, st2, st3)) == 0)
 }
 
 // @Test func emplaceSpeedTest1M() async throws {
