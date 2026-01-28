@@ -115,4 +115,10 @@ struct SparseSet_L2<T: Component>: SparseSet {
         // 這裡同樣建議用 inout 以保持結構的 In-place 性能
         action(&components[denseIdx])
     }
+
+     // 改成 mutating func
+    @inlinable
+    mutating func getRawDataPointer() -> UnsafeMutablePointer<T> {
+        return components.withUnsafeMutableBufferPointer { $0.baseAddress! }
+    }
 }

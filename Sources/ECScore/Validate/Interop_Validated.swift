@@ -1,6 +1,5 @@
-struct Manifest_Facts: Facts 
-{
-    typealias Value = ComponentManifest
+struct Manifest_Facts: Facts {
+    typealias T = ComponentManifest
     typealias Flags = CaseFlags
     typealias Env = MF_Env
 
@@ -9,16 +8,11 @@ struct Manifest_Facts: Facts
         self.flags = Flags()
     }
 
-    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, Env) -> Bool)? {
-        guard let flagCase = FlagCase(rawValue: at) else {
-            return nil
-        }
-
-        var fn: (borrowing Self.Value, inout Self, Env) -> Bool
-
+    static func validator(_ flagCase: FlagCase) -> Rule<Self> {
+        var fn: Rule<Self>
         switch flagCase {
-        case .unique: 
-            fn = { (arr, facts, _) in
+        case .unique:
+            fn = { arr, facts, _ in 
                 var seen = Set<ObjectIdentifier>()
                 for type in arr {
                     let type_id = ObjectIdentifier(type)
@@ -31,8 +25,8 @@ struct Manifest_Facts: Facts
                 return true
             }
 
-        case .noTypeStringCollisoin: 
-            fn = { (arr, facts, env) in
+        case .noTypeStringCollisoin:
+            fn = { arr, facts, env in
                 guard let register = env.registry else { return false }
                 var localNames = [String: any Component.Type]()
                 
@@ -57,7 +51,7 @@ struct Manifest_Facts: Facts
                 return true
             }
         }
-        
+
         return fn
     }
 

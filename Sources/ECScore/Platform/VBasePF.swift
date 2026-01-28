@@ -91,7 +91,6 @@ func interop(
     return InteropTokens(rids: rids, idToAt: idToAt)
 }
 
-
 struct TypeToken<T: Component> {
     let rid: RegistryId
     fileprivate init(rid: RegistryId) { self.rid = rid}
@@ -108,7 +107,7 @@ func interop<each T: Component>(
     repeat manifest.append(each type)
     var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
     
-    guard validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
+    guard validate(validated: &manifest_val, .unique)
     else {
         fatalError("duplicate of type while interop<each T>")
     }
@@ -118,7 +117,7 @@ func interop<each T: Component>(
     guard validate(
         validated: &manifest_val, 
         other_validated_resource: env, 
-        Manifest_Facts.FlagCase.noTypeStringCollisoin.rawValue
+        .noTypeStringCollisoin
     ) else {
         fatalError("TypeString hashed value collision while interop<each T>")
     }

@@ -1,14 +1,11 @@
 struct QueryPlanFacts: Facts {
-    typealias Value = QueryPlan
+    typealias T = QueryPlan
     typealias Flags = CaseFlags
     typealias Env = Env_Void
     
     private(set) var flags = Flags()
 
-    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, Env) -> Bool)? {
-        guard let flagCase = FlagCase(rawValue: at) else {
-            return nil
-        }
+    static func validator(_ flagCase: FlagCase) -> Rule<Self> {
         var fn: (borrowing Self.Value, inout Self, Env) -> Bool
 
         switch flagCase {

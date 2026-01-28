@@ -18,7 +18,7 @@ func makeBootedPlatform() -> Validated<BasePlatform, Proof_Handshake, Platform_F
     base.boot(registry: registry, entities: entities)
 
     var pf_val = Raw(value: base).upgrade(Platform_Facts.self)
-    validate(validated: &pf_val, Platform_Facts.FlagCase.handshake.rawValue)
+    validate(validated: &pf_val, .handshake)
 
     // 被驗證可以 handshake 的平台
     guard case let .success(pf_handshake) = pf_val.certify(Proof_Handshake.self) else {
@@ -42,11 +42,11 @@ struct PlatformTests {
         // 驗證流程
         var manifest_val = Raw(value: manifest).upgrade(Manifest_Facts.self)
         
-        let ok1 = validate(validated: &manifest_val, Manifest_Facts.FlagCase.unique.rawValue)
+        let ok1 = validate(validated: &manifest_val, .unique)
         var env = Manifest_Facts.Env._default()
         
         env.registry = base.registry
-        let ok2 = validate(validated: &manifest_val, other_validated_resource: env, Manifest_Facts.FlagCase.noTypeStringCollisoin.rawValue)
+        let ok2 = validate(validated: &manifest_val, other_validated_resource: env, .noTypeStringCollisoin)
 
         #expect(ok1 && ok2)
 

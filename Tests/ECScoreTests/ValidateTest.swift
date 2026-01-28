@@ -3,19 +3,16 @@ import Testing
 
 // test Foo Case
 struct FooFacts<T> : Facts {
-    typealias Value = T
     typealias Flags = FooCaseFlags
+    typealias FlagCase = FooFlagCase
     typealias Env = Env_Void
 
     private(set) var flags = Flags()
 
-    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, Env) -> Bool)? {
-        guard let fooCase = FooFlagCase(rawValue: at) else {
-            return nil
-        }
+    static func validator(_ flagCase: FlagCase) -> Rule<Self> {
         var fn: (Self.Value, inout Self, Env) -> Bool
 
-        switch fooCase {
+        switch flagCase {
         case .foo :
             fn = { (_ val: Value, facts: inout Self, _) in
                 facts.flags.insert(.foo)
@@ -69,8 +66,8 @@ func rawToValidatedToRaw() {
 
     // // validate
     let before = val1.flags
-    let ok = validate(validated: &val1, FooFlagCase.foo.rawValue)
-    validate(validated: &val1, FooFlagCase.bar.rawValue)
+    let ok = validate(validated: &val1, .foo)
+    validate(validated: &val1, .bar)
 
     #expect(ok)
     #expect(val1.flags != before)

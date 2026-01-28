@@ -35,18 +35,18 @@ struct Validated<T, P: Proof, F: Facts>: ~Copyable where F.Value == T {
 
 protocol Proof {}
 enum Proof_Init: Proof {}
+typealias Rule<F: Facts> = ((_: borrowing F.T, _: inout F,  _: borrowing F.Env) -> Bool)
 
 protocol Facts<T> {
     associatedtype T
     associatedtype Flags: OptionSet
+    associatedtype FlagCase
     associatedtype Env: Default
-
     typealias Value = T
+
     var flags: Flags { get }
-
     init()
-
-    static func validator(_ at: Int) -> ((_: borrowing Value, _: inout Self,  _: borrowing Env) -> Bool)?
+    static func validator(_ : FlagCase) -> Rule<Self>
     static func requirement(for proof: any Proof.Type) -> Flags
 }
 
@@ -63,9 +63,9 @@ extension Env_Void: Default {
 func validate<T, P: Proof, F: Facts>(
     validated: inout Validated<T, P, F>,
     other_validated_resource: borrowing F.Env = F.Env._default(),
-    _ at: Int,
+    _ flagCase : F.FlagCase,
 ) -> Bool {
-    guard let validator = F.validator(at) else { return false }
+    let validator: Rule<F> = F.validator(flagCase)
     return validator(validated.value, &validated.facts, other_validated_resource)
 }
 

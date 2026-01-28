@@ -1,17 +1,12 @@
 struct Platform_Facts: Facts {
-    typealias Value = BasePlatform
+    typealias T = BasePlatform
     typealias Flags = CaseFlags
     typealias Env = Env_Void
 
     private(set) var flags = Flags()
 
-    static func validator(_ at: Int) -> ((borrowing Self.Value, inout Self, borrowing Env) -> Bool)? {
-        guard let flagCase = FlagCase(rawValue: at) else {
-            return nil
-        }
-
-        var fn: (borrowing Self.Value, inout Self, borrowing Env) -> Bool
-
+    static func validator(_ flagCase: FlagCase) -> Rule<Self> {
+        var fn: Rule<Self>
         switch flagCase {
         case .handshake: 
             fn = { (_ pf, _ facts, _) in
