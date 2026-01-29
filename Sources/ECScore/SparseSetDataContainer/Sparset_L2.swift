@@ -151,11 +151,7 @@ extension Page64 {
 struct EntityOnPagePtr<T> {
     let ptr: UnsafePointer<SparseSetEntry>
     @inline(__always)
-    func getSlotCompArrIdx_Uncheck(_ slotIdx: Int) -> SlotCompArrIdx<T> {
-        return SlotCompArrIdx(idx: Int(ptr[slotIdx].compArrIdx))
+    func getSlotCompArrIdx_Uncheck(_ slotIdx: Int) -> Int {
+        return Int(ptr[slotIdx].compArrIdx)
     }
-}
-
-struct SlotCompArrIdx<T> {
-    let idx: Int
 }

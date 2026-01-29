@@ -103,33 +103,40 @@ func executeViewPlans<each T> (
     _ action: ( (repeat UnsafeMutablePointer<each T> ) -> Void)
 ) {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
-    
-    for vp in viewPlans { 
+    for vp in viewPlans {
         var blockMask = vp.mask    
-        let dataPtrs = (repeat (each storages).get_SparseSetL2MutPointer_Uncheck(vp.segmentIndex))
-        let pagePtrs = (repeat (each storages).getSparsePagePointer_Uncheck(vp.segmentIndex))
+        let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
+        let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
         
-    while blockMask != 0 {
-        let pageIdx = blockMask.trailingZeroBitCount
-        let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+        while blockMask != 0 { // let pageIdx = blockMask.trailingZeroBitCount
+            let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(blockMask.trailingZeroBitCount))
+            var pageMask = SparseSet_L2_BaseMask;
+            repeat pageMask &= (each pagePtrs).ptr.advanced(by: blockMask.trailingZeroBitCount).pointee.pageMask
 
-        var pageMask = SparseSet_L2_BaseMask;
-        repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
-
-        while pageMask != 0 {
-            let slotIdx = pageMask.trailingZeroBitCount // 0 ~ 63
-            let compArrIdxs = (repeat (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx))
-            
-            // logic here
-            action( repeat (each dataPtrs).advanced(by: (each compArrIdxs).idx) )
-            
+            while pageMask != 0 { // let slotIdx = pageMask.trailingZeroBitCount
+                // logic here
+                // ############################################################################
+                action( repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( pageMask.trailingZeroBitCount )) )
+                // ############################################################################
+                // end
+                pageMask &= (pageMask - 1)
+            }
             // end
-            pageMask &= (pageMask - 1)
+            blockMask &= (blockMask - 1)
         }
-        // end
-        blockMask &= (blockMask - 1)
-    }}
+    }
 }
+
+@inline(__always)
+func view<each T> (
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    with: borrowing (repeat TypeToken<each T>),
+    _ action: ( (repeat UnsafeMutablePointer<each T> ) -> Void)
+) {
+    let vps = createViewPlans( base: base, with: (repeat each with) )
+    executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), action)
+}
+
 
 @inline(__always)
 func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
@@ -140,4 +147,3 @@ func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
 func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
 }
-

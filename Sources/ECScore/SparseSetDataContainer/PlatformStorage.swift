@@ -212,11 +212,9 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
     func segmentBlockMaskWith(mask: inout UInt64, _ i: Int) {
         if mask == 0 { return }
         if i > handle.pfstorage.lastActiveSegment { mask = UInt64(0); return; } // for more segment
-        
         if let segment = handle.pfstorage.segments[i] {
             segment.block_MaskOut_With(blockMask: &mask)
-        } 
-        else {
+        } else {
             mask = UInt64(0)
         }
     }
@@ -229,12 +227,12 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
     }
 
     @inlinable
-    func get_SparseSetL2MutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
+    func get_SparseSetL2_CompMutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
         handle.pfstorage.getRawPointer_Internal(blockIdx)
     }
     
     @inlinable
-    func getSparsePagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
+    func getSparseSetL2_PagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
         PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
     }
 

@@ -7,8 +7,6 @@ struct Position {
     var y: Float
 }
 
-
-
 @Test func testComponentMacro() async throws {
     let storage = __SparseSet_L2_Position()
     print(storage)
