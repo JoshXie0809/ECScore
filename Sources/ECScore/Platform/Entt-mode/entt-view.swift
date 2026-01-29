@@ -147,3 +147,56 @@ func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
 func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
 }
+
+@inline(__always)
+func executeViewPlansParallel<each T: Sendable>(
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    viewPlans: [ViewPlan],
+    with: borrowing (repeat TypeToken<each T>),
+    coresNum: Int = 4,
+    _ action: @escaping @Sendable (repeat UnsafeMutablePointer<each T>) -> Void
+) async {
+    
+    let planCount = viewPlans.count
+    
+    // 如果 Plan 太少，直接跑單核版本避免調度開銷
+    if planCount < coresNum || planCount < 4 {
+        executeViewPlans(base: base, viewPlans: viewPlans, with: (repeat each with), action)
+        return
+    }
+
+    await withTaskGroup(of: Void.self) { group in
+        let chunkSize = (planCount + coresNum - 1) / coresNum
+        let storages = (repeat (each with).getStorage(base: base))
+
+        for i in stride(from: 0, to: planCount, by: chunkSize) {
+            let range = i..<min(i + chunkSize, planCount)
+            let chunk = Array(viewPlans[range])
+            
+            group.addTask {
+                // 每個 Task 處理一組獨立的 Segments
+                for vp in chunk {
+                    var blockMask = vp.mask    
+                    let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
+                    let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
+                    
+                    while blockMask != 0 {
+                        let pageIdx = blockMask.trailingZeroBitCount
+                        let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+                        var pageMask = SparseSet_L2_BaseMask
+                        repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+
+                        while pageMask != 0 {
+                            let slotIdx = pageMask.trailingZeroBitCount
+                            // 執行閉包
+                            action(repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx)))
+                            
+                            pageMask &= (pageMask - 1)
+                        }
+                        blockMask &= (blockMask - 1)
+                    }
+                }
+            }
+        }
+    }
+}

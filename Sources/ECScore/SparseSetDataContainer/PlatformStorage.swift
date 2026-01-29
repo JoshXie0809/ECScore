@@ -172,7 +172,7 @@ final class PFStorageHandle<T: Component> {
     fileprivate var pfstorage = PFStorage<T>()
 }
 
-struct PFStorageBox<T: Component>: AnyPlatformStorage {
+struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
     private let handle: PFStorageHandle<T>
     init(_ h: PFStorageHandle<T>) { self.handle = h}
 

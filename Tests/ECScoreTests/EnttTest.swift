@@ -23,7 +23,7 @@ struct Name: Component {
     emplace(base, tokens: ttokens) { 
         (entities, pack) in
         var (st1, st2, st3) = pack.storages
-        let entityCount = 4096 * 16
+        let entityCount = 4096 * 16 * 4
         let probability = 0.25
 
         for i in 0..<entityCount {
@@ -43,20 +43,20 @@ struct Name: Component {
     let clock = ContinuousClock()
     // #########################################################
 
-    // let t0 = clock.now
-    // let vps = createViewPlans(base: base, with: ttokens)
-    // let t1 = clock.now
-    // executeViewPlans(base: base, viewPlans: vps, with: ttokens) { 
-    //     pos, _, _ in
-    //     pos.pointee.x += 1.23
-    //     pos.pointee.y -= 3.32
-    // } 
+    let t0 = clock.now
+    let vps = createViewPlans(base: base, with: ttokens)
+    let t1 = clock.now
 
-    // let t2 = clock.now
+    await executeViewPlansParallel(base: base, viewPlans: vps, with: ttokens) { 
+        pos, _, _ in
+        pos.pointee.x += 1.23
+        pos.pointee.y -= 3.32
+    } 
 
-    // print("plan:", t1 - t0)
-    // print("exec:", t2 - t1)
-    // print("plan & exec:", t2 - t0)
+    let t2 = clock.now
+    print("plan:", t1 - t0)
+    print("exec:", t2 - t1)
+    print("plan & exec:", t2 - t0)
 
     let start = clock.now
     view(base: base, with: ttokens) { 
