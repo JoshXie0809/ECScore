@@ -1,3 +1,5 @@
+import Foundation
+
 let SparseSet_L2_BaseMask: UInt64 = 0xFFFFFFFFFFFFFFFF
 
 extension SparseSet_L2 {
@@ -153,20 +155,18 @@ func executeViewPlansParallel<each T: Sendable>(
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: [ViewPlan],
     with: borrowing (repeat TypeToken<each T>),
-    coresNum: Int = 4,
     _ action: @escaping @Sendable (repeat UnsafeMutablePointer<each T>) -> Void
 ) async {
-    
+    let processorCount = ProcessInfo.processInfo.activeProcessorCount
     let planCount = viewPlans.count
     
-    // 如果 Plan 太少，直接跑單核版本避免調度開銷
-    if planCount < coresNum || planCount < 4 {
+    if planCount < processorCount || planCount < 16 {
         executeViewPlans(base: base, viewPlans: viewPlans, with: (repeat each with), action)
         return
     }
 
     await withTaskGroup(of: Void.self) { group in
-        let chunkSize = (planCount + coresNum - 1) / coresNum
+        let chunkSize = (planCount + processorCount - 1) / processorCount
         let storages = (repeat (each with).getStorage(base: base))
 
         for i in stride(from: 0, to: planCount, by: chunkSize) {

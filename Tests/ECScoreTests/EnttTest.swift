@@ -23,7 +23,7 @@ struct Name: Component {
     emplace(base, tokens: ttokens) { 
         (entities, pack) in
         var (st1, st2, st3) = pack.storages
-        let entityCount = 4096 * 16 * 4
+        let entityCount = 4096 * 16 * 16 * 4
         let probability = 0.25
 
         for i in 0..<entityCount {
