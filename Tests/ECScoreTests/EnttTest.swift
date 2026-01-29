@@ -23,8 +23,8 @@ struct Name: Component {
     emplace(base, tokens: ttokens) { 
         (entities, pack) in
         var (st1, st2, st3) = pack.storages
-        let entityCount = 50_000
-        let probability = 0.25 // 10% 擁有 A
+        let entityCount = 4096 * 16
+        let probability = 0.25
 
         for i in 0..<entityCount {
             let e = entities.createEntity()

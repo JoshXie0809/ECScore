@@ -232,6 +232,7 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
     func get_SparseSetL2MutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
         handle.pfstorage.getRawPointer_Internal(blockIdx)
     }
+    
     @inlinable
     func getSparsePagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
         PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
@@ -241,11 +242,6 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage {
         PFStorageView(handle)
     }
 }
-
-struct PagePtr<T> {
-    let ptr: UnsafePointer<Page64>
-}
-
 
 struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
     private let handle: PFStorageHandle<T>

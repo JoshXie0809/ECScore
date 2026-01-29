@@ -130,3 +130,33 @@ extension Block64_L2 {
         return pageOnBlock.withUnsafeBufferPointer { $0.baseAddress! }
     }
 }
+
+struct PagePtr<T> {
+    let ptr: UnsafePointer<Page64>
+
+    @inlinable
+    func getEntityOnPagePointer_Uncheck(_ pageIdx: Int) -> EntityOnPagePtr<T> {
+        EntityOnPagePtr(ptr: ptr.advanced(by: pageIdx).pointee.getEntityOnPageRawPointer())
+    }
+}
+
+extension Page64 {
+    /// 獲取 Page 陣列的原始指標
+    @inline(__always)
+    func getEntityOnPageRawPointer() -> UnsafePointer<SparseSetEntry> {
+        // ContiguousArray 保證記憶體連續性，直接獲取基底地址
+        return (entityOnPage.withUnsafeBufferPointer { $0.baseAddress! })
+    }
+}
+
+struct EntityOnPagePtr<T> {
+    let ptr: UnsafePointer<SparseSetEntry>
+    @inline(__always)
+    func getSlotCompArrIdx_Uncheck(_ slotIdx: Int) -> SlotCompArrIdx<T> {
+        return SlotCompArrIdx(idx: Int(ptr[slotIdx].compArrIdx))
+    }
+}
+
+struct SlotCompArrIdx<T> {
+    let idx: Int
+}

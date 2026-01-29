@@ -104,25 +104,28 @@ func executeViewPlans<each T> (
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
     
     for vp in viewPlans { var blockMask = vp.mask    
-    let base_SS_L2_ptrs = (repeat (each storages).get_SparseSetL2MutPointer_Uncheck(vp.segmentIndex))
+    let dataPtrs = (repeat (each storages).get_SparseSetL2MutPointer_Uncheck(vp.segmentIndex))
     let pagePtrs = (repeat (each storages).getSparsePagePointer_Uncheck(vp.segmentIndex))
 
     while blockMask != 0 {
         let pageIdx = blockMask.trailingZeroBitCount
-        var pageMask = SparseSet_L2_BaseMask; 
+
+        let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+
+        var pageMask = SparseSet_L2_BaseMask;
         for pagePtr in repeat each pagePtrs {
             pageMask &= pagePtr.ptr.advanced(by: pageIdx).pointee.pageMask
         }
 
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount // 0 ~ 63
-            let offset = pageIdx << 6 | slotIdx
+            let compArrIdxs = (repeat (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx))
+            let vals = (repeat (each dataPtrs).advanced(by: (each compArrIdxs).idx))
+            _ = vals
+
+            // logic here
             
-            // // logic here
             
-            // let vals = (repeat advancedHelper(unsafeMutPtr: each base_SS_L2_ptrs, compArrIdx: (each storages).getCompArrIdx_Uncheck(at: offset, in: vp.segmentIndex)))
-            // // print(vp.segmentIndex, offset, (repeat (each vals).pointee))
-            // _ = vals
             // end
             pageMask &= (pageMask - 1)
         }
@@ -141,7 +144,3 @@ func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
 }
 
-@inline(__always)
-func advancedHelper<T>(unsafeMutPtr: borrowing UnsafeMutablePointer<T>, compArrIdx: Int16) -> UnsafeMutablePointer<T> {
-    unsafeMutPtr.advanced(by: Int(compArrIdx))
-}
