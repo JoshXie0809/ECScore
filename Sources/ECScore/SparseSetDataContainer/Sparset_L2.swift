@@ -133,8 +133,7 @@ extension Block64_L2 {
 
 struct PagePtr<T> {
     let ptr: UnsafePointer<Page64>
-
-    @inlinable
+    @inline(__always)
     func getEntityOnPagePointer_Uncheck(_ pageIdx: Int) -> EntityOnPagePtr<T> {
         EntityOnPagePtr(ptr: ptr.advanced(by: pageIdx).pointee.getEntityOnPageRawPointer())
     }

@@ -71,7 +71,7 @@ struct ViewPlan {
 @inline(__always)
 func createViewPlans<each T>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    _ with: borrowing (repeat TypeToken<each T>)
+    with: borrowing (repeat TypeToken<each T>)
 ) -> [ViewPlan]
 {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
@@ -99,7 +99,8 @@ func createViewPlans<each T>(
 func executeViewPlans<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: [ViewPlan],
-    _ with: borrowing (repeat TypeToken<each T>)
+    with: borrowing (repeat TypeToken<each T>),
+    _ action: ( (repeat UnsafeMutablePointer<each T>) -> Void)
 ) {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
     
@@ -120,11 +121,9 @@ func executeViewPlans<each T> (
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount // 0 ~ 63
             let compArrIdxs = (repeat (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx))
-            let vals = (repeat (each dataPtrs).advanced(by: (each compArrIdxs).idx))
-            _ = vals
-
-            // logic here
             
+            // logic here
+            action( repeat (each dataPtrs).advanced(by: (each compArrIdxs).idx) )
             
             // end
             pageMask &= (pageMask - 1)
