@@ -100,23 +100,21 @@ func executeViewPlans<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: [ViewPlan],
     with: borrowing (repeat TypeToken<each T>),
-    _ action: ( (repeat UnsafeMutablePointer<each T>) -> Void)
+    _ action: ( (repeat UnsafeMutablePointer<each T> ) -> Void)
 ) {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
     
-    for vp in viewPlans { var blockMask = vp.mask    
-    let dataPtrs = (repeat (each storages).get_SparseSetL2MutPointer_Uncheck(vp.segmentIndex))
-    let pagePtrs = (repeat (each storages).getSparsePagePointer_Uncheck(vp.segmentIndex))
-
+    for vp in viewPlans { 
+        var blockMask = vp.mask    
+        let dataPtrs = (repeat (each storages).get_SparseSetL2MutPointer_Uncheck(vp.segmentIndex))
+        let pagePtrs = (repeat (each storages).getSparsePagePointer_Uncheck(vp.segmentIndex))
+        
     while blockMask != 0 {
         let pageIdx = blockMask.trailingZeroBitCount
-
         let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
 
         var pageMask = SparseSet_L2_BaseMask;
-        for pagePtr in repeat each pagePtrs {
-            pageMask &= pagePtr.ptr.advanced(by: pageIdx).pointee.pageMask
-        }
+        repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
 
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount // 0 ~ 63

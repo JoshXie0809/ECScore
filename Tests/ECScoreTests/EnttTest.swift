@@ -23,12 +23,12 @@ struct Name: Component {
     emplace(base, tokens: ttokens) { 
         (entities, pack) in
         var (st1, st2, st3) = pack.storages
-        let entityCount = 50_000
+        let entityCount = 4096 * 3
         let probability = 0.25
 
         for i in 0..<entityCount {
             let e = entities.createEntity()
-            if Double.random(in: 0...1) < 0.5 {
+            if Double.random(in: 0...1) < 0.95 {
                 if Double.random(in: 0...1) < probability { st1.addComponent(e, Position.init(x: 3.43 + Float(i), y: 43.3)) }
                 if Double.random(in: 0...1) < probability { st2.addComponent(e, MockComponentA()) }
                 if Double.random(in: 0...1) < probability { st3.addComponent(e, MockComponentB()) }
@@ -45,22 +45,20 @@ struct Name: Component {
     // #expect(st1.activeEntityCount == 5000)
     // #expect(st2.activeEntityCount == 5000)
     
-
     // #expect(getMinimum_ActiveMemberNumber_OfStorages((st1, st2, st3)) == 5000)
     // #expect(getMaximum_FirstActiveSection_OfStorages((st1, st2, st3)) == 0)
     // #expect(getMinimum_LastActiveSection_OfStorages((st1, st2, st3)) == 1)
+
     let clock = ContinuousClock()
     let t0 = clock.now
     let vps = createViewPlans(base: base, with: ttokens)
     let t1 = clock.now
+    
     executeViewPlans(base: base, viewPlans: vps, with: ttokens) { 
-        pos, 
-        _, 
-        _ in
-        
+        pos, _, _ in
         pos.pointee.x += 1.23
-
-    }
+        pos.pointee.y -= 3.32
+    } 
 
     let t2 = clock.now
 
