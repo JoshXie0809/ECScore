@@ -110,15 +110,17 @@ func executeViewPlans<each T> (
         let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
         let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
         
-        while blockMask != 0 { // let pageIdx = blockMask.trailingZeroBitCount
-            let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(blockMask.trailingZeroBitCount))
+        while blockMask != 0 { 
+            let pageIdx = blockMask.trailingZeroBitCount
+            let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
             var pageMask = SparseSet_L2_BaseMask;
-            repeat pageMask &= (each pagePtrs).ptr.advanced(by: blockMask.trailingZeroBitCount).pointee.pageMask
+            repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
 
-            while pageMask != 0 { // let slotIdx = pageMask.trailingZeroBitCount
+            while pageMask != 0 { 
+                let slotIdx = pageMask.trailingZeroBitCount
                 // logic here
                 // ############################################################################
-                action( repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( pageMask.trailingZeroBitCount )) )
+                action( repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( slotIdx )) )
                 // ############################################################################
                 // end
                 pageMask &= (pageMask - 1)
@@ -133,7 +135,7 @@ func executeViewPlans<each T> (
 func view<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    _ action: ( (repeat UnsafeMutablePointer<each T> ) -> Void)
+    _ action: ( (repeat UnsafeMutablePointer<each T>) -> Void )
 ) {
     let vps = createViewPlans( base: base, with: (repeat each with) )
     executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), action)
@@ -160,7 +162,7 @@ func executeViewPlansParallel<each T: Sendable>(
     let processorCount = ProcessInfo.processInfo.activeProcessorCount
     let planCount = viewPlans.count
     
-    if planCount < processorCount || planCount < 16 {
+    if planCount < processorCount || planCount < 8 {
         executeViewPlans(base: base, viewPlans: viewPlans, with: (repeat each with), action)
         return
     }
@@ -172,14 +174,16 @@ func executeViewPlansParallel<each T: Sendable>(
         for i in stride(from: 0, to: planCount, by: chunkSize) {
             let range = i..<min(i + chunkSize, planCount)
             let chunk = Array(viewPlans[range])
-            
+
+            // ##################################################################################### core task
             group.addTask {
                 // 每個 Task 處理一組獨立的 Segments
                 for vp in chunk {
                     var blockMask = vp.mask    
                     let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
                     let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
-                    
+
+                    // ##################################################################################### Sparse Set L2
                     while blockMask != 0 {
                         let pageIdx = blockMask.trailingZeroBitCount
                         let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
@@ -188,15 +192,26 @@ func executeViewPlansParallel<each T: Sendable>(
 
                         while pageMask != 0 {
                             let slotIdx = pageMask.trailingZeroBitCount
-                            // 執行閉包
                             action(repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx)))
-                            
                             pageMask &= (pageMask - 1)
                         }
                         blockMask &= (blockMask - 1)
                     }
+                    // ##################################################################################### Sparse Set L2
+
                 }
             }
+            // ##################################################################################### core task
         }
     }
+}
+
+@inline(__always)
+func viewParallel<each T: Sendable> (
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    with: borrowing (repeat TypeToken<each T>),
+    _ action: @escaping @Sendable (repeat UnsafeMutablePointer<each T>) -> Void
+) async {
+    let vps = createViewPlans( base: base, with: (repeat each with) )
+    await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), action)
 }
