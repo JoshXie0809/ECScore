@@ -4,11 +4,11 @@ import Foundation
 
 @Test func testFragmentationAndRecycling() async throws {
     // ----------------------------------------------------------------
-    // 1. 初始化戰場：建立 50,000 個實體
+    // 1. 初始化戰場：建立 100,000 個實體
     // ----------------------------------------------------------------
     var storage = PFStorage<Position>()
     let entities = Entities()
-    let initialCount = 50000
+    let initialCount = 100_000
     
     // 紀錄時間：初始配置
     let eids = entities.spawn(initialCount)
@@ -56,13 +56,14 @@ import Foundation
     // ----------------------------------------------------------------
     // 4. 效能驗收：在高度碎片化歷史後，進行全量遍歷
     // ----------------------------------------------------------------
-    let start = DispatchTime.now()
+    let clock = ContinuousClock()
+    let start = clock.now
     
     var checksum: Float = 0
     var iterateCount = 0
     
     // 模擬 System 的遍歷邏輯
-    for i in 0..<storage.segments.count {
+    for i in stride(from: storage.firstActiveSegment, through: storage.lastActiveSegment, by: 1) {
         // 核心優化：你的架構允許直接跳過 nil 的大區塊 (L1 Skip)
         guard let l2 = storage.segments[i] else { continue }
         
@@ -74,11 +75,10 @@ import Foundation
         }
     }
     
-    let end = DispatchTime.now()
-    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
-    let timeMs = Double(nanoTime) / 1_000_000
+    let end = clock.now
+    let time = start - end
     
-    print("🚀 Fragmented Traversal Time: \(String(format: "%.4f", timeMs)) ms")
+    print("🚀 Fragmented Traversal Time: \(time)")
     print("   Processed \(iterateCount) entities. Checksum: \(checksum)")
     
     // ----------------------------------------------------------------

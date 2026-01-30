@@ -3,7 +3,8 @@ import Foundation
 @testable import ECScore 
 
 struct Velocity: Component {
-    let val: Double
+    var vx: Float
+    var vy: Float
 }
 
 struct Age: Component {
@@ -17,55 +18,56 @@ struct Name: Component {
 @Test func emplaceTest() async throws {
     let base = makeBootedPlatform()
     let ttokens = interop(
-        base, Position.self, MockComponentA.self, MockComponentB.self
+        base, Position.self, Velocity.self, MockComponentA.self, MockComponentB.self
     )
 
     emplace(base, tokens: ttokens) { 
         (entities, pack) in
-        var (st1, st2, st3) = pack.storages
-        let entityCount = 4096 * 64 * 4 * 7
-        let probability = 0.15
-
-        for i in 0..<entityCount {
+        // storage pack
+        var (st1, st2, st3, st4) = pack.storages
+        let entityCount = 4096 * 16
+        
+        for _ in 0..<entityCount {
             let e = entities.createEntity()
-            if Double.random(in: 0...1) < 0.5 {
-                if Double.random(in: 0...1) < probability { st1.addComponent(e, Position.init(x: 3.43 + Float(i), y: 43.3)) }
-                if Double.random(in: 0...1) < probability { st2.addComponent(e, MockComponentA()) }
-                if Double.random(in: 0...1) < probability { st3.addComponent(e, MockComponentB()) }
-            } else {
-                st1.addComponent(e, Position.init(x: 3.43 + Float(i), y: 43.3))
-                st2.addComponent(e, MockComponentA())
-                st3.addComponent(e, MockComponentB())
+            st1.addComponent(e, Position.init(x: Float.random(in: 0...10), y: Float.random(in: 0...10)))
+            st2.addComponent(e, Velocity(vx: Float.random(in: 0...10), vy: Float.random(in: 0...10) ))
+            if Int.random(in: 0..<10) < 5 { 
+                st3.addComponent(e, MockComponentA())
+            }
+            if Int.random(in: 0..<10) < 5 { 
+                st4.addComponent(e, MockComponentB())
             }
         }
     }
     // #########################################################
     let clock = ContinuousClock()
+    let dt = Float(1.0 / 120.0)
+    let ttokens2 = interop(base, Position.self, Velocity.self)
     // #########################################################
 
-    // #####################
-    // ### Parallel Mode ###
-    // #####################
-    let t0 = clock.now
-    await viewParallel(base: base, with: ttokens) { 
-        pos, _, _ in
-        pos.pointee.x += 1.23
-        pos.pointee.y -= 3.32
-    } 
-
-    let t1 = clock.now
-    print("plan & exec:", t1 - t0)
+    // // #####################
+    // // ### Parallel Mode ###
+    // // #####################
+    // sleep(1)
+    // let t0 = clock.now
+    // await viewParallel(base: base, with: ttokens2) { 
+    //     pos, vel in
+    //     pos.pointee.x += vel.pointee.vx * dt
+    //     pos.pointee.y += vel.pointee.vy * dt
+    // } 
+    // let t1 = clock.now
+    // print("plan & exec:", t1 - t0)
+    // sleep(1)
 
     let start = clock.now
-    view(base: base, with: ttokens) { 
-        pos, _, _ in
-        pos.pointee.x += 1.23
-        pos.pointee.y -= 3.32
+    view(base: base, with: ttokens2) { 
+        pos, vel in
+        pos.pointee.x += vel.pointee.vx * dt
+        pos.pointee.y += vel.pointee.vy * dt
     }
-
     let end = clock.now
+    print("plan & exec:", end - start)
 
-    print("plan & exec: \(end - start)")
 }
 
 @Test func trailingZeroBitCountTest() async throws {
