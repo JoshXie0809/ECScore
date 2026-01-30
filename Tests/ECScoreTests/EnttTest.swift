@@ -25,7 +25,7 @@ struct Name: Component {
         (entities, pack) in
         // storage pack
         var (st1, st2, st3, st4) = pack.storages
-        let entityCount = 4096 * 16
+        let entityCount = 4096 * 64 * 7
         
         for _ in 0..<entityCount {
             let e = entities.createEntity()
@@ -50,17 +50,16 @@ struct Name: Component {
     // // #####################
     // // ### Parallel Mode ###
     // // #####################
-    // sleep(1)
+
     // let t0 = clock.now
-    // await viewParallel(base: base, with: ttokens2) { 
+    // await viewParallel(base: base, with: ttokens2, coresNum: 8) { 
     //     pos, vel in
     //     pos.pointee.x += vel.pointee.vx * dt
     //     pos.pointee.y += vel.pointee.vy * dt
     // } 
     // let t1 = clock.now
     // print("plan & exec:", t1 - t0)
-    // sleep(1)
-    for _ in 0..<100 {
+
     let start = clock.now
     view(base: base, with: ttokens2) { 
         pos, vel in
@@ -69,7 +68,7 @@ struct Name: Component {
     }
     let end = clock.now
     print("plan & exec:", end - start)
-    }
+    
 }
 
 @Test func trailingZeroBitCountTest() async throws {
