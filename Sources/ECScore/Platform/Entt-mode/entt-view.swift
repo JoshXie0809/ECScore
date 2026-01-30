@@ -103,7 +103,7 @@ func executeViewPlans<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
     with: borrowing (repeat TypeToken<each T>),
-    _ action: (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
+    _ action: (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
 ) {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
 
@@ -123,7 +123,7 @@ func executeViewPlans<each T> (
                 let slotIdx = pageMask.trailingZeroBitCount
                 // do action here
                 // ############################################################################
-                action(0, repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( slotIdx )) )
+                action(0, repeat ComponentProxy( pointer: (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( slotIdx )) )  )
                 // ############################################################################
                 // end
                 pageMask &= (pageMask - 1)
@@ -140,7 +140,7 @@ func executeViewPlans<each T> (
 func view<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    _ action: (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
+    _ action: (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
 ) {
     let vps = createViewPlans( base: base, with: (repeat each with) )
     executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), action)
@@ -157,76 +157,100 @@ func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
 }
 
-@inline(__always)
-func executeViewPlansParallel<each T: Sendable>(
-    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    viewPlans: ContiguousArray<ViewPlan>,
-    with: borrowing (repeat TypeToken<each T>),
-    coresNum: Int,
-    _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
-) async {
-    let processorCount = min(ProcessInfo.processInfo.activeProcessorCount, coresNum)
-    let planCount = viewPlans.count
-    if planCount < processorCount || planCount < 8 {
-        executeViewPlans(base: base, viewPlans: viewPlans, with: (repeat each with), action)
-        return
+// @inline(__always)
+// func executeViewPlansParallel<each T: Sendable>(
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+//     viewPlans: ContiguousArray<ViewPlan>,
+//     with: borrowing (repeat TypeToken<each T>),
+//     coresNum: Int,
+//     _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
+// ) async {
+//     let processorCount = min(ProcessInfo.processInfo.activeProcessorCount, coresNum)
+//     let planCount = viewPlans.count
+//     if planCount < processorCount || planCount < 8 {
+//         executeViewPlans(base: base, viewPlans: viewPlans, with: (repeat each with), action)
+//         return
+//     }
+
+//     let storages = (repeat (each with).getStorage(base: base))
+//     await withTaskGroup(of: Void.self) { group in
+//         let chunkSize = (planCount + processorCount - 1) / processorCount
+//         for i in stride(from: 0, to: planCount, by: chunkSize) {
+//             let range = i..<min(i + chunkSize, planCount)
+//             let chunk = Array(viewPlans[range])
+//             let taskId = i / chunkSize
+//             // ##################################################################################### core task
+//             group.addTask {
+//                 // 每個 Task 處理一組獨立的 Segments
+//                 for vp in chunk {
+//                     var blockMask = vp.mask
+//                     let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
+//                     let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
+
+//                     // ##################################################################################### Sparse_Set_L2_i
+//                     while blockMask != 0 {
+//                         let pageIdx = blockMask.trailingZeroBitCount
+//                         let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+//                         var pageMask = SparseSet_L2_BaseMask
+//                         repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+
+//                         while pageMask != 0 {
+//                             let slotIdx = pageMask.trailingZeroBitCount
+//                             action( 
+//                                 taskId,
+//                                 repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx))
+//                             )
+//                             pageMask &= (pageMask - 1)
+//                         }
+//                         blockMask &= (blockMask - 1)
+//                     }
+//                     // ##################################################################################### Sparse_Set_L2_i
+
+//                 }
+//             }
+//             // ##################################################################################### core task
+//         }
+//     }
+//     repeat _fixLifetime(each storages)
+// }
+
+// @inline(__always)
+// func viewParallel<each T: Sendable> (
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+//     with: borrowing (repeat TypeToken<each T>),
+//     coresNum: Int = 4,
+//     _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
+// ) async {
+//     let vps = createViewPlans( base: base, with: (repeat each with) )
+//     await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), coresNum: coresNum, action)
+// }
+
+// struct ViewPack<each T: Component>: ~Copyable {
+//     // 將所有 Storage 放在一個元組裡
+//     var data: (repeat UnsafeMutablePointer<each T>)
+//     fileprivate init(_ data: (repeat UnsafeMutablePointer<each T>)) { self.data = data }
+// }
+
+@dynamicMemberLookup
+public struct ComponentProxy<T> {
+    // 這裡我們改用 UnsafeMutablePointer，與你之前的系統對齊
+    public let pointer: UnsafeMutablePointer<T>
+
+    @inlinable @inline(__always)
+    public init(pointer: UnsafeMutablePointer<T>) {
+        self.pointer = pointer
     }
 
-    let storages = (repeat (each with).getStorage(base: base))
-    await withTaskGroup(of: Void.self) { group in
-        let chunkSize = (planCount + processorCount - 1) / processorCount
-        for i in stride(from: 0, to: planCount, by: chunkSize) {
-            let range = i..<min(i + chunkSize, planCount)
-            let chunk = Array(viewPlans[range])
-            let taskId = i / chunkSize
-            // ##################################################################################### core task
-            group.addTask {
-                // 每個 Task 處理一組獨立的 Segments
-                for vp in chunk {
-                    var blockMask = vp.mask
-                    let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
-                    let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
-
-                    // ##################################################################################### Sparse_Set_L2_i
-                    while blockMask != 0 {
-                        let pageIdx = blockMask.trailingZeroBitCount
-                        let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
-                        var pageMask = SparseSet_L2_BaseMask
-                        repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
-
-                        while pageMask != 0 {
-                            let slotIdx = pageMask.trailingZeroBitCount
-                            action( 
-                                taskId,
-                                repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx))
-                            )
-                            pageMask &= (pageMask - 1)
-                        }
-                        blockMask &= (blockMask - 1)
-                    }
-                    // ##################################################################################### Sparse_Set_L2_i
-
-                }
-            }
-            // ##################################################################################### core task
+    // 這就是報錯要求的 subscript
+    @inlinable @inline(__always)
+    public subscript<V>(dynamicMember keyPath: WritableKeyPath<T, V>) -> V {
+        get {
+            // 直接從指標指向的記憶體讀取偏移量
+            pointer.pointee[keyPath: keyPath]
+        }
+        nonmutating set {
+            // 直接寫入
+            pointer.pointee[keyPath: keyPath] = newValue
         }
     }
-    repeat _fixLifetime(each storages)
-}
-
-@inline(__always)
-func viewParallel<each T: Sendable> (
-    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    with: borrowing (repeat TypeToken<each T>),
-    coresNum: Int = 4,
-    _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
-) async {
-    let vps = createViewPlans( base: base, with: (repeat each with) )
-    await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), coresNum: coresNum, action)
-}
-
-struct ViewPack<each T: Component>: ~Copyable {
-    // 將所有 Storage 放在一個元組裡
-    var data: (repeat UnsafeMutablePointer<each T>)
-    fileprivate init(_ data: (repeat UnsafeMutablePointer<each T>)) { self.data = data }
 }

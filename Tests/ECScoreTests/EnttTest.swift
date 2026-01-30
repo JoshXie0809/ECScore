@@ -215,7 +215,7 @@ struct BattleTag: Component {}
     emplace(base, tokens: ttokens) { (entities, pack) in
         var (pos, vel, dmg, def, hp, charStatus, btag,
             a, b, c, d, etag) = pack.storages
-        let entityCount = 4096 * 16
+        let entityCount = 4096 * 64
         for _ in 0..<entityCount {
             let e = entities.createEntity()
             let roll = Int.random(in: 1...140)
@@ -271,38 +271,38 @@ struct BattleTag: Component {}
         // move sys
         view(base: base, with: ttokens2) { 
             _, pos, vel in
-            pos.pointee.x += vel.pointee.vx * dt
-            pos.pointee.y += vel.pointee.vy * dt
+            pos.x += vel.vx * dt
+            pos.y += vel.vy * dt
         }
         
         view(base: base, with: ttokens3) {
             _, dmg, def, health, charStatus, _btag in
             // attack-defence system
-            let totalDamage = dmg.pointee.atk - def.pointee.def // negative mean add hp
-            health.pointee.hp -= totalDamage
+            let totalDamage = dmg.atk - def.def // negative mean add hp
+            health.hp -= totalDamage
 
             // charather-status
-            if health.pointee.hp <= 0 {
-                health.pointee.hp = 0
-                switch charStatus.pointee.status {
+            if health.hp <= 0 {
+                health.hp = 0
+                switch charStatus.status {
                 case .alive:
                     // change to dead edge
-                    charStatus.pointee.status = .deadEdge
+                    charStatus.status = .deadEdge
                 case .deadEdge:
-                    charStatus.pointee.status = .dead
+                    charStatus.status = .dead
                     deadCount += 1
                 case .dead:
-                    charStatus.pointee.status = .dead
+                    charStatus.status = .dead
                 } 
             }
             else {
-                switch charStatus.pointee.status {
+                switch charStatus.status {
                 case .dead:
-                    health.pointee.hp = 0
+                    health.hp = 0
                 case .deadEdge:
-                    charStatus.pointee.status = .alive
+                    charStatus.status = .alive
                 case .alive:
-                    charStatus.pointee.status = .alive
+                    charStatus.status = .alive
                 }
             }
         }
@@ -310,7 +310,7 @@ struct BattleTag: Component {}
 
     view(base: base, with: ttokens4) {
         _, charStatus in
-        if charStatus.pointee.status == .dead {
+        if charStatus.status == .dead {
             checkDeadCount += 1
         }
     }
