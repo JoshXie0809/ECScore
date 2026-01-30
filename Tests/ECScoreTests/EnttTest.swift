@@ -7,44 +7,68 @@ struct Velocity: Component {
     var vy: Float
 }
 
-struct Age: Component {
-    let val: Int
+struct Damage: Component {
+    var atk: Int
 }
 
-struct Name: Component {
-    let val: String
+struct Defence: Component {
+    var def: Int
 }
+
+struct Health: Component {
+    var hp: Int
+}
+
+struct CharStatus: Component {
+    var status: Status
+
+    enum Status {
+        case alive
+        case dead
+        case deadEdge
+    }
+}
+
+
+
 
 @Test func emplaceTest() async throws {
     let base = makeBootedPlatform()
     let ttokens = interop(
-        base, Position.self, Velocity.self, MockComponentA.self, MockComponentB.self
+        base, Position.self, Velocity.self, Damage.self, Defence.self, Health.self, CharStatus.self
     )
 
     emplace(base, tokens: ttokens) { 
         (entities, pack) in
         // storage pack
-        var (st1, st2, st3, st4) = pack.storages
-        let entityCount = 4096 * 64 * 7
+        var (pos, vel, dmg, def, hp, charStatus) = pack.storages
+        let entityCount = 4096 * 64
         
-        for _ in 0..<entityCount {
+        for i in 0..<entityCount {
             let e = entities.createEntity()
-            if Int.random(in: 0..<10) < 7 { 
-                st1.addComponent(e, Position.init(x: Float.random(in: 0...10), y: Float.random(in: 0...10)))
-                st2.addComponent(e, Velocity(vx: Float.random(in: 0...10), vy: Float.random(in: 0...10) ))
+
+            if i % 2 == 0 {
+                hp.addComponent(e, Health(hp: Int.random(in: 10...50)))
+                charStatus.addComponent(e, CharStatus(status: .alive))
             }
-            if Int.random(in: 0..<10) < 5 { 
-                st3.addComponent(e, MockComponentA())
+            if i % 3 == 0 {
+                pos.addComponent(e, Position.init(x: Float.random(in: 0...10), y: Float.random(in: 0...10)))
+                vel.addComponent(e, Velocity(vx: Float.random(in: 0...10), vy: Float.random(in: 0...10) ))
             }
-            if Int.random(in: 0..<10) < 5 { 
-                st4.addComponent(e, MockComponentB())
+            if i % 4 == 0 { 
+                dmg.addComponent(e, Damage(atk: Int.random(in: 10...30)))
+                def.addComponent(e, Defence(def: Int.random(in: 5...10)))
             }
         }
     }
     // #########################################################
     let clock = ContinuousClock()
     let dt = Float(1.0 / 120.0)
-    let ttokens2 = interop(base, Position.self, Velocity.self)
+    var deadCount = 0
+    let ttokens2 = interop(base, Position.self, Velocity.self, Health.self)
+    let ttokens3 = interop(base, Damage.self, Defence.self, Health.self)
+    let ttokens4 = interop(base, Health.self, CharStatus.self)
+    let ttokens5 = interop(base, CharStatus.self)
     // #########################################################
 
     // // #####################
@@ -59,17 +83,69 @@ struct Name: Component {
     // } 
     // let t1 = clock.now
     // print("plan & exec:", t1 - t0)
-
     let start = clock.now
-    view(base: base, with: ttokens2) { 
-        pos, vel in
-        pos.pointee.x += vel.pointee.vx * dt
-        pos.pointee.y += vel.pointee.vy * dt
+
+    for _ in 0..<2 {
+        // move sys
+        view(base: base, with: ttokens2) { 
+            pos, vel, health in
+            if health.pointee.hp > 0 {
+                pos.pointee.x += vel.pointee.vx * dt
+                pos.pointee.y += vel.pointee.vy * dt
+            }
+        }
+
+        // attack-defence system
+        view(base: base, with: ttokens3) {
+            dmg, def, health in
+            let totalDamage = dmg.pointee.atk - def.pointee.def // negative mean add hp
+            health.pointee.hp -= totalDamage
+        }
+        
+        // charather-status
+        view(base: base, with: ttokens4) {
+            health, charStatus in
+            if health.pointee.hp <= 0 {
+                health.pointee.hp = 0
+                switch charStatus.pointee.status {
+                case .alive:
+                    // change to dead edge
+                    charStatus.pointee.status = .deadEdge
+                case .deadEdge:
+                    charStatus.pointee.status = .dead
+                    deadCount += 1
+                case .dead:
+                    charStatus.pointee.status = .dead
+                } 
+            }
+            else {
+                switch charStatus.pointee.status {
+                case .dead:
+                    health.pointee.hp = 0
+                case .deadEdge:
+                    charStatus.pointee.status = .alive
+                case .alive:
+                    charStatus.pointee.status = .alive
+                }
+            }
+        }
     }
+
+    var checkDeadCount = 0
+    view(base: base, with: ttokens5) {
+        charStatus in
+        if charStatus.pointee.status == .dead {
+            checkDeadCount += 1
+        }
+    }
+
+    #expect(deadCount == checkDeadCount)
+    
     let end = clock.now
     print("plan & exec:", end - start)
-    
 }
+
+
 
 @Test func trailingZeroBitCountTest() async throws {
     var mask: UInt64 = 0
