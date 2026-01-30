@@ -60,7 +60,7 @@ struct Name: Component {
     // let t1 = clock.now
     // print("plan & exec:", t1 - t0)
     // sleep(1)
-    
+    for _ in 0..<100 {
     let start = clock.now
     view(base: base, with: ttokens2) { 
         pos, vel in
@@ -69,7 +69,7 @@ struct Name: Component {
     }
     let end = clock.now
     print("plan & exec:", end - start)
-    
+    }
 }
 
 @Test func trailingZeroBitCountTest() async throws {

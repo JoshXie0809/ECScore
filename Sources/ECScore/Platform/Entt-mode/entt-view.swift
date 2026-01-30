@@ -74,7 +74,7 @@ struct ViewPlan {
 func createViewPlans<each T>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>)
-) -> [ViewPlan]
+) -> ContiguousArray<ViewPlan>
 {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
     var global_First = Int.min; repeat maxHelper(&global_First, (each storages).firstActiveSegment);
@@ -82,25 +82,26 @@ func createViewPlans<each T>(
     if global_First > global_Last { return [] }
     
     var global_Minimum_ActiveSegmentCount = Int.max; repeat minHelper(&global_Minimum_ActiveSegmentCount, (each storages).activeSegmentCount);
-    var viewPlans = [ViewPlan]()
+    var viewPlans = ContiguousArray<ViewPlan>()
     let estimated_space = min(global_Minimum_ActiveSegmentCount, global_Last - global_First + 1)
     viewPlans.reserveCapacity(estimated_space)
     let allSegments = (repeat (each storages).segments)
     for i in stride(from: global_First, through: global_Last, by: 1) {
         var segment_i_mask = SparseSet_L2_BaseMask
-        repeat segment_i_mask &= (each allSegments)[i]?.sparse.blockMask ?? 0
+        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee?.sparse.blockMask ?? 0
         if segment_i_mask != 0 {
             viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
         }
     }
-
+    
+    repeat _fixLifetime(each storages)
     return viewPlans
 }
 
 @inline(__always)
 func executeViewPlans<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    viewPlans: [ViewPlan],
+    viewPlans: ContiguousArray<ViewPlan>,
     with: borrowing (repeat TypeToken<each T>),
     _ action: ( (repeat UnsafeMutablePointer<each T>) -> Void )
 ) {
@@ -156,7 +157,7 @@ func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
 @inline(__always)
 func executeViewPlansParallel<each T: Sendable>(
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    viewPlans: [ViewPlan],
+    viewPlans: ContiguousArray<ViewPlan>,
     with: borrowing (repeat TypeToken<each T>),
     _ action: @escaping @Sendable (repeat UnsafeMutablePointer<each T>) -> Void
 ) async {

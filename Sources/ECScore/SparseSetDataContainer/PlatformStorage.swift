@@ -153,6 +153,11 @@ struct PFStorage<T: Component>: ~Copyable {
         // 既然你保證了 reserveCapacity，這是安全的
         return segments[blockIdx]!.getRawDataPointer() 
     }
+
+    @inlinable
+    func getSegmentsRawPointer_Internal() -> UnsafePointer<SparseSet_L2<T>?> {
+        return segments.withUnsafeBufferPointer { $0.baseAddress! }    
+    }
 }
 
 // 定義一個協議，用來獲取內部泛型 T 的類型
@@ -235,8 +240,8 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
         PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
     }
 
-    var segments: ContiguousArray<SparseSet_L2<T>?> {
-        handle.pfstorage.segments
+    var segments: UnsafePointer<SparseSet_L2<T>?> {
+        handle.pfstorage.getSegmentsRawPointer_Internal()
     }
 
     var view: PFStorageView<T> {
