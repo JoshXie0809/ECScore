@@ -31,9 +31,6 @@ struct CharStatus: Component {
 
 struct BattleTag: Component {}
 
-
-
-
 // @Test func emplaceAndViewParallelTest() async throws {
 //     let base = makeBootedPlatform()
 //     let ttokens = interop(
@@ -138,9 +135,8 @@ struct BattleTag: Component {}
 //         // move sys
 //         await viewParallel(base: base, with: ttokens2, coresNum: coresNum) { 
 //             tid, pos, vel in
-//             pos.pointee.x += vel.pointee.vx * dt
-//             pos.pointee.y += vel.pointee.vy * dt
-            
+//             pos.x += vel.vx * dt
+//             pos.y += vel.vy * dt
 //         }
 
         
@@ -148,31 +144,31 @@ struct BattleTag: Component {}
 //             tid, dmg, def, health, charStatus in
 
 //             // attack-defence system
-//             let totalDamage = dmg.pointee.atk - def.pointee.def // negative mean add hp
-//             health.pointee.hp -= totalDamage
+//             let totalDamage = dmg.atk - def.def // negative mean add hp
+//             health.hp -= totalDamage
 
 //             // charather-status
-//             if health.pointee.hp <= 0 {
-//                 health.pointee.hp = 0
-//                 switch charStatus.pointee.status {
+//             if health.hp <= 0 {
+//                 health.hp = 0
+//                 switch charStatus.status {
 //                 case .alive:
 //                     // change to dead edge
-//                     charStatus.pointee.status = .deadEdge
+//                     charStatus.status = .deadEdge
 //                 case .deadEdge:
-//                     charStatus.pointee.status = .dead
+//                     charStatus.status = .dead
 //                     parallel_deadCount.add(at: tid)
 //                 case .dead:
-//                     charStatus.pointee.status = .dead
+//                     charStatus.status = .dead
 //                 } 
 //             }
 //             else {
-//                 switch charStatus.pointee.status {
+//                 switch charStatus.status {
 //                 case .dead:
-//                     health.pointee.hp = 0
+//                     health.hp = 0
 //                 case .deadEdge:
-//                     charStatus.pointee.status = .alive
+//                     charStatus.status = .alive
 //                 case .alive:
-//                     charStatus.pointee.status = .alive
+//                     charStatus.status = .alive
 //                 }
 //             }
 //         }
@@ -181,7 +177,7 @@ struct BattleTag: Component {}
 //     // 2-frame finished
 //     await viewParallel(base: base, with: ttokens5, coresNum: coresNum) {
 //         tid, charStatus  in
-//         if charStatus.pointee.status == .dead {
+//         if charStatus.status == .dead {
 //             parallel_checkDeadCount.add(at: tid)
 //         }
 //     }
@@ -319,6 +315,11 @@ struct BattleTag: Component {}
     print("total dead:", deadCount)
     print("plan & exec:", end - start)
 }
+
+
+
+
+
 
 
 
