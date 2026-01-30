@@ -4,9 +4,14 @@ import Testing
 
 // 模擬組件 A
 struct MockComponentA: Component {}
-
 // 模擬組件 B
 struct MockComponentB: Component {}
+// 模擬組件 C
+struct MockComponentC: Component {}
+// 模擬組件 D
+struct MockComponentD: Component {}
+// 模擬組件 E
+struct MockComponentE: Component {}
 
 // 輔助方法：快速初始化一個已 Boot 的平台
 func makeBootedPlatform() -> Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
