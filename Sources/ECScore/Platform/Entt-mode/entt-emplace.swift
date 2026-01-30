@@ -44,5 +44,5 @@ struct EmplaceStorage<T: Component> {
 struct EmplacePack<each T: Component>: ~Copyable {
     // 將所有 Storage 放在一個元組裡
     let storages: (repeat EmplaceStorage<each T>)
-    fileprivate init(_ sts: (repeat EmplaceStorage<each T>)) { self.storages = sts}
+    fileprivate init(_ sts: (repeat EmplaceStorage<each T>)) { self.storages = sts }
 }

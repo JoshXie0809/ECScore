@@ -103,7 +103,7 @@ func executeViewPlans<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
     with: borrowing (repeat TypeToken<each T>),
-    _ action: ( (repeat UnsafeMutablePointer<each T>) -> Void )
+    _ action: (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
 ) {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
 
@@ -123,7 +123,7 @@ func executeViewPlans<each T> (
                 let slotIdx = pageMask.trailingZeroBitCount
                 // do action here
                 // ############################################################################
-                action( repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( slotIdx )) )
+                action(0, repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( slotIdx )) )
                 // ############################################################################
                 // end
                 pageMask &= (pageMask - 1)
@@ -140,7 +140,7 @@ func executeViewPlans<each T> (
 func view<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    _ action: ( (repeat UnsafeMutablePointer<each T>) -> Void )
+    _ action: (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
 ) {
     let vps = createViewPlans( base: base, with: (repeat each with) )
     executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), action)
@@ -163,7 +163,7 @@ func executeViewPlansParallel<each T: Sendable>(
     viewPlans: ContiguousArray<ViewPlan>,
     with: borrowing (repeat TypeToken<each T>),
     coresNum: Int,
-    _ action: @escaping @Sendable (repeat UnsafeMutablePointer<each T>) -> Void
+    _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
 ) async {
     let processorCount = min(ProcessInfo.processInfo.activeProcessorCount, coresNum)
     let planCount = viewPlans.count
@@ -178,12 +178,12 @@ func executeViewPlansParallel<each T: Sendable>(
         for i in stride(from: 0, to: planCount, by: chunkSize) {
             let range = i..<min(i + chunkSize, planCount)
             let chunk = Array(viewPlans[range])
-
+            let taskId = i / chunkSize
             // ##################################################################################### core task
             group.addTask {
                 // 每個 Task 處理一組獨立的 Segments
                 for vp in chunk {
-                    var blockMask = vp.mask    
+                    var blockMask = vp.mask
                     let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
                     let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
 
@@ -196,7 +196,10 @@ func executeViewPlansParallel<each T: Sendable>(
 
                         while pageMask != 0 {
                             let slotIdx = pageMask.trailingZeroBitCount
-                            action(repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx)))
+                            action( 
+                                taskId,
+                                repeat (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx))
+                            )
                             pageMask &= (pageMask - 1)
                         }
                         blockMask &= (blockMask - 1)
@@ -216,8 +219,14 @@ func viewParallel<each T: Sendable> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
     coresNum: Int = 4,
-    _ action: @escaping @Sendable (repeat UnsafeMutablePointer<each T>) -> Void
+    _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat UnsafeMutablePointer<each T>) -> Void
 ) async {
     let vps = createViewPlans( base: base, with: (repeat each with) )
     await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), coresNum: coresNum, action)
+}
+
+struct ViewPack<each T: Component>: ~Copyable {
+    // 將所有 Storage 放在一個元組裡
+    var data: (repeat UnsafeMutablePointer<each T>)
+    fileprivate init(_ data: (repeat UnsafeMutablePointer<each T>)) { self.data = data }
 }
