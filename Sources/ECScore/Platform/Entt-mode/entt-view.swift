@@ -2,27 +2,27 @@ import Foundation
 
 let SparseSet_L2_BaseMask: UInt64 = 0xFFFFFFFFFFFFFFFF
 
-extension SparseSet_L2 {
-    @inlinable
-    func block_MaskOut_With(blockMask: inout UInt64) {
-        blockMask &= sparse.blockMask
-    }
+// extension SparseSet_L2 {
+//     @inlinable
+//     func block_MaskOut_With(blockMask: inout UInt64) {
+//         blockMask &= sparse.blockMask
+//     }
 
-    @inlinable
-    func block_MaskOut_NotWith(blockMask: inout UInt64) {
-        blockMask &= ~sparse.blockMask
-    }
+//     @inlinable
+//     func block_MaskOut_NotWith(blockMask: inout UInt64) {
+//         blockMask &= ~sparse.blockMask
+//     }
 
-    @inlinable // should: 0 <= i <= 63
-    func page_I_MaskOut_With(pageMask: inout UInt64, _ i: Int) {
-        pageMask &= sparse.pageOnBlock[i].pageMask
-    }
+//     @inlinable // should: 0 <= i <= 63
+//     func page_I_MaskOut_With(pageMask: inout UInt64, _ i: Int) {
+//         pageMask &= sparse.pageOnBlock[i].pageMask
+//     }
 
-    @inlinable // should: 0 <= i <= 63
-    func page_I_MaskOut_NotWith(pageMask: inout UInt64, _ i: Int) {
-        pageMask &= ~sparse.pageOnBlock[i].pageMask
-    }
-}
+//     @inlinable // should: 0 <= i <= 63
+//     func page_I_MaskOut_NotWith(pageMask: inout UInt64, _ i: Int) {
+//         pageMask &= ~sparse.pageOnBlock[i].pageMask
+//     }
+// }
 
 func getStorages<each T>(
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -85,10 +85,10 @@ func createViewPlans<each T>(
     var viewPlans = [ViewPlan]()
     let estimated_space = min(global_Minimum_ActiveSegmentCount, global_Last - global_First + 1)
     viewPlans.reserveCapacity(estimated_space)
-
+    let allSegments = (repeat (each storages).segments)
     for i in stride(from: global_First, through: global_Last, by: 1) {
         var segment_i_mask = SparseSet_L2_BaseMask
-        repeat (each storages).segmentBlockMaskWith(mask: &segment_i_mask, i)
+        repeat segment_i_mask &= (each allSegments)[i]?.sparse.blockMask ?? 0
         if segment_i_mask != 0 {
             viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
         }

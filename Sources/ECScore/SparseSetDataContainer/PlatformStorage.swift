@@ -8,7 +8,6 @@ struct PFStorage<T: Component>: ~Copyable {
     var storageType: any Component.Type { T.self }
     var segmentCount : Int { segments.count }
     
-    
     init() {
         self.segments = ContiguousArray<SparseSet_L2<T>?>(repeating: nil, count: 1)
         // self.segments[0] = SparseSet_L2<T>()
@@ -149,7 +148,7 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
-    mutating func getRawPointer_Internal(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
+    mutating func getSegmentComponentsRawPointer_Internal(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
         // 這裡使用 Unsafe 存取來繞過 mutating 限制
         // 既然你保證了 reserveCapacity，這是安全的
         return segments[blockIdx]!.getRawDataPointer() 
@@ -208,32 +207,36 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
     @inlinable var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
     @inlinable var activeSegmentCount: Int { handle.pfstorage.activeSegmentCount }
     
-    @inlinable
-    func segmentBlockMaskWith(mask: inout UInt64, _ i: Int) {
-        if mask == 0 { return }
-        if i > handle.pfstorage.lastActiveSegment { mask = UInt64(0); return; } // for more segment
-        if let segment = handle.pfstorage.segments[i] {
-            segment.block_MaskOut_With(blockMask: &mask)
-        } else {
-            mask = UInt64(0)
-        }
-    }
+    // @inlinable
+    // func segmentBlockMaskWith(mask: inout UInt64, _ i: Int) {
+    //     if mask == 0 { return }
+    //     if i > handle.pfstorage.lastActiveSegment { mask = UInt64(0); return; } // for more segment
+    //     if let segment = handle.pfstorage.segments[i] {
+    //         segment.block_MaskOut_With(blockMask: &mask)
+    //     } else {
+    //         mask = UInt64(0)
+    //     }
+    // }
 
-    @inlinable
-    func segmentPageMaskWith_Uncheck(mask: inout UInt64, blockIdx: Int, pageIdx: Int) {
-        if mask == 0 { return }
-        let segment = handle.pfstorage.segments[blockIdx]!
-        segment.page_I_MaskOut_With(pageMask: &mask, pageIdx)
-    }
+    // @inlinable
+    // func segmentPageMaskWith_Uncheck(mask: inout UInt64, blockIdx: Int, pageIdx: Int) {
+    //     if mask == 0 { return }
+    //     let segment = handle.pfstorage.segments[blockIdx]!
+    //     segment.page_I_MaskOut_With(pageMask: &mask, pageIdx)
+    // }
 
     @inlinable
     func get_SparseSetL2_CompMutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
-        handle.pfstorage.getRawPointer_Internal(blockIdx)
+        handle.pfstorage.getSegmentComponentsRawPointer_Internal(blockIdx)
     }
     
     @inlinable
     func getSparseSetL2_PagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
         PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
+    }
+
+    var segments: ContiguousArray<SparseSet_L2<T>?> {
+        handle.pfstorage.segments
     }
 
     var view: PFStorageView<T> {

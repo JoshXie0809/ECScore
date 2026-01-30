@@ -29,8 +29,10 @@ struct Name: Component {
         
         for _ in 0..<entityCount {
             let e = entities.createEntity()
-            st1.addComponent(e, Position.init(x: Float.random(in: 0...10), y: Float.random(in: 0...10)))
-            st2.addComponent(e, Velocity(vx: Float.random(in: 0...10), vy: Float.random(in: 0...10) ))
+            if Int.random(in: 0..<10) < 7 { 
+                st1.addComponent(e, Position.init(x: Float.random(in: 0...10), y: Float.random(in: 0...10)))
+                st2.addComponent(e, Velocity(vx: Float.random(in: 0...10), vy: Float.random(in: 0...10) ))
+            }
             if Int.random(in: 0..<10) < 5 { 
                 st3.addComponent(e, MockComponentA())
             }
@@ -58,7 +60,7 @@ struct Name: Component {
     // let t1 = clock.now
     // print("plan & exec:", t1 - t0)
     // sleep(1)
-
+    
     let start = clock.now
     view(base: base, with: ttokens2) { 
         pos, vel in
@@ -67,7 +69,7 @@ struct Name: Component {
     }
     let end = clock.now
     print("plan & exec:", end - start)
-
+    
 }
 
 @Test func trailingZeroBitCountTest() async throws {
