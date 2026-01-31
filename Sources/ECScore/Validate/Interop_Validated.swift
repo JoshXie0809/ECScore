@@ -1,14 +1,14 @@
-struct Manifest_Facts: Facts {
-    typealias T = ComponentManifest
-    typealias Flags = CaseFlags
-    typealias Env = MF_Env
+public struct Manifest_Facts: Facts {
+    public typealias T = ComponentManifest
+    public typealias Flags = CaseFlags
+    public typealias Env = MF_Env
 
-    private(set) var flags: Flags
-    init() {
+    public private(set) var flags: Flags
+    public init() {
         self.flags = Flags()
     }
 
-    static func validator(_ flagCase: FlagCase) -> Rule<Self> {
+    public static func validator(_ flagCase: FlagCase) -> Rule<Self> {
         var fn: Rule<Self>
         switch flagCase {
         case .unique:
@@ -55,7 +55,7 @@ struct Manifest_Facts: Facts {
         return fn
     }
 
-    static func requirement(for proof: any Proof.Type) -> Flags {
+    public static func requirement(for proof: any Proof.Type) -> Flags {
         switch proof {
         case is Proof_Ok_Manifest.Type:
             return [Flags.unique, Flags.noTypeStringCollisoin]
@@ -64,23 +64,26 @@ struct Manifest_Facts: Facts {
         }
     }
 
-    enum FlagCase: Int {
+    public enum FlagCase: Int {
         case unique = 0
         case noTypeStringCollisoin = 1
     }
 
-    struct CaseFlags: OptionSet {
-        var rawValue: Int
-        static let unique = Flags(rawValue: 1 << FlagCase.unique.rawValue)
-        static let noTypeStringCollisoin = Flags(rawValue: 1 << FlagCase.noTypeStringCollisoin.rawValue)
+    public struct CaseFlags: OptionSet, @unchecked Sendable {
+        public var rawValue: Int
+        public static let unique = Flags(rawValue: 1 << FlagCase.unique.rawValue)
+        public static let noTypeStringCollisoin = Flags(rawValue: 1 << FlagCase.noTypeStringCollisoin.rawValue)
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
     }
 
-    struct MF_Env: Default {
-        var registry: Platform_Registry?
-        static func _default() -> Self {
+    public struct MF_Env: Default {
+        public var registry: Platform_Registry?
+        public static func _default() -> Self {
             return Self(registry: nil)
         }
     }
 }
 
-enum Proof_Ok_Manifest: Proof {}
+public enum Proof_Ok_Manifest: Proof {}

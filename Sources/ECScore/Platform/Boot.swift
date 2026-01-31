@@ -1,6 +1,6 @@
-enum PlatformReservedSlot: Int { case registry = 0, entities = 1 }
+public enum PlatformReservedSlot: Int { case registry = 0, entities = 1 }
 
-extension BasePlatform {
+public extension BasePlatform {
     func boot<R: Platform_Registry, E: Platform_Entity>(registry: R, entities: E) {
         self.storages = [nil, nil]
         
@@ -33,7 +33,7 @@ extension BasePlatform {
     }
 }
 
-extension BasePlatform {
+public extension BasePlatform {
     @inlinable
     var registry: Platform_Registry? {
         let rid0 = RegistryId(id: 0, version: 0)

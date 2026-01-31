@@ -1,7 +1,6 @@
 public protocol Platform {}
 
 public protocol AnyPlatformStorage {
-
     mutating func remove(eid: EntityId)
     mutating func rawAdd(eid: EntityId, component: Any)
 

@@ -1,6 +1,6 @@
-public struct EntityId: Hashable, Comparable {
-    let id: Int
-    let version: Int
+public struct EntityId: Hashable, Comparable, Sendable {
+    public let id: Int
+    public let version: Int
 
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
@@ -8,6 +8,11 @@ public struct EntityId: Hashable, Comparable {
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.id == rhs.id && lhs.version == rhs.version
+    }
+
+    public init(id: Int, version: Int) {
+        self.id = id
+        self.version = version
     }
 }
 

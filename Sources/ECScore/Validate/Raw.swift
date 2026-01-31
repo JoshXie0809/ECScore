@@ -1,27 +1,27 @@
-struct Raw<T>: ~Copyable {
-    var value: T
+public struct Raw<T>: ~Copyable {
+    public var value: T
 
-    init(value: consuming T) {
+    public init(value: consuming T) {
         self.value = value
     }
 
-    mutating func alter(_ fn: ((inout T) -> Void)) {
+    public mutating func alter(_ fn: ((inout T) -> Void)) {
         fn(&self.value)
     }
 
-    consuming func upgrade<F: Facts>(_ flagType: F.Type) -> Validated<T, Proof_Init, F> 
+    public consuming func upgrade<F: Facts>(_ flagType: F.Type) -> Validated<T, Proof_Init, F> 
         where T == F.Value
     {
         Validated(value: value)
     }
 
-    consuming func downgrade() -> T {
+    public consuming func downgrade() -> T {
         return value
     }
 }
 
-struct Validated<T, P: Proof, F: Facts>: ~Copyable where F.Value == T {
-    let value: T
+public struct Validated<T, P: Proof, F: Facts>: ~Copyable where F.Value == T {
+    public let value: T
     fileprivate var facts: F
     fileprivate init(value: T, facts: F = F()) {
         self.value = value
@@ -33,11 +33,11 @@ struct Validated<T, P: Proof, F: Facts>: ~Copyable where F.Value == T {
     }
 }
 
-protocol Proof {}
-enum Proof_Init: Proof {}
-typealias Rule<F: Facts> = ((_: borrowing F.T, _: inout F,  _: borrowing F.Env) -> Bool)
+public protocol Proof {}
+public enum Proof_Init: Proof {}
+public typealias Rule<F: Facts> = ((_: borrowing F.T, _: inout F,  _: borrowing F.Env) -> Bool)
 
-protocol Facts<T> {
+public protocol Facts<T> {
     associatedtype T
     associatedtype Flags: OptionSet
     associatedtype FlagCase
@@ -50,17 +50,17 @@ protocol Facts<T> {
     static func requirement(for proof: any Proof.Type) -> Flags
 }
 
-protocol Default {
+public protocol Default {
     static func _default() -> Self
 }
 
-struct Env_Void {}
+public struct Env_Void {}
 extension Env_Void: Default {
-    static func _default() -> Self { Self() }
+    public static func _default() -> Self { Self() }
 }
 
 @discardableResult
-func validate<T, P: Proof, F: Facts>(
+public func validate<T, P: Proof, F: Facts>(
     validated: inout Validated<T, P, F>,
     other_validated_resource: borrowing F.Env = F.Env._default(),
     _ flagCase : F.FlagCase,
@@ -70,7 +70,7 @@ func validate<T, P: Proof, F: Facts>(
 }
 
 // certify
-extension Validated {
+public extension Validated {
     consuming func certify<NewP: Proof>(_ target: NewP.Type) 
     -> CertifyResult<T, NewP, F>
     {
@@ -85,19 +85,19 @@ extension Validated {
     }
 }
 
-enum CertifyResult <T, P: Proof, F: Facts>: ~Copyable where T == F.Value {
+public enum CertifyResult <T, P: Proof, F: Facts>: ~Copyable where T == F.Value {
     case success(Validated<T, P, F>)
     case failure(missingFlags: F.Flags, proofName: String)
 }
 
 // clone
-extension Validated {
+public extension Validated {
     borrowing func clone() -> Validated<T, P, F> {
         return Validated<T, P, F>(value: self.value, facts: self.facts)    
     }
 }
 
-extension Validated {
+public extension Validated {
     var flags: F.Flags {
         facts.flags
     }

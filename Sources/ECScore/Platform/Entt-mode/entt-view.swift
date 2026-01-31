@@ -137,10 +137,10 @@ func executeViewPlans<each T> (
 }
 
 @inline(__always)
-func view<each T> (
+public func view<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    _ action: (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
+    _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
     let vps = createViewPlans( base: base, with: (repeat each with) )
     executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), action)
@@ -215,7 +215,7 @@ func executeViewPlansParallel<each T: Sendable>(
 }
 
 @inline(__always)
-func viewParallel<each T: Sendable> (
+public func viewParallel<each T: Sendable> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
     coresNum: Int = 4,
@@ -228,15 +228,15 @@ func viewParallel<each T: Sendable> (
 @dynamicMemberLookup
 public struct ComponentProxy<T> {
     // 這裡我們改用 UnsafeMutablePointer，與你之前的系統對齊
-    public let pointer: UnsafeMutablePointer<T>
+    let pointer: UnsafeMutablePointer<T>
 
-    @inlinable @inline(__always)
+    @inline(__always)
     public init(pointer: UnsafeMutablePointer<T>) {
         self.pointer = pointer
     }
 
     // 這就是報錯要求的 subscript
-    @inlinable @inline(__always)
+    @inline(__always)
     public subscript<V>(dynamicMember keyPath: WritableKeyPath<T, V>) -> V {
         get {
             // 直接從指標指向的記憶體讀取偏移量

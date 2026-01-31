@@ -1,11 +1,11 @@
-struct Platform_Facts: Facts {
-    typealias T = BasePlatform
-    typealias Flags = CaseFlags
-    typealias Env = Env_Void
+public struct Platform_Facts: Facts {
+    public typealias T = BasePlatform
+    public typealias Flags = CaseFlags
+    public typealias Env = Env_Void
 
-    private(set) var flags = Flags()
+    public private(set) var flags = Flags()
 
-    static func validator(_ flagCase: FlagCase) -> Rule<Self> {
+    public static func validator(_ flagCase: FlagCase) -> Rule<Self> {
         var fn: Rule<Self>
         switch flagCase {
         case .handshake: 
@@ -21,7 +21,11 @@ struct Platform_Facts: Facts {
         return fn
     }
 
-    static func requirement(for proof: any Proof.Type) -> CaseFlags {
+    public init() {
+        self.flags = Flags()
+    }
+
+    public static func requirement(for proof: any Proof.Type) -> CaseFlags {
         switch proof {
         case is Proof_Handshake.Type:
             return [.handshake]
@@ -30,14 +34,17 @@ struct Platform_Facts: Facts {
         }
     }
 
-    enum FlagCase: Int {
+    public enum FlagCase: Int {
         case handshake = 0
     }
 
-    struct CaseFlags: OptionSet {
-        var rawValue: Int
-        static let handshake = Self(rawValue: 1 << FlagCase.handshake.rawValue )
+    public struct CaseFlags: OptionSet, @unchecked Sendable {
+        public var rawValue: Int
+        public static let handshake = Self(rawValue: 1 << FlagCase.handshake.rawValue )
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
     }
 }
 
-enum Proof_Handshake: Proof {}
+public enum Proof_Handshake: Proof {}

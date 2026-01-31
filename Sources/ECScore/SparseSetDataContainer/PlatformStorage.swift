@@ -172,45 +172,40 @@ extension PFStorage: StorageTypeProvider {
     }
 }
 
-final class PFStorageHandle<T: Component> {
+public final class PFStorageHandle<T: Component> {
     fileprivate var pfstorage = PFStorage<T>()
 }
 
-struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
+public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
     private let handle: PFStorageHandle<T>
-    init(_ h: PFStorageHandle<T>) { self.handle = h}
-    
-    @inlinable
-    mutating func rawAdd(eid: EntityId, component: Any) {
+    public init(_ h: PFStorageHandle<T>) { self.handle = h}
+        
+    public mutating func rawAdd(eid: EntityId, component: Any) {
         handle.pfstorage.rawAdd(eid: eid, component: component)
     }
 
-    @inlinable
-    mutating func add(eid: EntityId, component: T) {
+    public mutating func add(eid: EntityId, component: T) {
         handle.pfstorage.add(eid: eid, component: component)
     }
 
-    @inlinable
-    mutating func remove(eid: EntityId) {
+    public mutating func remove(eid: EntityId) {
         handle.pfstorage.remove(eid: eid)
     }
 
-    @inlinable
-    func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
+    public func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
         handle.pfstorage.getWithDenseIndex_Uncheck(index)
     }
 
-    @inlinable
-    func get(_ eid: EntityId) -> Any? {
+    public func get(_ eid: EntityId) -> Any? {
         handle.pfstorage.get(eid)
     }
 
-    @inline(__always) @inlinable var storageType: any Component.Type { T.self }
-    @inline(__always) @inlinable var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
-    @inline(__always) @inlinable var segmentCount : Int { handle.pfstorage.segmentCount }
-    @inline(__always) @inlinable var firstActiveSegment: Int { handle.pfstorage.firstActiveSegment }
-    @inline(__always) @inlinable var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
-    @inline(__always) @inlinable var activeSegmentCount: Int { handle.pfstorage.activeSegmentCount }
+    @inline(__always) public var storageType: any Component.Type { T.self }
+    @inline(__always) public var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
+    @inline(__always) var segmentCount : Int { handle.pfstorage.segmentCount }
+    @inline(__always) var firstActiveSegment: Int { handle.pfstorage.firstActiveSegment }
+    @inline(__always) var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
+    @inline(__always) var activeSegmentCount: Int { handle.pfstorage.activeSegmentCount }
     
     // @inlinable
     // func segmentBlockMaskWith(mask: inout UInt64, _ i: Int) {
@@ -230,19 +225,16 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
     //     segment.page_I_MaskOut_With(pageMask: &mask, pageIdx)
     // }
 
-    @inlinable
     @inline(__always)
     func get_SparseSetL2_CompMutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
         handle.pfstorage.getSegmentComponentsRawPointer_Internal(blockIdx)
     }
     
-    @inlinable
     @inline(__always)
     func get_SparseSetL2_PagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
         PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
     }
 
-    @inlinable
     @inline(__always)
     var segments: UnsafePointer<SparseSet_L2<T>?> {
         handle.pfstorage.getSegmentsRawPointer_Internal()
@@ -269,7 +261,7 @@ struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
 }
 
 extension PFStorageBox: Component where T: Component {
-    static func createPFStorage() -> any AnyPlatformStorage {
+    public static func createPFStorage() -> any AnyPlatformStorage {
         // 核心修正：使用 Self 而不是 T
         return PFStorageBox<Self>(PFStorageHandle<Self>())
     }

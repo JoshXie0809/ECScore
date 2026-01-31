@@ -1,4 +1,4 @@
-extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
+public extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
     @inlinable
     var registry: any Platform_Registry {
         value.storages[PlatformReservedSlot.registry.rawValue]!.get(EntityId(id: 0, version: 0)) as! Platform_Registry
@@ -35,9 +35,9 @@ extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
 }
 
 // 向 main base-pf 確保需要的 Type 的 storage 是存在的
-typealias ComponentManifest = Array<any Component.Type>
+public typealias ComponentManifest = Array<any Component.Type>
 
-struct InteropTokens {
+public struct InteropTokens {
     let rids: [RegistryId]
     let idToAt: [ObjectIdentifier:Int]
     fileprivate init(
@@ -55,7 +55,7 @@ struct InteropTokens {
 }
 
 @discardableResult
-func interop(
+public func interop(
     _ pf_val: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ manifest_val: consuming Validated<ComponentManifest, Proof_Ok_Manifest, Manifest_Facts>
 )
@@ -91,13 +91,13 @@ func interop(
     return InteropTokens(rids: rids, idToAt: idToAt)
 }
 
-struct TypeToken<T: Component> {
-    let rid: RegistryId
+public struct TypeToken<T: Component> {
+    public let rid: RegistryId
     fileprivate init(rid: RegistryId) { self.rid = rid}
     var type: T.Type { T.self }
 }
 
-func interop<each T: Component>(
+public func interop<each T: Component>(
     _ pf_val: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ type: repeat (each T).Type
 ) 
@@ -131,7 +131,7 @@ func interop<each T: Component>(
     return ( repeat TypeToken(rid: tokens.getRid(each type)!) )
 }
 
-struct EntityHandle: ~Copyable {
+public struct EntityHandle: ~Copyable {
     fileprivate let eid: EntityId
     fileprivate init(eid: EntityId) {
         self.eid = eid
@@ -142,7 +142,7 @@ struct EntityHandle: ~Copyable {
     }
 }
 
-extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
+public extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
     borrowing func getEntityHandle(
         _ eid: consuming EntityId
     )  -> Result<EntityHandle, BasePlatformError>
@@ -151,4 +151,3 @@ extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
         return .success(EntityHandle(eid: eid))   
     }
 }
-

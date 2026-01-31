@@ -41,14 +41,14 @@ struct EmptyComponent: Component {}
 // @@ ############################################################################## 3
 
 enum PlayerType {
-    case ncp
+    case npc
     case monster
     case hero
 }
 
 struct PlayerComponent: Component {
     var rng: Xoshiro128 = Xoshiro128(seed: 0)
-    var type: PlayerType = .ncp
+    var type: PlayerType = .npc
 }
 
 enum StatusEffect {

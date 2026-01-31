@@ -1,9 +1,10 @@
 // main platform
-class BasePlatform : Platform {
-    var storages: [AnyPlatformStorage?] = []
+public final class BasePlatform : Platform {
+    public var storages: [AnyPlatformStorage?] = []
+    public init() {}
 }
 
-enum BasePlatformError: Error {
+public enum BasePlatformError: Error {
     case invalidEID
 }
 

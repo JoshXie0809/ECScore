@@ -7,6 +7,7 @@ public protocol Platform_Entity: Platform, Component, AnyObject {
 
 public class EntityPlatForm_Ver0: Platform_Entity, Component {
     private var entities = Entities()
+    public init() {}
 
     public func isValid(_ eid: EntityId) -> Bool {
         return entities.isValid(eid)
