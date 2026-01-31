@@ -110,7 +110,7 @@ func executeViewPlans<each T> (
     for vp in viewPlans {
         var blockMask = vp.mask
         let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
-        let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
+        let pagePtrs = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
         
         // ###################################################### Sparse_Set_L2_i
         while blockMask != 0 { 
@@ -185,7 +185,7 @@ func executeViewPlansParallel<each T: Sendable>(
                 for vp in chunk {
                     var blockMask = vp.mask
                     let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
-                    let pagePtrs = (repeat (each storages).getSparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
+                    let pagePtrs = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
 
                     // ##################################################################################### Sparse_Set_L2_i
                     while blockMask != 0 {

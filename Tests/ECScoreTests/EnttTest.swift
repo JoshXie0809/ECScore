@@ -209,12 +209,12 @@ struct BattleTag: Component {}
     )
 
     emplace(base, tokens: ttokens) { (entities, pack) in
-        var (pos, vel, dmg, def, hp, charStatus, btag,
+        var (pos, vel, dmg, def, hp, charStatus, battag,
             a, b, c, d, etag) = pack.storages
-        let entityCount = 4096 * 64
+        let entityCount = 4096 * 16
         for _ in 0..<entityCount {
             let e = entities.createEntity()
-            let roll = Int.random(in: 1...140)
+            let roll = Int.random(in: 1...150)
             
             // 所有實體都具備基礎的物理與狀態組件（達到 100% 密度）
             pos.addComponent(e, Position(x: Float.random(in: 0...320), y: Float.random(in: 0...240)))
@@ -225,27 +225,28 @@ struct BattleTag: Component {}
                 hp.addComponent(e, Health(hp: Int.random(in: 6...12)))
                 dmg.addComponent(e, Damage(atk: 0)) // NPC 不攻擊
                 def.addComponent(e, Defence(def: Int.random(in: 3...8)))
-                a.addComponent(e, MockComponentA())
+
             } else if roll <= 30 { // Hero
                 hp.addComponent(e, Health(hp: Int.random(in: 5...15)))
                 dmg.addComponent(e, Damage(atk: Int.random(in: 4...10)))
                 def.addComponent(e, Defence(def: Int.random(in: 2...6)))
-                btag.addComponent(e, BattleTag())
-                b.addComponent(e, MockComponentB())
+                battag.addComponent(e, BattleTag())
                 
             } else if roll <= 100 { // Monster
                 hp.addComponent(e, Health(hp: Int.random(in: 4...12)))
                 dmg.addComponent(e, Damage(atk: Int.random(in: 3...9)))
                 def.addComponent(e, Defence(def: Int.random(in: 2...8)))
-                btag.addComponent(e, BattleTag())
-                c.addComponent(e, MockComponentC())
-
-            } else if roll <= 120 {
-                d.addComponent(e, MockComponentD())
+                battag.addComponent(e, BattleTag())                
 
             } else {
-                etag.addComponent(e, MockComponentE())
+                d.addComponent(e, MockComponentD())
             }
+
+            if Int.random(in: 0..<10) < 5 { a.addComponent(e, MockComponentA())}
+            if Int.random(in: 0..<10) < 5 { b.addComponent(e, MockComponentB())}
+            if Int.random(in: 0..<10) < 5 { c.addComponent(e, MockComponentC())}
+            if Int.random(in: 0..<10) < 5 { etag.addComponent(e, MockComponentE())}
+            
         }
     }
     // #########################################################
