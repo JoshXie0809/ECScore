@@ -205,12 +205,12 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
         handle.pfstorage.get(eid)
     }
 
-    @inlinable var storageType: any Component.Type { T.self }
-    @inlinable var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
-    @inlinable var segmentCount : Int { handle.pfstorage.segmentCount }
-    @inlinable var firstActiveSegment: Int { handle.pfstorage.firstActiveSegment }
-    @inlinable var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
-    @inlinable var activeSegmentCount: Int { handle.pfstorage.activeSegmentCount }
+    @inline(__always) @inlinable var storageType: any Component.Type { T.self }
+    @inline(__always) @inlinable var activeEntityCount: Int { handle.pfstorage.activeEntityCount }
+    @inline(__always) @inlinable var segmentCount : Int { handle.pfstorage.segmentCount }
+    @inline(__always) @inlinable var firstActiveSegment: Int { handle.pfstorage.firstActiveSegment }
+    @inline(__always) @inlinable var lastActiveSegment: Int { handle.pfstorage.lastActiveSegment }
+    @inline(__always) @inlinable var activeSegmentCount: Int { handle.pfstorage.activeSegmentCount }
     
     // @inlinable
     // func segmentBlockMaskWith(mask: inout UInt64, _ i: Int) {
@@ -242,6 +242,8 @@ struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
         PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
     }
 
+    @inlinable
+    @inline(__always)
     var segments: UnsafePointer<SparseSet_L2<T>?> {
         handle.pfstorage.getSegmentsRawPointer_Internal()
     }
