@@ -40,7 +40,13 @@ let package = Package(
                 .product(name: "SwiftDiagnostics", package: "swift-syntax"),
             ]
         ),
-        
+
+        .executableTarget(
+            name: "Game7Systems",
+            dependencies: ["ECScore", "ECScoreMacros"],
+            path: "Sources/Game7Systems"
+        ),
+
         .testTarget(
             name: "ECScoreTests",
             dependencies: ["ECScore"]

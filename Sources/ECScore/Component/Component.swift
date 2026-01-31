@@ -1,27 +1,27 @@
-protocol Component: ~Copyable {
+public protocol Component: ~Copyable {
     static func createPFStorage() -> AnyPlatformStorage
     static var typeIdString: String { get }
     static var _hs: TypeStrIdHashed_FNV1A_64 { get } // hashed string of typeIdString
 }
 
-typealias TypeStrIdHashed_FNV1A_64 = UInt64
+public typealias TypeStrIdHashed_FNV1A_64 = UInt64
 
 extension Component {
-    static var typeIdString: String {
+    public static var typeIdString: String {
         String(reflecting: Self.self)
     }
 
-    static var _hs: TypeStrIdHashed_FNV1A_64 {
+    public static var _hs: TypeStrIdHashed_FNV1A_64 {
         typeIdString._hs_fnv1a_64
     }
 
-    static func createPFStorage() -> AnyPlatformStorage {
+    public static func createPFStorage() -> AnyPlatformStorage {
         PFStorageBox(PFStorageHandle<Self>())
     }
 }
 
 extension String {
-    var _hs_fnv1a_64: TypeStrIdHashed_FNV1A_64 {
+    public var _hs_fnv1a_64: TypeStrIdHashed_FNV1A_64 {
         fnv1a_64(self)
     }
 }

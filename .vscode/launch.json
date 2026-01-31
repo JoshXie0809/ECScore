@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ECScore}",
+            "name": "Debug Game7System",
+            "target": "Game7System",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Game7System"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ECScore}",
+            "name": "Release Game7System",
+            "target": "Game7System",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Game7System"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ECScore}",
+            "name": "Debug Game7Systems",
+            "target": "Game7Systems",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Game7Systems"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ECScore}",
+            "name": "Release Game7Systems",
+            "target": "Game7Systems",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Game7Systems"
+        }
+    ]
+}

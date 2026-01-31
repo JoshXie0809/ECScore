@@ -1,23 +1,23 @@
-struct EntityId: Hashable, Comparable {
+public struct EntityId: Hashable, Comparable {
     let id: Int
     let version: Int
 
-    static func < (lhs: Self, rhs: Self) -> Bool {
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
     }
 
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.id == rhs.id && lhs.version == rhs.version
     }
 }
 
 extension EntityId: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         "E(id:\(id), v:\(version))"
     }
 }
 
-class Entities {
+public class Entities {
     private var freeList: [Int] = [] // where id can be reused
     private var versions:  [Int] = [] // the version for an id, init is 0
     private var isActive: [UInt64] = []
@@ -27,7 +27,7 @@ class Entities {
         versions.count
     }
 
-    @inlinable
+    @usableFromInline
     func spawn(_ n: Int = 1) -> [EntityId] {
         var results: [EntityId] = []
         results.reserveCapacity(n)
@@ -53,7 +53,7 @@ class Entities {
         return results
     }
 
-    @inlinable
+    @usableFromInline
     func despawn(_ entity: EntityId) {
         // 安全檢查：版本號必須相符才能銷毀
         guard isValid(entity) else { return }
@@ -68,18 +68,18 @@ class Entities {
         liveCount -= 1
     }
 
-    @inlinable
+    @usableFromInline
     func isValid(_ entity: EntityId) -> Bool {
         return entity.id < versions.count && versions[entity.id] == entity.version && 
                (isActive[entity.id >> 6] & (1 << (entity.id & 63)) != 0)
     }
 
-    @inlinable
+    @usableFromInline
     func idIsActive(_ id: Int) -> Bool {
         return id < maxId && (isActive[id >> 6] & (1 << (id & 63)) != 0)
     }
 
-    @inlinable
+    @usableFromInline
     func getVersion(_ id: Int) -> Int {
         return versions[id]
     }

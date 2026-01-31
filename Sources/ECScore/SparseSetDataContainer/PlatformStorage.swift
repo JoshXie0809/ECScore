@@ -179,7 +179,7 @@ final class PFStorageHandle<T: Component> {
 struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
     private let handle: PFStorageHandle<T>
     init(_ h: PFStorageHandle<T>) { self.handle = h}
-
+    
     @inlinable
     mutating func rawAdd(eid: EntityId, component: Any) {
         handle.pfstorage.rawAdd(eid: eid, component: component)
