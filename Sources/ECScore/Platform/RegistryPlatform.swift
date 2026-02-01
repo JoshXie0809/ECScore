@@ -12,7 +12,7 @@ public class RegistryPlatform : Platform, Platform_Registry, Component {
     let entities: Entities = Entities()
     private var typeToRId: [TypeStrIdHashed_FNV1A_64: RegistryId] = [:]
     private var ridToType: [RegistryId: any Component.Type] = [:]
-    public var count : Int { entities.liveCount }
+    public var count : Int { entities.maxId }
     public init() {}
 
     public func register(_ type: any Component.Type) -> RegistryId {

@@ -1,13 +1,13 @@
 class FrameBuffer {
     public let width: Int
     public let height: Int
-    private var buffer: [UInt8] // 改用 UInt8，這才是真正的 1-byte char
+    private var buffer: ContiguousArray<UInt8>
 
     init(width: UInt32, height: UInt32) {
         self.width = Int(width)
         self.height = Int(height)
         // 使用空白字元的 ASCII 編碼 (32) 初始化
-        self.buffer = Array(repeating: UInt8(ascii: " "), count: Int(width) * Int(height))
+        self.buffer = ContiguousArray(repeating: UInt8(ascii: " "), count: Int(width) * Int(height))
     }
 
     func clear() {
@@ -22,6 +22,16 @@ class FrameBuffer {
         if y >= 0 && y < height && x >= 0 && x < width {
             buffer[x + y * width] = char
         }
+    }
+
+    @inline(__always)
+    func reserveCapacity(_ n: Int) {
+        buffer.reserveCapacity(n)
+    }
+
+    @inline(__always)
+    func getBufferPtr() -> UnsafeMutablePointer<UInt8> {
+        self.buffer.withUnsafeMutableBufferPointer { $0.baseAddress! }
     }
 
     func renderToString() -> String {

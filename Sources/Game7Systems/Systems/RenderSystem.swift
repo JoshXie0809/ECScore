@@ -11,8 +11,7 @@ struct RenderSystem {
 
     @inline(__always)
     func update(_ world: borrowing World) {
-        let buffer = world.frameBuffer
-        
+        let buffer = world.frameBuffer        
         view(base: world.base, with: renderToken) 
         { _, pos, sprite in
             

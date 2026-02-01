@@ -27,7 +27,6 @@ public class Entities {
     private var versions:  [Int] = [] // the version for an id, init is 0
     private var isActive: [UInt64] = []
 
-    private(set) var liveCount: Int = 0
     var maxId : Int {
         versions.count
     }
@@ -52,7 +51,6 @@ public class Entities {
 
             // 更新 Bitmask
             isActive[id >> 6] |= (UInt64(1) << (id & 63))
-            liveCount += 1
             results.append(EntityId(id: id, version: versions[id]))
         }
         return results
@@ -70,7 +68,6 @@ public class Entities {
         isActive[id >> 6] &= ~(1 << (id & 63))
         // 回收 ID
         freeList.append(id)
-        liveCount -= 1
     }
 
     @usableFromInline
