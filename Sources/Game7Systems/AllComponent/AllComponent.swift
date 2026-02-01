@@ -89,7 +89,7 @@ struct PositionComponent: Component {
 // @@ ############################################################################## 5
 
 struct SpriteComponent: Component {
-    var character: Character = " "
+    var character: UInt8 = UInt8(ascii: " ")
 }
 
 // @@ ############################################################################## 5

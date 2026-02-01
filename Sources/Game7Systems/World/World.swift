@@ -1,11 +1,13 @@
 import ECScore
 
 struct World: ~Copyable {
-    static let maxX = 320
-    static let maxY = 240
+    static let maxX = UInt32(320)
+    static let maxY = UInt32(240)
 
     private var resource: World.Resource
     var dt: Duration { resource.dt }
+    var renderString: String { resource.frameBuffer.renderToString() }
+    var frameBuffer: FrameBuffer { resource.frameBuffer }
 
     // 使用你的 ECScore Registry
     let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
@@ -21,9 +23,12 @@ struct World: ~Copyable {
         self.resource.prev = now
     }
 
+    
+
     struct Resource {
         var prev: ContinuousClock.Instant = clock.now
         var dt: Duration = .zero
+        let frameBuffer: FrameBuffer = FrameBuffer(width: World.maxX, height: World.maxY)
     }
 
     struct Spawner {
