@@ -20,7 +20,7 @@ struct Game7Systems {
             let ITER_NUM = 16
             let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
-            let emplaceStrategy = 1
+            let emplaceStrategy = 2
             let complexFlag = true
             let printWorldFlag = false
         // ##################################################
@@ -90,8 +90,8 @@ let tb0 = clock.now
 
 
     // system update
-    // tick // set dt
-    world.tick()
+    let fakeDt = Duration.nanoseconds(1_000_000_000 / 120)
+    world.tick(fakeDt)
     // #####################################################################################
     // run-stage
         let sys1 = RunResult.durationHelper(mvSys.update, world)
@@ -161,19 +161,19 @@ func createEntities(_ world: borrowing World, _ gs: GameSettings, _ rng: inout X
                 dmgSt.addComponent(entity, d)
                 posSt.addComponent(entity, pos)
                 guard gs.complexFlag else { continue }
+
+                var prob: UInt32 = 0
                 switch gs.emplaceStrategy {
                 case 1 : 
-                    dataSt.addComponent(entity, DataComponent(seed: rng.next()))
-                    spSt.addComponent(entity, SpriteComponent())
-                    dirSt.addComponent(entity, DirectionComponent())
-
+                    prob = 100
                 case 2 : 
-                    if rng.next() % 100 < 50 { dataSt.addComponent(entity, DataComponent(seed: rng.next())) }
-                    if rng.next() % 100 < 50 { spSt.addComponent(entity, SpriteComponent()) }
-                    if rng.next() % 100 < 50 { dirSt.addComponent(entity, DirectionComponent()) }
-
+                    prob = 50
                 default: fatalError()
                 }
+                
+                if rng.next() % 100 < prob { dataSt.addComponent(entity, DataComponent(seed: rng.next())) }
+                if rng.next() % 100 < prob { spSt.addComponent(entity, SpriteComponent()) }
+                if rng.next() % 100 < prob { dirSt.addComponent(entity, DirectionComponent()) }
                 
             }
         }

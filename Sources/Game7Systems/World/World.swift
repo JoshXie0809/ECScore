@@ -17,9 +17,13 @@ struct World: ~Copyable {
         self.resource = Resource()
     }
 
-    mutating func tick() {
+    mutating func tick(_ fakeDt: Duration? = nil) {
         let now = clock.now
-        self.resource.dt = now - self.resource.prev
+        if let dt = fakeDt {
+            self.resource.dt = dt
+        } else {
+            self.resource.dt = now - self.resource.prev
+        }
         self.resource.prev = now
     }
   
