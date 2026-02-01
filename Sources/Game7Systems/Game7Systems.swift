@@ -71,11 +71,22 @@ let ta0 = clock.now
 let ta1 = clock.now
 // ---------------------------------------------------------
 
-sleep(1)
-
 // ---------------------------------------------------------
 let tb0 = clock.now
 // ---------------------------------------------------------
+
+// bench-mark-system-order
+
+// m_systems.emplace_back(createMovementSystem(m_entities));
+// m_systems.emplace_back(createDataSystem(m_entities));
+
+// if (m_addMoreComplexSystem == add_more_complex_system_t::UseMoreComplexSystems) {
+//   m_systems.emplace_back(createMoreComplexSystem(m_entities));
+//   m_systems.emplace_back(createHealthSystem(m_entities));
+//   m_systems.emplace_back(createDamageSystem(m_entities));
+//   m_systems.emplace_back(createSpriteSystem(m_entities));
+//   m_systems.emplace_back(createRenderSystem(m_entities));
+// }
 
 
     // system update
@@ -83,11 +94,11 @@ let tb0 = clock.now
     world.tick()
     // #####################################################################################
     // run-stage
-        let sys1 = RunResult.durationHelper(dmgSys.update, world)
-        let sys2 = RunResult.durationHelper(healthSys.update, world)
-        let sys3 = RunResult.durationHelper(dataSys.update, world)
-        let sys4 = RunResult.durationHelper(mcSys.update, world) // update dirComponet here
-        let sys5 = RunResult.durationHelper(mvSys.update, world)
+        let sys1 = RunResult.durationHelper(mvSys.update, world)
+        let sys2 = RunResult.durationHelper(dataSys.update, world)
+        let sys3 = RunResult.durationHelper(mcSys.update, world)
+        let sys4 = RunResult.durationHelper(healthSys.update, world)
+        let sys5 = RunResult.durationHelper(dmgSys.update, world)
         let sys6 = RunResult.durationHelper(spriteSys.update, world)
         let sys7 = RunResult.durationHelper(renderSys.update, world)
         let allSysDuration = (sys1, sys2, sys3, sys4, sys5, sys6, sys7)
@@ -153,13 +164,13 @@ func createEntities(_ world: borrowing World, _ gs: GameSettings, _ rng: inout X
                 switch gs.emplaceStrategy {
                 case 1 : 
                     dataSt.addComponent(entity, DataComponent(seed: rng.next()))
-                    spSt.addComponent(entity, SpriteComponent(character: UInt8(ascii: " ")))
-                    dirSt.addComponent(entity, DirectionComponent(vx: 0, vy: 0))
+                    spSt.addComponent(entity, SpriteComponent())
+                    dirSt.addComponent(entity, DirectionComponent())
 
                 case 2 : 
-                    if rng.next() % 100 < 50 { spSt.addComponent(entity, SpriteComponent(character: UInt8(ascii: " "))) }
                     if rng.next() % 100 < 50 { dataSt.addComponent(entity, DataComponent(seed: rng.next())) }
-                    if rng.next() % 100 < 50 { dirSt.addComponent(entity, DirectionComponent(vx: 0, vy: 0)) }
+                    if rng.next() % 100 < 50 { spSt.addComponent(entity, SpriteComponent()) }
+                    if rng.next() % 100 < 50 { dirSt.addComponent(entity, DirectionComponent()) }
 
                 default: fatalError()
                 }
