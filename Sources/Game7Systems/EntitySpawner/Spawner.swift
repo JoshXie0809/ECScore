@@ -7,24 +7,11 @@ public class WorldSpawner {
     
     // 使用你的 ECScore Registry
     let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
-    let ttokens: (
-        TypeToken<PlayerComponent>, TypeToken<HealthComponent>, 
-        TypeToken<DamageComponent>, TypeToken<PositionComponent>, 
-        TypeToken<MockA>, TypeToken<MockB>, TypeToken<MockC>, TypeToken<MockD>, TypeToken<MockE>,
-        TypeToken<MockA1>, TypeToken<MockB1>, TypeToken<MockC1>, TypeToken<MockD1>, TypeToken<MockE1>
-    )
-
     public init(registry: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>) {
         self.base = registry
-        self.ttokens = interop(base, 
-            PlayerComponent.self, HealthComponent.self,
-            DamageComponent.self, PositionComponent.self,
-            MockA.self, MockB.self, MockC.self, MockD.self, MockE.self, 
-            MockA1.self, MockB1.self, MockC1.self, MockD1.self, MockE1.self, 
-        )
     }
 
-    func spawnEntity(tempRng: inout Xoshiro128, _ type: PlayerType) -> (PlayerComponent, HealthComponent, DamageComponent, PositionComponent)
+    static func spawnEntityComponent(tempRng: inout Xoshiro128, _ type: PlayerType) -> (PlayerComponent, HealthComponent, DamageComponent, PositionComponent)
     {
         // 2. 根據職業分配組件 (模仿 C++ setComponents 邏輯)
         let hp: Int

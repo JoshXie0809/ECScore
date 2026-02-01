@@ -4,9 +4,14 @@ import Foundation
 @main
 struct Game7Systems {
     public static func main() async throws {
-        let ITER_NUM = 1
-        let totalEntityNum = 4096 * 16
+        // ##################################################
+        // ##################################################
+        // parameter
+        let ITER_NUM = 10
+        let totalEntityNum = 4096 * 256
         let seed = UInt32(12345)
+        // ##################################################
+        // ##################################################
 
         for _ in 0..<ITER_NUM {
             var rng = Xoshiro128(seed: seed)
@@ -73,7 +78,7 @@ let t0 = clock.now
                 case .npc: npcCount += 1
                 }
 
-                let (p, h, d, pos) = world.spawnEntity(tempRng: &rng, type)
+                let (p, h, d, pos) = WorldSpawner.spawnEntityComponent(tempRng: &rng, type)
 
                 // 執行 ECScore 的指標寫入
                 let entity = entities.createEntity()
