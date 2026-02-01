@@ -36,4 +36,9 @@ struct Xoshiro128 {
 
         return result
     }
+
+    public mutating func range(_ l: UInt32, _ h: UInt32) -> UInt32 {
+        let range = h - l + 1
+        return self.next() % range + l
+    }
 }

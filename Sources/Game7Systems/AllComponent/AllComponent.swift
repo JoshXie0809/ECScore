@@ -108,3 +108,17 @@ struct VelocityComponent: Component {
 // @@ ############################################################################## 6
 
 
+// testing myself
+struct MockA: Component {}
+struct MockB: Component {}
+struct MockC: Component {}
+struct MockD: Component {}
+struct MockE: Component {}
+
+
+// testing myself
+struct MockA1: Component {}
+struct MockB1: Component {}
+struct MockC1: Component {}
+struct MockD1: Component {}
+struct MockE1: Component {}
