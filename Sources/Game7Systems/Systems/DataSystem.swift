@@ -8,11 +8,12 @@ struct DataSystem {
     }
 
     @inline(__always)
-    func update(base: borrowing VBPF, dt: Duration) 
+    func update(_ world: borrowing World)
     {
+        let dt = world.dt
         let dtSeconds = Double(dt.components.seconds) + Double(dt.components.attoseconds) / 1e18
-
-        view(base: base, with: dataToken) 
+        
+        view(base: world.base, with: dataToken) 
         { _, data in
 
             data.thingy = (data.thingy + 1) % 1_000_000

@@ -8,9 +8,9 @@ struct HealthSystem {
     }
 
     @inline(__always)
-    func update(base: borrowing VBPF) 
+    func update(_ world: borrowing World)
     {
-        view(base: base, with: hToken) 
+        view(base: world.base, with: hToken) 
         { _, health in
 
             if(health.hp <= 0 && health.status != .dead) {

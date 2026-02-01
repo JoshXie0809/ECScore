@@ -8,9 +8,9 @@ struct DmgSystem {
     }
 
     @inline(__always)
-    func update(base: borrowing VBPF) 
+    func update(_ world: borrowing World)
     {
-        view(base: base, with: dmgToken) 
+        view(base: world.base, with: dmgToken) 
         { _, health, damage in
 
             let totalDamage = damage.atk - damage.def

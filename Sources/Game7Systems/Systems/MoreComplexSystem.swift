@@ -9,9 +9,9 @@ struct MoreComplexSystem {
     }
 
     @inline(__always)
-    func update(base: borrowing VBPF) 
+    func update(_ world: borrowing World)
     {
-        view(base: base, with: mcToken) 
+        view(base: world.base, with: mcToken) 
         { _, pos, dir, data in
 
             if (data.thingy % 10) == 0 {
@@ -24,7 +24,7 @@ struct MoreComplexSystem {
                     dir.vy = Float(data.rng.range(3, 19)) - 10.0
                 }
             }
-            
+
         }
     }
 }
