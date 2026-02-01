@@ -12,8 +12,8 @@ struct World: ~Copyable {
     // 使用你的 ECScore Registry
     let base: Validated<BasePlatform, Proof_Handshake, Platform_Facts>
 
-    public init(registry: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>) {
-        self.base = registry
+    public init(_ base: consuming Validated<BasePlatform, Proof_Handshake, Platform_Facts>) {
+        self.base = base
         self.resource = Resource()
     }
 
@@ -22,9 +22,7 @@ struct World: ~Copyable {
         self.resource.dt = now - self.resource.prev
         self.resource.prev = now
     }
-
-    
-
+  
     struct Resource {
         var prev: ContinuousClock.Instant = clock.now
         var dt: Duration = .zero
@@ -62,5 +60,4 @@ struct World: ~Copyable {
         }
     }
     
-
 }
