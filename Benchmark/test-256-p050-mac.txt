@@ -1,0 +1,282 @@
+
+================== System Information ==================
+Platform     : macOS Version 26.2 (Build 25C56)
+CPU Model    : Apple M1 Pro
+L1 D-Cache   : 64 KB
+Architecture : macbookpro.local
+Logic Cores  : 10 cores
+Total RAM    : 16.00 GB
+========================================================
+
+======================================================
+                 iterId : 0
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.855670208 seconds
+systems update duration : 0.02573225 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003741833 seconds
+    DataSystem Duration : 0.002653542 seconds
+  MCmplxSystem Duration : 0.00187575 seconds
+  HealthSystem Duration : 0.004202792 seconds
+  DamageSystem Duration : 0.005893625 seconds
+  SpriteSystem Duration : 0.003876917 seconds
+  RenderSystem Duration : 0.003486375 seconds
+======================================================
+
+======================================================
+                 iterId : 1
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.872248125 seconds
+systems update duration : 0.024062292 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003246459 seconds
+    DataSystem Duration : 0.002336875 seconds
+  MCmplxSystem Duration : 0.001793583 seconds
+  HealthSystem Duration : 0.003939375 seconds
+  DamageSystem Duration : 0.005624833 seconds
+  SpriteSystem Duration : 0.003685292 seconds
+  RenderSystem Duration : 0.003433917 seconds
+======================================================
+
+======================================================
+                 iterId : 2
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.881488333 seconds
+systems update duration : 0.023575541 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003183083 seconds
+    DataSystem Duration : 0.002278334 seconds
+  MCmplxSystem Duration : 0.001788792 seconds
+  HealthSystem Duration : 0.003858417 seconds
+  DamageSystem Duration : 0.005532333 seconds
+  SpriteSystem Duration : 0.003517916 seconds
+  RenderSystem Duration : 0.003415708 seconds
+======================================================
+
+======================================================
+                 iterId : 3
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.8838115 seconds
+systems update duration : 0.023203375 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003114917 seconds
+    DataSystem Duration : 0.002161125 seconds
+  MCmplxSystem Duration : 0.001803792 seconds
+  HealthSystem Duration : 0.003746791 seconds
+  DamageSystem Duration : 0.005508459 seconds
+  SpriteSystem Duration : 0.003456541 seconds
+  RenderSystem Duration : 0.003410667 seconds
+======================================================
+
+======================================================
+                 iterId : 4
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.886881542 seconds
+systems update duration : 0.024572416 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003299667 seconds
+    DataSystem Duration : 0.00236175 seconds
+  MCmplxSystem Duration : 0.001917209 seconds
+  HealthSystem Duration : 0.004013125 seconds
+  DamageSystem Duration : 0.005873959 seconds
+  SpriteSystem Duration : 0.003607042 seconds
+  RenderSystem Duration : 0.003496167 seconds
+======================================================
+
+======================================================
+                 iterId : 5
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.8850305 seconds
+systems update duration : 0.023799 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003233625 seconds
+    DataSystem Duration : 0.002200458 seconds
+  MCmplxSystem Duration : 0.001987417 seconds
+  HealthSystem Duration : 0.003677084 seconds
+  DamageSystem Duration : 0.005696375 seconds
+  SpriteSystem Duration : 0.003427667 seconds
+  RenderSystem Duration : 0.003573666 seconds
+======================================================
+
+======================================================
+                 iterId : 6
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.900596 seconds
+systems update duration : 0.022855375 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003056542 seconds
+    DataSystem Duration : 0.002137792 seconds
+  MCmplxSystem Duration : 0.001785625 seconds
+  HealthSystem Duration : 0.003669208 seconds
+  DamageSystem Duration : 0.005446959 seconds
+  SpriteSystem Duration : 0.003345833 seconds
+  RenderSystem Duration : 0.00341075 seconds
+======================================================
+
+======================================================
+                 iterId : 7
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.877865209 seconds
+systems update duration : 0.022954084 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003037333 seconds
+    DataSystem Duration : 0.002164 seconds
+  MCmplxSystem Duration : 0.001794542 seconds
+  HealthSystem Duration : 0.003685958 seconds
+  DamageSystem Duration : 0.005447416 seconds
+  SpriteSystem Duration : 0.003399834 seconds
+  RenderSystem Duration : 0.003423959 seconds
+======================================================
+
+======================================================
+                 iterId : 8
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.868396834 seconds
+systems update duration : 0.0238835 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003030334 seconds
+    DataSystem Duration : 0.002298333 seconds
+  MCmplxSystem Duration : 0.002098291 seconds
+  HealthSystem Duration : 0.003699583 seconds
+  DamageSystem Duration : 0.005683583 seconds
+  SpriteSystem Duration : 0.003512625 seconds
+  RenderSystem Duration : 0.003558333 seconds
+======================================================
+
+======================================================
+                 iterId : 9
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.912014708 seconds
+systems update duration : 0.022925542 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003033167 seconds
+    DataSystem Duration : 0.002131375 seconds
+  MCmplxSystem Duration : 0.001829417 seconds
+  HealthSystem Duration : 0.003687417 seconds
+  DamageSystem Duration : 0.005459 seconds
+  SpriteSystem Duration : 0.003367875 seconds
+  RenderSystem Duration : 0.003416167 seconds
+======================================================
+
+======================================================
+                 iterId : 10
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.885644917 seconds
+systems update duration : 0.023740708 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003201334 seconds
+    DataSystem Duration : 0.002209084 seconds
+  MCmplxSystem Duration : 0.001932458 seconds
+  HealthSystem Duration : 0.0037915 seconds
+  DamageSystem Duration : 0.005565209 seconds
+  SpriteSystem Duration : 0.003514166 seconds
+  RenderSystem Duration : 0.003523458 seconds
+======================================================
+
+======================================================
+                 iterId : 11
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.885542416 seconds
+systems update duration : 0.024073667 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.00313075 seconds
+    DataSystem Duration : 0.002404459 seconds
+  MCmplxSystem Duration : 0.001942083 seconds
+  HealthSystem Duration : 0.003728958 seconds
+  DamageSystem Duration : 0.005729 seconds
+  SpriteSystem Duration : 0.003637791 seconds
+  RenderSystem Duration : 0.003497834 seconds
+======================================================
+
+======================================================
+                 iterId : 12
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.901059458 seconds
+systems update duration : 0.023455375 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003096875 seconds
+    DataSystem Duration : 0.002178333 seconds
+  MCmplxSystem Duration : 0.001911792 seconds
+  HealthSystem Duration : 0.003741667 seconds
+  DamageSystem Duration : 0.005518208 seconds
+  SpriteSystem Duration : 0.003469291 seconds
+  RenderSystem Duration : 0.00353825 seconds
+======================================================
+
+======================================================
+                 iterId : 13
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.878971875 seconds
+systems update duration : 0.023580042 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003151417 seconds
+    DataSystem Duration : 0.002208875 seconds
+  MCmplxSystem Duration : 0.001860792 seconds
+  HealthSystem Duration : 0.003779 seconds
+  DamageSystem Duration : 0.005577125 seconds
+  SpriteSystem Duration : 0.00350775 seconds
+  RenderSystem Duration : 0.003492208 seconds
+======================================================
+
+======================================================
+                 iterId : 14
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.886059416 seconds
+systems update duration : 0.023249875 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003144542 seconds
+    DataSystem Duration : 0.002168042 seconds
+  MCmplxSystem Duration : 0.00181325 seconds
+  HealthSystem Duration : 0.003766333 seconds
+  DamageSystem Duration : 0.005457583 seconds
+  SpriteSystem Duration : 0.003463625 seconds
+  RenderSystem Duration : 0.003434875 seconds
+======================================================
+
+======================================================
+                 iterId : 15
+        emplaceStrategy : Prob(0.5)
+  total entities number : 1048576
+ entity create duration : 0.883092458 seconds
+systems update duration : 0.023235833 seconds
+   (hero, monster, npc) : (221812, 297236, 5240)
+======================================================
+    MoveSystem Duration : 0.003088334 seconds
+    DataSystem Duration : 0.002139792 seconds
+  MCmplxSystem Duration : 0.00179375 seconds
+  HealthSystem Duration : 0.003741916 seconds
+  DamageSystem Duration : 0.005598875 seconds
+  SpriteSystem Duration : 0.003437167 seconds
+  RenderSystem Duration : 0.003434167 seconds
+======================================================
+
