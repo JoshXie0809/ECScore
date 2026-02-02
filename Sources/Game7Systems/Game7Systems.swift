@@ -10,9 +10,9 @@ struct Game7Systems {
         // ##################################################
         // parameter
             let ITER_NUM = 16
-            let totalEntityNum = 4096 * 4
+            let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
-            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
+            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_075
             let printWorldFlag = false
         // ##################################################
 
@@ -34,8 +34,14 @@ func run(_ gs: GameSettings) -> RunResult {
     // ---------------------------------------------------------
     // world
     // #####################################################################################
+    // resource for system
         var world = World(makeBootedPlatform())
         var rng = Xoshiro128(seed: gs.seed)
+        let empToken: EMP_TOKEN = interop(world.base, 
+            PlayerComponent.self, HealthComponent.self, 
+            DamageComponent.self, PositionComponent.self,
+            DataComponent.self, SpriteComponent.self, DirectionComponent.self
+        )
     // systems init
     // #####################################################################################
         let dmgSys = DmgSystem(base: world.base)
@@ -54,7 +60,7 @@ let ta0 = clock.now
 
     // #####################################################################################
     // create-entities-stage
-    let hmn = createEntities(world, gs, &rng)
+        let hmn = createEntities(world, gs, &rng, empToken)
     // #####################################################################################
 
 
@@ -67,10 +73,8 @@ let tb0 = clock.now
 // ---------------------------------------------------------
 
 // bench-mark-system-order
-
 // m_systems.emplace_back(createMovementSystem(m_entities));
 // m_systems.emplace_back(createDataSystem(m_entities));
-
 // if (m_addMoreComplexSystem == add_more_complex_system_t::UseMoreComplexSystems) {
 //   m_systems.emplace_back(createMoreComplexSystem(m_entities));
 //   m_systems.emplace_back(createHealthSystem(m_entities));
@@ -78,7 +82,6 @@ let tb0 = clock.now
 //   m_systems.emplace_back(createSpriteSystem(m_entities));
 //   m_systems.emplace_back(createRenderSystem(m_entities));
 // }
-
 
     // system update
     let fakeDt = Duration.nanoseconds(1_000_000_000 / 120)
@@ -111,12 +114,11 @@ let tb1 = clock.now
 }
 
 @inline(__always) 
-func createEntities(_ world: borrowing World, _ gs: GameSettings, _ rng: inout Xoshiro128) -> (Int, Int, Int) {
-    let empToken = interop(world.base, 
-        PlayerComponent.self, HealthComponent.self, DamageComponent.self, PositionComponent.self,
-        DataComponent.self, SpriteComponent.self, DirectionComponent.self
-    )
-
+func createEntities(
+    _ world: borrowing World, _ gs: GameSettings, 
+    _ rng: inout Xoshiro128, _ empToken: EMP_TOKEN
+) -> (Int, Int, Int) 
+{
     let totalEntityNum = gs.ttEn
     var (heroCount, monsterCount, npcCount) = (0, 0, 0)
     let prob = gs.emplaceStrategy.rawValue
@@ -145,7 +147,7 @@ func createEntities(_ world: borrowing World, _ gs: GameSettings, _ rng: inout X
                 case .npc: npcCount += 1
                 }
 
-                let (p, h, d, pos) = World.Spawner.spawnEntityComponent(tempRng: &rng, type)
+                let (p, h, d, pos) = World.Spawner.spawnEntityComponent(&rng, type)
 
                 let entity = entities.createEntity()
                 plSt.addComponent(entity, p)
@@ -162,3 +164,13 @@ func createEntities(_ world: borrowing World, _ gs: GameSettings, _ rng: inout X
     }
     return (heroCount, monsterCount, npcCount) 
 }
+
+typealias EMP_TOKEN = (
+    TypeToken<PlayerComponent>, 
+    TypeToken<HealthComponent>, 
+    TypeToken<DamageComponent>, 
+    TypeToken<PositionComponent>, 
+    TypeToken<DataComponent>, 
+    TypeToken<SpriteComponent>, 
+    TypeToken<DirectionComponent>
+)
