@@ -21,6 +21,23 @@ func makeBootedPlatform() -> VBPF {
     return pf_handshake
 }
 
+struct GameSettings {
+    let iterId: Int
+    let ttEn: Int
+    let seed: UInt32
+    let printWorldFlag: Bool
+    let emplaceStrategy: emplaceStrategyProb
+
+    enum emplaceStrategyProb: UInt32, CustomStringConvertible {
+        case prob_000 = 0
+        case prob_025 = 25
+        case prob_050 = 50
+        case prob_075 = 75
+        case prob_100 = 100
+
+        var description: String { "Prob(\(Double(self.rawValue) / 100))" }
+    }
+}
 
 struct RunResult: CustomStringConvertible {
     let gs: GameSettings
@@ -43,8 +60,8 @@ struct RunResult: CustomStringConvertible {
 
     var description: String {
         let s01 = gs.iterId
-        let s02 = gs.ttEn
-        let s03 = gs.complexFlag
+        let s02 = gs.emplaceStrategy
+        let s03 = gs.ttEn
         let s04 = createEntityDuration
         let s05 = updateEntityDuration
         let s06 = hmn
@@ -55,13 +72,11 @@ struct RunResult: CustomStringConvertible {
         let s11 = allSysDuration.4
         let s12 = allSysDuration.5
         let s13 = allSysDuration.6
-        let s14 = gs.emplaceStrategy
         var res = ""
         res += "======================================================\n"
         res += "                 iterId : \(s01)" + "\n"
-        res += "        emplaceStrategy : \(s14)" + "\n"
-        res += "total entities number   : \(s02)" + "\n"
-        res += "is complex(7 system)?   : \(s03)" + "\n"
+        res += "        emplaceStrategy : \(s02)" + "\n"
+        res += "total entities number   : \(s03)" + "\n"
         res += "entity create duration  : \(s04)" + "\n"
         res += "systems update duration : \(s05)" + "\n"
         res += "(hero, monster, npc)    : \(s06)" + "\n"

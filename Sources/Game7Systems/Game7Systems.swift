@@ -1,16 +1,8 @@
 import ECScore
 import Foundation
 
-// global Setting
+
 let clock = ContinuousClock()
-struct GameSettings {
-    let iterId: Int
-    let ttEn: Int
-    let seed: UInt32
-    let complexFlag: Bool
-    let printWorldFlag: Bool
-    let emplaceStrategy: Int
-}
 
 @main
 struct Game7Systems {
@@ -18,18 +10,17 @@ struct Game7Systems {
         // ##################################################
         // parameter
             let ITER_NUM = 16
-            let totalEntityNum = 4096 * 3
+            let totalEntityNum = 4096 * 4
             let seed = UInt32(12345)
-            let emplaceStrategy = 2
-            let complexFlag = true
+            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
             let printWorldFlag = false
         // ##################################################
 
         for iter in 0..<ITER_NUM {
             let gs = GameSettings(
                 iterId: iter,
-                ttEn: totalEntityNum, seed: seed, 
-                complexFlag: complexFlag, 
+                ttEn: totalEntityNum, 
+                seed: seed, 
                 printWorldFlag: printWorldFlag,
                 emplaceStrategy: emplaceStrategy
             )
@@ -128,6 +119,7 @@ func createEntities(_ world: borrowing World, _ gs: GameSettings, _ rng: inout X
 
     let totalEntityNum = gs.ttEn
     var (heroCount, monsterCount, npcCount) = (0, 0, 0)
+    let prob = gs.emplaceStrategy.rawValue
     
     emplace(world.base, tokens: empToken) {
         entities, pack in
@@ -160,16 +152,6 @@ func createEntities(_ world: borrowing World, _ gs: GameSettings, _ rng: inout X
                 hSt.addComponent(entity, h)
                 dmgSt.addComponent(entity, d)
                 posSt.addComponent(entity, pos)
-                guard gs.complexFlag else { continue }
-
-                var prob: UInt32 = 0
-                switch gs.emplaceStrategy {
-                case 1 : 
-                    prob = 100
-                case 2 : 
-                    prob = 50
-                default: fatalError()
-                }
                 
                 if rng.next() % 100 < prob { dataSt.addComponent(entity, DataComponent(seed: rng.next())) }
                 if rng.next() % 100 < prob { spSt.addComponent(entity, SpriteComponent()) }

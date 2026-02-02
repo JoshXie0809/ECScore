@@ -4,14 +4,11 @@
 import PackageDescription
 import CompilerPluginSupport
 
-import PackageDescription
-
-// 1. 根據環境動態決定平台陣列
 let packagePlatforms: [SupportedPlatform]?
 #if os(macOS)
     packagePlatforms = [.macOS(.v15)]
 #else
-    packagePlatforms = nil // Linux 不需要指定，給空陣列即可
+    packagePlatforms = nil // Linux platforms
 #endif
 
 let package = Package(
