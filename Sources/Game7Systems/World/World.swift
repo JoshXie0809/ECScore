@@ -34,7 +34,7 @@ struct World: ~Copyable {
     }
 
     struct Spawner {
-        static func spawnEntityComponent(_ rng: inout Xoshiro128, _ type: PlayerType) -> (PlayerComponent, HealthComponent, DamageComponent, PositionComponent)
+        static func spawnEntityComponent(_ rng: inout Xoshiro128, _ type: PlayerType) -> (PlayerComponent, HealthComponent, DamageComponent)
         {
             // 2. 根據職業分配組件 (模仿 C++ setComponents 邏輯)
             let hp: Int
@@ -55,12 +55,9 @@ struct World: ~Copyable {
             let player = PlayerComponent(type: type)
             let health = HealthComponent(hp: hp, maxHp: hp)
             let dmg = DamageComponent(atk: atk)
-            let pos = PositionComponent(
-                        x: Float(rng.next() % UInt32(World.maxX)), 
-                        y: Float(rng.next() % UInt32(World.maxY))
-                    )
 
-            return (player, health, dmg, pos)
+
+            return (player, health, dmg)
         }
     }
     

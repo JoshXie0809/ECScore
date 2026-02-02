@@ -1,7 +1,6 @@
 import ECScore
 import Foundation
 
-
 let clock = ContinuousClock()
 
 @main
@@ -9,10 +8,10 @@ struct Game7Systems {
     public static func main() async throws {
         // ##################################################
         // parameter
-            let ITER_NUM = 16
-            let totalEntityNum = 4096 * 256
+            let ITER_NUM = 6
+            let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
-            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
+            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_050
             let printWorldFlag = false
         // ##################################################
 
@@ -41,7 +40,8 @@ func run(_ gs: GameSettings) -> RunResult {
         let empToken: EMP_TOKEN = interop(world.base, 
             PlayerComponent.self, HealthComponent.self, 
             DamageComponent.self, PositionComponent.self,
-            DataComponent.self, SpriteComponent.self, DirectionComponent.self
+            DataComponent.self, SpriteComponent.self, 
+            DirectionComponent.self, EmptyComponent.self
         )
     // systems init
     // #####################################################################################
@@ -126,7 +126,8 @@ func createEntities(
     
     emplace(world.base, tokens: empToken) {
         entities, pack in
-        var ( plSt, hSt, dmgSt, posSt, dataSt, spSt, dirSt ) = pack.storages
+        var ( plSt, hSt, dmgSt, posSt, 
+            dataSt, spSt, dirSt, emptySt ) = pack.storages
         for i in 0..<totalEntityNum {
             var targetType: PlayerType? = nil
 
@@ -148,18 +149,35 @@ func createEntities(
                 case .npc: npcCount += 1
                 }
 
-                let (p, h, d, pos) = World.Spawner.spawnEntityComponent(&rng, type)
+                let (p, h, d) = World.Spawner.spawnEntityComponent(&rng, type)
 
                 let entity = entities.createEntity()
                 plSt.addComponent(entity, p)
                 hSt.addComponent(entity, h)
                 dmgSt.addComponent(entity, d)
+                spSt.addComponent(entity, SpriteComponent()) 
+
+                let roll1 = rng.next() % 100
+                let roll2 = rng.next() % 100
+
+                if roll1 > prob { // empty
+                    emptySt.addComponent(entity, EmptyComponent()) 
+                    continue
+                }
+
+                if (roll2 & 1) == 0 { // all-component
+                    dataSt.addComponent(entity, DataComponent(seed: rng.next()))
+                } 
+
+                // minimal
+                let pos = PositionComponent(
+                    x: Float(rng.next() % UInt32(World.maxX)), 
+                    y: Float(rng.next() % UInt32(World.maxY))
+                )
+
                 posSt.addComponent(entity, pos)
-                
-                if rng.next() % 100 < prob { dataSt.addComponent(entity, DataComponent(seed: rng.next())) }
-                if rng.next() % 100 < prob { spSt.addComponent(entity, SpriteComponent()) }
-                if rng.next() % 100 < prob { dirSt.addComponent(entity, DirectionComponent()) }
-                
+                dirSt.addComponent(entity, DirectionComponent())    
+
             }
         }
     }
@@ -173,5 +191,6 @@ typealias EMP_TOKEN = (
     TypeToken<PositionComponent>, 
     TypeToken<DataComponent>, 
     TypeToken<SpriteComponent>, 
-    TypeToken<DirectionComponent>
+    TypeToken<DirectionComponent>,
+    TypeToken<EmptyComponent>
 )
