@@ -9,12 +9,14 @@ struct Game7Systems {
     public static func main() async throws {
         // ##################################################
         // parameter
-            let ITER_NUM = 16
+            let ITER_NUM = 4
             let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
             let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_075
             let printWorldFlag = false
         // ##################################################
+
+        printSystemInfo()
 
         for iter in 0..<ITER_NUM {
             let gs = GameSettings(
@@ -26,7 +28,6 @@ struct Game7Systems {
             )
             print(run(gs))
         }
-        
     }
 }
 
