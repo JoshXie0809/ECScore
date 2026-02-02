@@ -18,7 +18,7 @@ struct Game7Systems {
         // ##################################################
         // parameter
             let ITER_NUM = 16
-            let totalEntityNum = 4096 * 512
+            let totalEntityNum = 4096 * 3
             let seed = UInt32(12345)
             let emplaceStrategy = 2
             let complexFlag = true

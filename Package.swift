@@ -4,8 +4,19 @@
 import PackageDescription
 import CompilerPluginSupport
 
+import PackageDescription
+
+// 1. 根據環境動態決定平台陣列
+let packagePlatforms: [SupportedPlatform]?
+#if os(macOS)
+    packagePlatforms = [.macOS(.v15)]
+#else
+    packagePlatforms = nil // Linux 不需要指定，給空陣列即可
+#endif
+
 let package = Package(
     name: "ECScore",
+    platforms: packagePlatforms,
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
