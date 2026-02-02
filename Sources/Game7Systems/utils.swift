@@ -156,7 +156,7 @@ private func getMacOSL1Cache() -> Int64 {
 #if os(Linux)
 private func getLinuxCPUModel() -> String {
 
-    if let cpuinfo = try? String(contentsOfFile: "/proc/cpuinfo") {
+    if let cpuinfo = try? String(contentsOfFile: "/proc/cpuinfo", encoding: .utf8) {
         let lines = cpuinfo.components(separatedBy: .newlines)
         if let modelLine = lines.first(where: { $0.contains("model name") }) {
             return modelLine.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespaces) ?? "Unknown Linux CPU"
