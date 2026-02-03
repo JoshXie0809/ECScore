@@ -41,11 +41,70 @@ struct name {
 
 @Test func schedulerTest() async throws {
     let base = makeBootedPlatform()
-    scheduler2(base, [1, 2, 10], [3, 7, 11], [4, 5], [9, 12], [4, 5, 6])
+    var rng = Xoshiro128(seed: 12345)
+    let clock = ContinuousClock()
+
+    for iter in 0..<20 {
+        var RIDSs = [[Int]]()
+        for _ in 0..<2000 {
+            var rids = [Int]()
+            for rid in 0...109 { // maxRid = 109
+                if rng.next() % 1000 < 40 {
+                    rids.append(rid)
+                }
+            }
+
+            if rids.count > 0 { RIDSs.append(rids) }
+        }
+
+        let ts0 = clock.now
+        scheduler2(base, RIDSs)
+        print("iter: \(iter)")
+        print("total schedule time: ", clock.now - ts0)
+        print()
+    }
+    
 }
 
 
+struct Xoshiro128 {
+    var state: (UInt32, UInt32, UInt32, UInt32)
 
+    init(seed: UInt32) {
+        self.state = (
+            seed &+ 3,
+            seed &+ 5,
+            seed &+ 7,
+            seed &+ 11
+        )
+    }
+
+    @inline(__always)
+    private static func rotl(_ x: UInt32, _ k: Int) -> UInt32 {
+        return (x << k) | (x >> (32 - k))
+    }
+
+    public mutating func next() -> UInt32 {
+        let result = Xoshiro128.rotl(state.1 &* 5, 7) &* 9
+
+        let t = state.1 << 9
+
+        state.2 ^= state.0
+        state.3 ^= state.1
+        state.1 ^= state.2
+        state.0 ^= state.3
+
+        state.2 ^= t
+        state.3 = Xoshiro128.rotl(state.3, 11)
+
+        return result
+    }
+
+    public mutating func range(_ l: UInt32, _ h: UInt32) -> UInt32 {
+        let range = h - l + 1
+        return self.next() % range + l
+    }
+}
 
 
 

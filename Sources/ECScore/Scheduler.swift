@@ -117,13 +117,13 @@ extension MASK {
     }
 }
 
-func scheduler2(_ base : borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ RIDSs: [Int]...) {
+func scheduler2(_ base : borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ RIDSs: [[Int]]) {
     let maxRid = 109
     let tolerenceCount = Int(Double(maxRid + 1) * 0.8)
     var Masks = MASKS()
     var systemStore = [[Int]]()
     var startAddedIdx = 0 // 核心水位線
-    let MAX_SYSTEMS_PER_LAYER = 4 // 假設每層並行上限是 4 個系統
+    let MAX_SYSTEMS_PER_LAYER = 2 // 假設每層並行上限是 4 個系統
 
     for (system_i, rids) in RIDSs.enumerated() {
         // 從水位線開始找，自動跳過前面已經「確定滿了」的 Masks
@@ -131,34 +131,29 @@ func scheduler2(_ base : borrowing Validated<BasePlatform, Proof_Handshake, Plat
 
         if let foundIdx = res {
             systemStore[foundIdx].append(system_i)
-            
-            // 重要：如果當前水位線所在的層級塞滿了，就把水位線往後推
-            // 這樣下一個系統進來，就永遠不會再去碰這個已經滿載的 Mask
-            // 修改點：水位線應該在「數量滿了」或「位元滿了」時都往後推
-            while startAddedIdx < systemStore.count && 
-                (systemStore[startAddedIdx].count >= MAX_SYSTEMS_PER_LAYER || Masks[startAddedIdx].isSaturated(tolerenceCount)) {
-                startAddedIdx += 1
-            }
-            
-
         } else {
             // 沒地方塞，建立新層級
             var mask = MASK.createMask(maxRid)
             for rid in rids { mask.wear(rid) }
             Masks.append(mask)
             systemStore.append([system_i])
-            
-            // 如果新建立的這層也立即滿了（比如 MAX 設為 1），水位線也得跟進
-            if systemStore[startAddedIdx].count >= MAX_SYSTEMS_PER_LAYER || Masks[startAddedIdx].isSaturated(tolerenceCount) {
-                startAddedIdx += 1
-            }
         }
 
-        print("wear: ", rids)
-        print("can wear at \(res ?? -1)")
-        print("after", Masks)
-        print("systemStore", systemStore)
-        print("======")
+        // 重要：如果當前水位線所在的層級塞滿了，就把水位線往後推
+        // 這樣下一個系統進來，就永遠不會再去碰這個已經滿載的 Mask
+        // 修改點：水位線應該在「數量滿了」或「位元滿了」時都往後推
+        while startAddedIdx < systemStore.count && 
+            (systemStore[startAddedIdx].count >= MAX_SYSTEMS_PER_LAYER || 
+            Masks[startAddedIdx].isSaturated(tolerenceCount)) 
+        {
+            startAddedIdx += 1
+        }
+
+        // print("wear: ", rids)
+        // print("can wear at \(res ?? -1)")
+        // print("after", Masks)
+        // print("systemStore", systemStore)
+        // print("======")
 
 
     }
