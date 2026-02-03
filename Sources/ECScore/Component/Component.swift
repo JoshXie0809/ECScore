@@ -54,7 +54,7 @@ public protocol FastComponentProtocol: Component {
 @frozen
 @dynamicMemberLookup
 public struct ComponentProxy<T> {
-    public let pointer: UnsafeMutablePointer<T>
+    private let pointer: UnsafeMutablePointer<T>
 
     @inline(__always)
     public init(pointer: UnsafeMutablePointer<T>) {

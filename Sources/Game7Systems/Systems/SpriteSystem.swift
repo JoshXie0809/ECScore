@@ -22,7 +22,7 @@ struct SpriteSystem {
         view(base: world.base, with: spriteToken) 
         { _, sprite, player, health in
 
-            let ch: UInt8 = switch health.status {
+            sprite.character = switch health.status {
             case .alive:
                 switch player.type {
                 case .hero:    SpriteCharacter.playerSprite
@@ -32,8 +32,7 @@ struct SpriteSystem {
             case .dead:  SpriteCharacter.graveSprite
             case .spawn: SpriteCharacter.spawnSprite
             }         
-
-            sprite.character = ch
+            
         }
         
     }

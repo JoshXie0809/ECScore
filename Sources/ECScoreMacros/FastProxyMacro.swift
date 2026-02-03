@@ -70,9 +70,7 @@ public struct FastProxyMacro: MemberMacro, ExtensionMacro {
         // 這裡只負責連結 FastComponentProtocol，完全不碰你的 createPFStorage
         return [
             try ExtensionDeclSyntax("""
-            extension \(type): ECScore.FastComponentProtocol {
-                public typealias FastProxyType = \(type).ProxyMembers
-            }
+            extension \(type): ECScore.FastComponentProtocol {}
             """)
         ]
     }

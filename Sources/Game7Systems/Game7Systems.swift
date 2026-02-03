@@ -11,7 +11,7 @@ struct Game7Systems {
             let ITER_NUM = 16
             let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
-            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
+            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_050
             let printWorldFlag = false
         // ##################################################
 
