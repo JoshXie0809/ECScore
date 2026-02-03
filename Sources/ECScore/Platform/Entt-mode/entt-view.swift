@@ -250,7 +250,6 @@ public func viewParallel<each T: Sendable> (
 
 @dynamicMemberLookup
 public struct ComponentProxy<T> {
-    // 這裡我們改用 UnsafeMutablePointer，與你之前的系統對齊
     let pointer: UnsafeMutablePointer<T>
 
     @inline(__always)
@@ -258,16 +257,15 @@ public struct ComponentProxy<T> {
         self.pointer = pointer
     }
 
-    // 這就是報錯要求的 subscript
     @inline(__always)
     public subscript<V>(dynamicMember keyPath: WritableKeyPath<T, V>) -> V {
-        get {
-            // 直接從指標指向的記憶體讀取偏移量
-            pointer.pointee[keyPath: keyPath]
+        @inline(__always)
+        _read {
+            yield pointer.pointee[keyPath: keyPath]
         }
-        nonmutating set {
-            // 直接寫入
-            pointer.pointee[keyPath: keyPath] = newValue
+        @inline(__always)
+        nonmutating _modify {
+            yield &pointer.pointee[keyPath: keyPath]
         }
     }
 }
