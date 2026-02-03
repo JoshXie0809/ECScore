@@ -1,13 +1,8 @@
 import Testing
 @testable import ECScore
 
-@Component
-struct Position {
+@FastProxy
+struct Position: Component {
     var x: Float
     var y: Float
-}
-
-@Test func testComponentMacro() async throws {
-    let storage = __SparseSet_L2_Position()
-    _ = storage
 }

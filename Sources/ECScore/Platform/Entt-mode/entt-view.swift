@@ -247,25 +247,3 @@ public func viewParallel<each T: Sendable> (
     let vps = createViewPlans( base: base, with: (repeat each with) )
     await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), coresNum: coresNum, action)
 }
-
-@dynamicMemberLookup
-public struct ComponentProxy<T> {
-    let pointer: UnsafeMutablePointer<T>
-
-    @inline(__always)
-    public init(pointer: UnsafeMutablePointer<T>) {
-        self.pointer = pointer
-    }
-
-    @inline(__always)
-    public subscript<V>(dynamicMember keyPath: WritableKeyPath<T, V>) -> V {
-        @inline(__always)
-        _read {
-            yield pointer.pointee[keyPath: keyPath]
-        }
-        @inline(__always)
-        nonmutating _modify {
-            yield &pointer.pointee[keyPath: keyPath]
-        }
-    }
-}
