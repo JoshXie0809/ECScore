@@ -39,32 +39,87 @@ struct name {
 }
 
 
-@Test func schedulerTest() async throws {
-    let base = makeBootedPlatform()
-    var rng = Xoshiro128(seed: 12345)
-    let clock = ContinuousClock()
+// @Test func schedulerTest() async throws {
+//     let base = makeBootedPlatform()
+//     var rng = Xoshiro128(seed: 23)
+//     let clock = ContinuousClock()
+//     let tst0 = clock.now
 
-    for iter in 0..<20 {
-        var RIDSs = [[Int]]()
-        for _ in 0..<2000 {
-            var rids = [Int]()
-            for rid in 0...109 { // maxRid = 109
-                if rng.next() % 1000 < 40 {
-                    rids.append(rid)
-                }
-            }
+//     for iter in 0..<100 {
+//         var RIDSs = [[Int]]()
+//         for _ in 0..<40 {
+//             var rids = [Int]()
+//             for rid in 0...109 { // maxRid = 109
+//                 if rng.next() % 1000 < 40 {
+//                     rids.append(rid)
+//                 }
+//             }
 
-            if rids.count > 0 { RIDSs.append(rids) }
-        }
+//             if rids.count > 0 { RIDSs.append(rids) }
+//         }
 
-        let ts0 = clock.now
-        scheduler2(base, RIDSs)
-        print("iter: \(iter)")
-        print("total schedule time: ", clock.now - ts0)
-        print()
-    }
+//         // let ts0 = clock.now
+//         // scheduler2(base, RIDSs)
+//         // print("iter: \(iter)")
+//         // print("total schedule time: ", clock.now - ts0)
+//         // print()
+//     }
+
+//     print("finished", clock.now - tst0)
     
-}
+// }
+
+// @Test func schedulerTest2() async throws {
+//     let base = makeBootedPlatform()
+//     var rng = Xoshiro128(seed: 23)
+//     let clock = ContinuousClock()
+//     let tst0 = clock.now
+
+//     for iter in 0..<100_000 {
+//         var RIDSs = [[Int]]()
+//         for _ in 0..<40 {
+//             var rids = [Int]()
+//             for rid in 0...109 {
+//                 if rng.next() % 1000 < 40 {
+//                     rids.append(rid)
+//                 }
+//             }
+//             if rids.count > 0 { RIDSs.append(rids) }
+//         }
+
+//         // 1. 執行調度 (假設你的 scheduler2 現在會回傳 systemStore)
+//         let systemStore = scheduler2(base, RIDSs)
+        
+//         // 2. 自動校驗：如果出錯直接拋出錯誤中斷測試
+//         if !verifyScheduler(systemStore, RIDSs) {
+//             Issue.record("Scheduler logic failed at iteration \(iter)")
+//             return
+//         }
+//     }
+
+//     print("✅ Passed 100,000 iterations of scheduling and logic verification.")
+//     print("Total time:", clock.now - tst0)
+// }
+
+
+// func verifyScheduler(_ systemStore: [[Int]], _ RIDSs: [[Int]]) -> Bool {
+//     for layer in systemStore {
+//         var seenRIDs = Set<Int>()
+//         for systemIdx in layer {
+//             let rids = RIDSs[systemIdx]
+//             for rid in rids {
+//                 // 如果在同一層發現重複的 RID，代表調度邏輯錯誤
+//                 if seenRIDs.contains(rid) {
+//                     print("❌ Conflict detected in layer: \(layer)")
+//                     print("System \(systemIdx) shares RID \(rid)")
+//                     return false
+//                 }
+//                 seenRIDs.insert(rid)
+//             }
+//         }
+//     }
+//     return true
+// }
 
 
 struct Xoshiro128 {

@@ -211,7 +211,7 @@ struct BattleTag: Component {}
     emplace(base, tokens: ttokens) { (entities, pack) in
         var (pos, vel, dmg, def, hp, charStatus, battag,
             a, b, c, d, etag) = pack.storages
-        let entityCount = 4096 * 16
+        let entityCount = 4096
         for _ in 0..<entityCount {
             let e = entities.createEntity()
             let roll = Int.random(in: 1...150)

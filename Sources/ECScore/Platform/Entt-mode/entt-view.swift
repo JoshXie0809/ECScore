@@ -146,6 +146,29 @@ public func view<each T> (
     executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), action)
 }
 
+// single componet
+@inline(__always)
+public func view<T>(
+    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, 
+    with: TypeToken<T>,
+    _ action: (_: Int, _: ComponentProxy<T>) -> Void
+) {
+    let vps = createViewPlans( base: base, with: with )
+    let storage: PFStorageBox<T> = with.getStorage(base: base)
+    for vp in vps {
+        let blockId = vp.segmentIndex
+        let count = storage.segments[blockId]!.count
+        let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
+        for i in 0..<count {
+            // taskId = 0
+            action(0, ComponentProxy<T>(pointer: dataPtr.advanced(by: i)) )
+        }
+    }
+
+    _fixLifetime(storage)
+}
+
+
 
 @inline(__always)
 func minHelper(_ minimum: inout Int, _ new: borrowing Int) {

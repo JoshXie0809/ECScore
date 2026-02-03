@@ -1,3 +1,5 @@
+import Foundation
+
 struct Scheduler {
 
 }
@@ -117,13 +119,17 @@ extension MASK {
     }
 }
 
-func scheduler2(_ base : borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ RIDSs: [[Int]]) {
+let _SCHEDULER2_TOLERENCE_RATE = 0.5
+let _SCHEDULER2_MAX_SYSTEMS_PER_LAYER_DEVIDER = 4
+
+
+func scheduler2(_ base : borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, _ RIDSs: [[Int]]) -> [[Int]] {
     let maxRid = 109
-    let tolerenceCount = Int(Double(maxRid + 1) * 0.8)
+    let tolerenceCount = Int(Double(maxRid + 1) * _SCHEDULER2_TOLERENCE_RATE)
     var Masks = MASKS()
     var systemStore = [[Int]]()
     var startAddedIdx = 0 // 核心水位線
-    let MAX_SYSTEMS_PER_LAYER = 2 // 假設每層並行上限是 4 個系統
+    let MAX_SYSTEMS_PER_LAYER = max(1, ProcessInfo.processInfo.activeProcessorCount / _SCHEDULER2_MAX_SYSTEMS_PER_LAYER_DEVIDER)
 
     for (system_i, rids) in RIDSs.enumerated() {
         // 從水位線開始找，自動跳過前面已經「確定滿了」的 Masks
@@ -157,4 +163,6 @@ func scheduler2(_ base : borrowing Validated<BasePlatform, Proof_Handshake, Plat
 
 
     }
+
+    return systemStore
 }

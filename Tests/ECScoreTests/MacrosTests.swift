@@ -9,5 +9,5 @@ struct Position {
 
 @Test func testComponentMacro() async throws {
     let storage = __SparseSet_L2_Position()
-    print(storage)
+    _ = storage
 }
