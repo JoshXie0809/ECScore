@@ -159,6 +159,8 @@ func createEntities(
 
                 let roll1 = rng.next() % 100
                 let roll2 = rng.next() % 100
+                let roll3 = rng.next() % World.maxX
+                let roll4 =  rng.next() % World.maxY
 
                 if roll1 > prob { // empty
                     emptySt.addComponent(entity, EmptyComponent()) 
@@ -171,8 +173,8 @@ func createEntities(
 
                 // minimal
                 let pos = PositionComponent(
-                    x: Float(rng.next() % UInt32(World.maxX)), 
-                    y: Float(rng.next() % UInt32(World.maxY))
+                    x: Float(roll3), 
+                    y: Float(roll4)
                 )
 
                 posSt.addComponent(entity, pos)
