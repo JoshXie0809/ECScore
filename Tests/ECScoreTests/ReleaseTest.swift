@@ -76,7 +76,7 @@ import Foundation
     }
     
     let end = clock.now
-    let time = start - end
+    let time = end - start
     
     print("🚀 Fragmented Traversal Time: \(time)")
     print("   Processed \(iterateCount) entities. Checksum: \(checksum)")
