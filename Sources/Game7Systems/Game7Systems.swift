@@ -8,10 +8,10 @@ struct Game7Systems {
     public static func main() async throws {
         // ##################################################
         // parameter
-            let ITER_NUM = 1
+            let ITER_NUM = 16
             let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
-            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
+            let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_050
             let printWorldFlag = false
         // ##################################################
 
