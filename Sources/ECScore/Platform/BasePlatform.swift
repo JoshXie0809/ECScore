@@ -9,6 +9,44 @@ public enum BasePlatformError: Error {
 }
 
 
+
+
+
+
+
+// public struct EntityHandle: ~Copyable {
+//     fileprivate let eid: EntityId
+//     fileprivate init(eid: EntityId) {
+//         self.eid = eid
+//     }
+
+//     func clone() -> EntityHandle {
+//         EntityHandle(eid: self.eid)
+//     }
+// }
+
+// public extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
+//     borrowing func getEntityHandle(
+//         _ eid: consuming EntityId
+//     )  -> Result<EntityHandle, BasePlatformError>
+//     {
+//         guard entities.isValid(eid) else { return .failure(.invalidEID) }
+//         return .success(EntityHandle(eid: eid))   
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
 // struct MounterCache<each T: Component>: ~Copyable {
 //     let providers: (repeat (() -> each T))
 //     let token: InteropTokens

@@ -5,6 +5,7 @@ public protocol Platform_Registry: AnyObject, Component {
     func lookup(_ type_rs: TypeStrIdHashed_FNV1A_64) -> RegistryId?
     func lookup(_ rid: RegistryId) -> Component.Type?
     func contains(_ type: any Component.Type) -> Bool
+    var maxRidId: Int { get }
     var count: Int { get }
 }
 
@@ -12,7 +13,8 @@ public class RegistryPlatform : Platform, Platform_Registry, Component {
     let entities: Entities = Entities()
     private var typeToRId: [TypeStrIdHashed_FNV1A_64: RegistryId] = [:]
     private var ridToType: [RegistryId: any Component.Type] = [:]
-    public var count : Int { entities.maxId }
+    public var maxRidId : Int { entities.maxId }
+    public var count : Int { entities.maxId + 1 }
     public init() {}
 
     public func register(_ type: any Component.Type) -> RegistryId {

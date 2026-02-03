@@ -59,6 +59,11 @@ let package = Package(
             name: "ECScoreTests",
             dependencies: ["ECScore"]
         ),
+
+        .testTarget(
+            name: "ScedulerTests",
+            dependencies: ["ECScore"]
+        ),
     ]
     
 )

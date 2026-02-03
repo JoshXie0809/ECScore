@@ -130,24 +130,3 @@ public func interop<each T: Component>(
     let tokens = interop(pf_val, ok_manifest)
     return ( repeat TypeToken(rid: tokens.getRid(each type)!) )
 }
-
-public struct EntityHandle: ~Copyable {
-    fileprivate let eid: EntityId
-    fileprivate init(eid: EntityId) {
-        self.eid = eid
-    }
-
-    func clone() -> EntityHandle {
-        EntityHandle(eid: self.eid)
-    }
-}
-
-public extension Validated<BasePlatform, Proof_Handshake, Platform_Facts> {
-    borrowing func getEntityHandle(
-        _ eid: consuming EntityId
-    )  -> Result<EntityHandle, BasePlatformError>
-    {
-        guard entities.isValid(eid) else { return .failure(.invalidEID) }
-        return .success(EntityHandle(eid: eid))   
-    }
-}

@@ -2,7 +2,6 @@ fileprivate let SENTINEL = BlockOffset(4096) // 使用 4096 作為哨兵節點�
 fileprivate let NIL = BlockOffset(-1)
 fileprivate let EMPTY = BlockOffset(-2)
 
-
 final class LinkedList4096 {
     // prev/next 陣列長度改為 4097，最後一個位置 [4096] 是哨兵
     private(set) var prev = ContiguousArray<BlockOffset>(repeating: NIL, count: 4097)

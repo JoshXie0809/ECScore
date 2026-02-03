@@ -28,7 +28,7 @@ public class Entities {
     private var isActive: [UInt64] = []
 
     var maxId : Int {
-        versions.count
+        versions.count - 1
     }
 
     @usableFromInline
@@ -78,7 +78,7 @@ public class Entities {
 
     @usableFromInline
     func idIsActive(_ id: Int) -> Bool {
-        return id < maxId && (isActive[id >> 6] & (1 << (id & 63)) != 0)
+        return id <= maxId && (isActive[id >> 6] & (1 << (id & 63)) != 0)
     }
 
     @usableFromInline
