@@ -8,7 +8,7 @@ struct Game7Systems {
     public static func main() async throws {
         // ##################################################
         // parameter
-            let ITER_NUM = 16
+            let ITER_NUM = 1
             let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
             let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
@@ -157,24 +157,25 @@ func createEntities(
                 dmgSt.addComponent(entity, d)
                 spSt.addComponent(entity, SpriteComponent()) 
 
-                let roll1 = rng.next() % 100
-                let roll2 = rng.next() % 100
-                let roll3 = rng.next() % World.maxX
-                let roll4 =  rng.next() % World.maxY
+                let roll1 = rng.next() 
+                let roll2 = rng.next()
+                let roll3 = rng.next() 
+                let roll4 = rng.next() 
+                let roll5 = rng.next()
 
-                if roll1 > prob { // empty
+                if roll1 % 100 > prob { // empty
                     emptySt.addComponent(entity, EmptyComponent()) 
                     continue
                 }
 
-                if (roll2 & 1) == 0 { // all-component
-                    dataSt.addComponent(entity, DataComponent(seed: rng.next()))
+                if (roll2 % 100 & 1) == 0 { // all-component
+                    dataSt.addComponent(entity, DataComponent(seed: roll3))
                 } 
 
                 // minimal
                 let pos = PositionComponent(
-                    x: Float(roll3), 
-                    y: Float(roll4)
+                    x: Float(roll4 % World.maxX), 
+                    y: Float(roll5 % World.maxY)
                 )
 
                 posSt.addComponent(entity, pos)
