@@ -138,19 +138,19 @@ struct PagePtr<T> {
     @inlinable
     @inline(__always)
     func getEntityOnPagePointer_Uncheck(_ pageIdx: Int) -> EntityOnPagePtr<T> {
-        EntityOnPagePtr(ptr: ptr.advanced(by: pageIdx).pointee.getEntityOnPageRawPointer())
+        EntityOnPagePtr(ptr: ptr.advanced(by: pageIdx).pointee.entityOnPage.withUnsafeBufferPointer { $0.baseAddress! } )
     }
 }
 
-extension Page64 {
-    // 獲取 Page 陣列的原始指標
-    @inlinable
-    @inline(__always)
-    func getEntityOnPageRawPointer() -> UnsafePointer<SparseSetEntry> {
-        // ContiguousArray 保證記憶體連續性，直接獲取基底地址
-        return (entityOnPage.withUnsafeBufferPointer { $0.baseAddress! })
-    }
-}
+// extension Page64 {
+//     // 獲取 Page 陣列的原始指標
+//     @inlinable
+//     @inline(__always)
+//     func getEntityOnPageRawPointer() -> UnsafePointer<SparseSetEntry> {
+//         // ContiguousArray 保證記憶體連續性，直接獲取基底地址
+//         return (entityOnPage.withUnsafeBufferPointer { $0.baseAddress! })
+//     }
+// }
 
 struct EntityOnPagePtr<T> {
     let ptr: UnsafePointer<SparseSetEntry>
