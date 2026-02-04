@@ -117,7 +117,6 @@ struct SparseSet_L2<T: Component>: SparseSet {
 
     // 改成 mutating func
     @inlinable
-    @inline(__always)
     mutating func getRawDataPointer() -> UnsafeMutablePointer<T> {
         return components.withUnsafeMutableBufferPointer { $0.baseAddress! }
     }   
@@ -126,7 +125,6 @@ struct SparseSet_L2<T: Component>: SparseSet {
 extension Block64_L2 {
     // 獲取 Page 陣列的原始指標
     @inlinable
-    @inline(__always)
     func getPageRawPointer() -> UnsafePointer<Page64> {
         // ContiguousArray 保證記憶體連續性，直接獲取基底地址
         return pageOnBlock.withUnsafeBufferPointer { $0.baseAddress! }
@@ -136,7 +134,6 @@ extension Block64_L2 {
 struct PagePtr<T> {
     let ptr: UnsafePointer<Page64>
     @inlinable
-    @inline(__always)
     func getEntityOnPagePointer_Uncheck(_ pageIdx: Int) -> EntityOnPagePtr<T> {
         EntityOnPagePtr(ptr: ptr.advanced(by: pageIdx).pointee.entityOnPage.withUnsafeBufferPointer { $0.baseAddress! } )
     }
@@ -154,7 +151,7 @@ struct PagePtr<T> {
 
 struct EntityOnPagePtr<T> {
     let ptr: UnsafePointer<SparseSetEntry>
-    @inline(__always)
+    @inlinable
     func getSlotCompArrIdx_Uncheck(_ slotIdx: Int) -> Int {
         return Int(ptr.advanced(by: slotIdx).pointee.compArrIdx)
     }

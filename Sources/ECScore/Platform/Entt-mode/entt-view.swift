@@ -119,11 +119,13 @@ func executeViewPlans<each T> (
             var pageMask = SparseSet_L2_BaseMask
             repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
 
-            while pageMask != 0 { 
+            while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
                 // do action here
                 // ############################################################################
-                action(0, repeat ComponentProxy( pointer: (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck( slotIdx )) )  )
+                action(0, 
+                    repeat ComponentProxy(pointer: (each dataPtrs).advanced(by: Int((each entityOnPagePtrs).ptr.advanced(by: slotIdx).pointee.compArrIdx)))
+                )
                 // ############################################################################
                 // end
                 pageMask &= (pageMask - 1)
