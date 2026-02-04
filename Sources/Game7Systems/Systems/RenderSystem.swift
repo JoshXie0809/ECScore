@@ -11,7 +11,9 @@ struct RenderSystem {
 
     @inline(__always)
     func update(_ world: borrowing World) {
-        let buffer = world.frameBuffer
+        let buffer = world.frameBuffer.getBufferPtr()
+        let height = world.frameBuffer.height
+        let width = world.frameBuffer.width
 
         view(base: world.base, with: renderToken) 
         { _, pos, sprite in
@@ -19,8 +21,10 @@ struct RenderSystem {
             let x = Int(pos.x)
             let y = Int(pos.y)
             let char = sprite.character
-            buffer.draw(x: x, y: y, char: char)
             
+            if y >= 0 && y < height && x >= 0 && x < width {
+                buffer[x + y * width] = char
+            }
         }
 
         _fixLifetime(buffer)

@@ -25,6 +25,7 @@ struct Game7Systems {
                 printWorldFlag: printWorldFlag,
                 emplaceStrategy: emplaceStrategy
             )
+            
             print(run(gs))
         }
     }

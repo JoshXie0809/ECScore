@@ -15,12 +15,21 @@ struct MoveSystem {
 
         view(base: world.base, with: mvToken) 
         { _, pos, dir in
+            
+            // swift dynamic lookup sometimes has problem when get-set simutaneously
 
-            // swift dynamic lookup has some problem when get-set simutaneously
-            let dx = (dir.vx * dtSeconds)
-            let dy = (dir.vy * dtSeconds)
-            pos.x += dx
-            pos.y += dy
+            // case
+            pos.x += (dir.vx * dtSeconds) // get and set 
+            pos.y += (dir.vy * dtSeconds)
+            
+            // so if compiler have problem 
+            // try this
+
+            // let nx = (dir.vx * dtSeconds) + pos.x // only get
+            // let ny = (dir.vy * dtSeconds) + pos.y
+            
+            // pos.x = nx
+            // pos.y = ny
 
         }
 

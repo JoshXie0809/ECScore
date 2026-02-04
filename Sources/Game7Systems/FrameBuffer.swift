@@ -18,9 +18,7 @@ class FrameBuffer {
     @inline(__always)
     func draw(x: Int, y: Int, char: UInt8) {
         if y >= 0 && y < height && x >= 0 && x < width {
-            buffer.withUnsafeMutableBufferPointer { ptr in
-                ptr[x + y * width] = char
-            }
+            buffer[x + y * width] = char
         }
     }
 

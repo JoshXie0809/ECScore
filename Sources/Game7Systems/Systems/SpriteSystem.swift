@@ -31,7 +31,7 @@ struct SpriteSystem {
                 }
             case .dead:  SpriteCharacter.graveSprite
             case .spawn: SpriteCharacter.spawnSprite
-            }         
+            }
             
         }
         
