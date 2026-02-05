@@ -123,10 +123,12 @@ func createEntities2(
     emplace(world.base, tokens: empToken) {
         entities, pack in
         var ( plSt, hSt, dmgSt, posSt, 
-            dataSt, spSt, dirSt, _ ) = pack.storages
+            dataSt, spSt, dirSt, emptySt ) = pack.storages
         var j = 0
 
         for i in 0..<totalEntityNum {
+            let entity = entities.createEntity()
+            
             var targetType: PlayerType? = nil
             if i == 0 {
                 targetType = .hero
@@ -137,6 +139,8 @@ func createEntities2(
                 targetType = .hero
             } else if (i % 2) == 0 {
                 targetType = .monster
+            } else {
+                emptySt.addComponent(entity, EmptyComponent())
             }
 
             if let type = targetType {
@@ -148,7 +152,7 @@ func createEntities2(
 
                 let (p, h, d) = World.Spawner.spawnEntityComponent(&rng, type)
 
-                let entity = entities.createEntity()
+                
                 plSt.addComponent(entity, p)
                 hSt.addComponent(entity, h)
                 dmgSt.addComponent(entity, d)
