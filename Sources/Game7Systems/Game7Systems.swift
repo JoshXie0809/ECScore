@@ -200,7 +200,9 @@ typealias EMP_TOKEN = (
 )
 
 // same as bench-mark-logic
-// https://github.com/abeimler/ecs_benchmark/blob/master/benchmark/benchmarks/BaseECSBenchmark.h#L141
+// https://github.com/abeimler/ecs_benchmark/blob/master/benchmark/benchmarks/BaseECSBenchmark.h#L185
+// https://github.com/abeimler/ecs_benchmark/blob/master/benchmark/benchmarks/BaseECSBenchmark.h#L134
+// I guess performance on table is remove from full / not add from empty?
 
 @inline(__always) 
 func createEntities2(
@@ -245,25 +247,30 @@ func createEntities2(
                 hSt.addComponent(entity, h)
                 dmgSt.addComponent(entity, d)
                 spSt.addComponent(entity, SpriteComponent()) 
-                dataSt.addComponent(entity, DataComponent())
-                posSt.addComponent(entity, PositionComponent())
-                dirSt.addComponent(entity, DirectionComponent())
+                posSt.addComponent(entity, PositionComponent()) // 1
+                dirSt.addComponent(entity, DirectionComponent()) // 2
+                dataSt.addComponent(entity, DataComponent()) // 3
 
                 if i >= (totalEntityNum / 2) && i <= (totalEntityNum * 3 / 4) {
                     if j % 10 == 0 {
                         if i % 7 == 0 {
-                            posSt.removeComponent(entity)
+                            posSt.removeComponent(entity)  // 1
                         }
                         if i % 11 == 0 {
-                            dirSt.removeComponent(entity)
+                            dirSt.removeComponent(entity) // 2
                         }
                         if i % 13 == 0 {
-                            dataSt.removeComponent(entity)
+                            dataSt.removeComponent(entity) // 3
                         }
                         if i % 17 == 0 {
+                            plSt.removeComponent(entity)
+                            hSt.removeComponent(entity)
+                            dmgSt.removeComponent(entity)
+                            spSt.removeComponent(entity)
                             dataSt.removeComponent(entity)
                             posSt.removeComponent(entity)
                             dirSt.removeComponent(entity)
+
                             entities.destroyEntity(entity)
                         }
                     }
