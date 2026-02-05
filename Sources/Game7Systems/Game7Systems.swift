@@ -171,6 +171,7 @@ func createEntities2(
                             dataSt.removeComponent(entity)
                             posSt.removeComponent(entity)
                             dirSt.removeComponent(entity)
+                            emptySt.removeComponent(entity)
 
                             switch type {
                             case .hero: heroCount -= 1
