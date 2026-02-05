@@ -31,6 +31,11 @@ public struct EmplaceEntities: ~Copyable {
     public func createEntity() -> EmplaceEntityId {
         EmplaceEntityId(entities.spawn(1)[0])
     }
+
+    @inline(__always)
+    public func destroyEntity(_ eeid: EmplaceEntityId) {
+        entities.despawn(eeid.entity)
+    }
 }
 
 public struct EmplaceStorage<T: Component> {
@@ -40,6 +45,11 @@ public struct EmplaceStorage<T: Component> {
     @inline(__always)
     public mutating func addComponent(_ eeid: EmplaceEntityId, _ comp: T) {
         storage.add(eid: eeid.entity, component: comp)
+    }
+
+    @inline(__always)
+    public mutating func removeComponent(_ eeid: EmplaceEntityId) {
+        storage.remove(eid: eeid.entity)
     }
 }
 

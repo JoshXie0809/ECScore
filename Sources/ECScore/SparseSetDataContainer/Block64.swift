@@ -44,8 +44,7 @@ struct Block64_L2 { // Layer 2
     @inline(__always)
     mutating func removeEntityOnBlock(_ index: Int) {
         let (pageIdx, slotIdx) = (index >> 6, index & 63)
-
-        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")        
+        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")
         let bit = UInt64(1) << pageIdx
         precondition(blockMask & bit != 0, "remove entity on inactive page")
 

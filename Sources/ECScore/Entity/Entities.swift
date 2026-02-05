@@ -60,7 +60,7 @@ public class Entities {
     func despawn(_ entity: EntityId) {
         // 安全檢查：版本號必須相符才能銷毀
         guard isValid(entity) else { return }
-
+        
         let id = entity.id
         // 增加版本號，使現有的 EntityId 失效
         versions[id] += 1

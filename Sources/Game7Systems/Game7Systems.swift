@@ -62,7 +62,7 @@ let ta0 = clock.now
 
     // #####################################################################################
     // create-entities-stage
-        let hmn = createEntities(world, gs, &rng, empToken)
+        let hmn = createEntities2(world, gs, &rng, empToken)
     // #####################################################################################
 
 
@@ -167,7 +167,7 @@ func createEntities(
                 if roll1 % 100 > prob { // empty
                     emptySt.addComponent(entity, EmptyComponent()) 
                     continue
-                }
+                } 
 
                 if (roll2 % 100 & 1) == 0 { // all-component
                     dataSt.addComponent(entity, DataComponent(seed: roll3))
@@ -198,3 +198,78 @@ typealias EMP_TOKEN = (
     TypeToken<DirectionComponent>,
     TypeToken<EmptyComponent>
 )
+
+// same as bench-mark-logic
+@inline(__always) 
+func createEntities2(
+    _ world: borrowing World, _ gs: GameSettings, 
+    _ rng: inout Xoshiro128, _ empToken: EMP_TOKEN
+) -> (Int, Int, Int) 
+{
+    let totalEntityNum = gs.ttEn
+    var (heroCount, monsterCount, npcCount) = (0, 0, 0)
+    
+    emplace(world.base, tokens: empToken) {
+        entities, pack in
+        var ( plSt, hSt, dmgSt, posSt, 
+            dataSt, spSt, dirSt, _ ) = pack.storages
+        var j = 0
+
+        for i in 0..<totalEntityNum {
+            var targetType: PlayerType? = nil
+
+            if i == 0 {
+                targetType = .hero
+            } else if (i % 6) == 0 {
+                let roll = rng.next() % 100
+                targetType = (roll < 3) ? .npc : (roll < 30) ? .hero : .monster
+            } else if (i % 4) == 0 {
+                targetType = .hero
+            } else if (i % 2) == 0 {
+                targetType = .monster
+            }
+
+            if let type = targetType {
+                switch type {
+                case .hero: heroCount += 1
+                case .monster: monsterCount += 1
+                case .npc: npcCount += 1
+                }
+
+                let (p, h, d) = World.Spawner.spawnEntityComponent(&rng, type)
+
+                let entity = entities.createEntity()
+                plSt.addComponent(entity, p)
+                hSt.addComponent(entity, h)
+                dmgSt.addComponent(entity, d)
+                spSt.addComponent(entity, SpriteComponent()) 
+                dataSt.addComponent(entity, DataComponent())
+                posSt.addComponent(entity, PositionComponent())
+                dirSt.addComponent(entity, DirectionComponent())
+
+                if i >= (totalEntityNum / 2) && i <= (totalEntityNum * 3 / 4) {
+                    if j % 10 == 0 {
+                        if i % 7 == 0 {
+                            plSt.removeComponent(entity)
+                        }
+                        if i % 11 == 0 {
+                            hSt.removeComponent(entity)
+                        }
+                        if i % 13 == 0 {
+                            dataSt.removeComponent(entity)
+                        }
+                        if i % 17 == 0 {
+                            dataSt.removeComponent(entity)
+                            posSt.removeComponent(entity)
+                            dirSt.removeComponent(entity)
+                            entities.destroyEntity(entity)
+                        }
+                    }
+                    j += 1
+                }
+
+            }
+        }
+    }
+    return (heroCount, monsterCount, npcCount) 
+}
