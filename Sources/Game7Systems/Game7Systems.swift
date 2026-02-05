@@ -200,6 +200,8 @@ typealias EMP_TOKEN = (
 )
 
 // same as bench-mark-logic
+// https://github.com/abeimler/ecs_benchmark/blob/master/benchmark/benchmarks/BaseECSBenchmark.h#L141
+
 @inline(__always) 
 func createEntities2(
     _ world: borrowing World, _ gs: GameSettings, 
