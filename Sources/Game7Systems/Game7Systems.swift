@@ -271,6 +271,12 @@ func createEntities2(
                             posSt.removeComponent(entity)
                             dirSt.removeComponent(entity)
 
+                            switch type {
+                            case .hero: heroCount -= 1
+                            case .monster: monsterCount -= 1
+                            case .npc: npcCount -= 1
+                            }
+
                             entities.destroyEntity(entity)
                         }
                     }
