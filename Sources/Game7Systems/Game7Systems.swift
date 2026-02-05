@@ -221,7 +221,6 @@ func createEntities2(
 
         for i in 0..<totalEntityNum {
             var targetType: PlayerType? = nil
-
             if i == 0 {
                 targetType = .hero
             } else if (i % 6) == 0 {
@@ -253,15 +252,6 @@ func createEntities2(
 
                 if i >= (totalEntityNum / 2) && i <= (totalEntityNum * 3 / 4) {
                     if j % 10 == 0 {
-                        if i % 7 == 0 {
-                            posSt.removeComponent(entity)  // 1
-                        }
-                        if i % 11 == 0 {
-                            dirSt.removeComponent(entity) // 2
-                        }
-                        if i % 13 == 0 {
-                            dataSt.removeComponent(entity) // 3
-                        }
                         if i % 17 == 0 {
                             plSt.removeComponent(entity)
                             hSt.removeComponent(entity)
@@ -278,6 +268,16 @@ func createEntities2(
                             }
 
                             entities.destroyEntity(entity)
+                        } else {
+                            if i % 7 == 0 {
+                                posSt.removeComponent(entity)  // 1
+                            }
+                            if i % 11 == 0 {
+                                dirSt.removeComponent(entity) // 2
+                            }
+                            if i % 13 == 0 {
+                                dataSt.removeComponent(entity) // 3
+                            }
                         }
                     }
                     j += 1
