@@ -65,7 +65,8 @@ func getMaximum_FirstActiveSection_OfStorages<each T>(
     return maximum
 }
 
-struct ViewPlan {
+@usableFromInline
+struct ViewPlan: Sendable {
     let segmentIndex: Int
     let mask: UInt64
 }
@@ -170,8 +171,6 @@ public func view<T>(
     _fixLifetime(storage)
 }
 
-
-
 @inline(__always)
 func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
     minimum = min(minimum, new)
@@ -182,70 +181,144 @@ func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
 }
 
+// static view
+public protocol SystemBody {
+    associatedtype Components
+    
+    @inline(__always)
+    @inlinable 
+    func execute(taskId: Int, components: Components)
+}
+
 @inline(__always)
-func executeViewPlansParallel<each T: Sendable>(
+func executeViewPlans<S: SystemBody, each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
     with: borrowing (repeat TypeToken<each T>),
-    coresNum: Int,
-    _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
-) async {
-    let processorCount = min(ProcessInfo.processInfo.activeProcessorCount, coresNum)
-    let planCount = viewPlans.count
-    if planCount < processorCount || planCount < 8 {
-        executeViewPlans(base: base, viewPlans: viewPlans, with: (repeat each with), action)
-        return
-    }
+    _ body: borrowing S
+) where S.Components == (repeat ComponentProxy<each T>) // 強制型別對齊
+{
+    let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
 
-    let storages = (repeat (each with).getStorage(base: base))
-    await withTaskGroup(of: Void.self) { group in
-        let chunkSize = (planCount + processorCount - 1) / processorCount
-        for i in stride(from: 0, to: planCount, by: chunkSize) {
-            let range = i..<min(i + chunkSize, planCount)
-            let chunk = Array(viewPlans[range])
-            let taskId = i / chunkSize
-            // ##################################################################################### core task
-            group.addTask {
-                // 每個 Task 處理一組獨立的 Segments
-                for vp in chunk {
-                    var blockMask = vp.mask
-                    let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
-                    let pagePtrs = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
+    for vp in viewPlans {
+        var blockMask = vp.mask
+        // 預先取出這一塊 Segment 的指針
+        let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
+        let pagePtrs = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
+        
+        // ###################################################### Sparse_Set_L2_i
+        while blockMask != 0 { 
+            let pageIdx = blockMask.trailingZeroBitCount
+            let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+            var pageMask = SparseSet_L2_BaseMask
+            repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
 
-                    // ##################################################################################### Sparse_Set_L2_i
-                    while blockMask != 0 {
-                        let pageIdx = blockMask.trailingZeroBitCount
-                        let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
-                        var pageMask = SparseSet_L2_BaseMask
-                        repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
-
-                        while pageMask != 0 {
-                            let slotIdx = pageMask.trailingZeroBitCount
-                            action( 
-                                taskId,
-                                repeat ComponentProxy(pointer: (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx)))
-                            )
-                            pageMask &= (pageMask - 1)
-                        }
-                        blockMask &= (blockMask - 1)
-                    }
-                    // ##################################################################################### Sparse_Set_L2_i
-
-                }
+            while pageMask != 0 {
+                let slotIdx = pageMask.trailingZeroBitCount
+                
+                // ############################################################################
+                // 這裡發生了改變：我們構建一個 Tuple 傳給 body.execute
+                // 因為 S 是具體的 Struct，編譯器會在這裡直接展開代碼 (Inline)
+                body.execute(
+                    taskId: 0, 
+                    components: (
+                        repeat ComponentProxy(
+                            pointer: (each dataPtrs).advanced(by: Int((each entityOnPagePtrs).ptr.advanced(by: slotIdx).pointee.compArrIdx))
+                        )
+                    )
+                )
+                // ############################################################################
+                
+                pageMask &= (pageMask - 1)
             }
-            // ##################################################################################### core task
+            blockMask &= (blockMask - 1)
         }
+        // ###################################################### Sparse_Set_L2_i
     }
     repeat _fixLifetime(each storages)
 }
 
+// 重構後的入口 View
 @inline(__always)
-public func viewParallel<each T: Sendable> (
+public func view<S: SystemBody, each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    coresNum: Int = 4,
-    _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
-) async {
-    let vps = createViewPlans( base: base, with: (repeat each with) )
-    await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), coresNum: coresNum, action)
+    _ body: borrowing S
+) where S.Components == (repeat ComponentProxy<each T>) 
+{
+    let vps = createViewPlans(base: base, with: (repeat each with))
+    executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), body)
 }
+
+
+
+
+
+
+// @inline(__always)
+// func executeViewPlansParallel<each T: Sendable>(
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+//     viewPlans: ContiguousArray<ViewPlan>,
+//     with: borrowing (repeat TypeToken<each T>),
+//     coresNum: Int,
+//     _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
+// ) async {
+//     let processorCount = min(ProcessInfo.processInfo.activeProcessorCount, coresNum)
+//     let planCount = viewPlans.count
+//     if planCount < processorCount || planCount < 8 {
+//         executeViewPlans(base: base, viewPlans: viewPlans, with: (repeat each with), action)
+//         return
+//     }
+
+//     let storages = (repeat (each with).getStorage(base: base))
+//     await withTaskGroup(of: Void.self) { group in
+//         let chunkSize = (planCount + processorCount - 1) / processorCount
+//         for i in stride(from: 0, to: planCount, by: chunkSize) {
+//             let range = i..<min(i + chunkSize, planCount)
+//             let chunk = Array(viewPlans[range])
+//             let taskId = i / chunkSize
+//             // ##################################################################################### core task
+//             group.addTask {
+//                 // 每個 Task 處理一組獨立的 Segments
+//                 for vp in chunk {
+//                     var blockMask = vp.mask
+//                     let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
+//                     let pagePtrs = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
+
+//                     // ##################################################################################### Sparse_Set_L2_i
+//                     while blockMask != 0 {
+//                         let pageIdx = blockMask.trailingZeroBitCount
+//                         let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+//                         var pageMask = SparseSet_L2_BaseMask
+//                         repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+
+//                         while pageMask != 0 {
+//                             let slotIdx = pageMask.trailingZeroBitCount
+//                             action( 
+//                                 taskId,
+//                                 repeat ComponentProxy(pointer: (each dataPtrs).advanced(by: (each entityOnPagePtrs).getSlotCompArrIdx_Uncheck(slotIdx)))
+//                             )
+//                             pageMask &= (pageMask - 1)
+//                         }
+//                         blockMask &= (blockMask - 1)
+//                     }
+//                     // ##################################################################################### Sparse_Set_L2_i
+
+//                 }
+//             }
+//             // ##################################################################################### core task
+//         }
+//     }
+//     repeat _fixLifetime(each storages)
+// }
+
+// @inline(__always)
+// public func viewParallel<each T: Sendable> (
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+//     with: borrowing (repeat TypeToken<each T>),
+//     coresNum: Int = 4,
+//     _ action: @escaping @Sendable (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
+// ) async {
+//     let vps = createViewPlans( base: base, with: (repeat each with) )
+//     await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), coresNum: coresNum, action)
+// }

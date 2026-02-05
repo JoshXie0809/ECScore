@@ -4,6 +4,12 @@
 import PackageDescription
 import CompilerPluginSupport
 
+let crossModuleOptimizationSettings: [SwiftSetting] = [
+    .unsafeFlags([
+        "-cross-module-optimization"
+    ])
+]
+
 let packagePlatforms: [SupportedPlatform]?
 #if os(macOS)
     packagePlatforms = [.macOS(.v15)]
@@ -34,7 +40,8 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "ECScore",
-            dependencies: ["ECScoreMacros"]
+            dependencies: ["ECScoreMacros"],
+            swiftSettings: crossModuleOptimizationSettings
         ),
 
         // ✅ 新增：Macro target
@@ -52,7 +59,8 @@ let package = Package(
         .executableTarget(
             name: "Game7Systems",
             dependencies: ["ECScore", "ECScoreMacros"],
-            path: "Sources/Game7Systems"
+            path: "Sources/Game7Systems",
+            swiftSettings: crossModuleOptimizationSettings
         ),
 
         .testTarget(
