@@ -27,6 +27,7 @@ struct Game7Systems {
             )
             
             print(run(gs))
+            sleep(1)
         }
     }
 }
@@ -273,7 +274,7 @@ func createEntities2(
                                 posSt.removeComponent(entity)  // 1
                             }
                             if i % 11 == 0 {
-                                dirSt.removeComponent(entity) // 2
+                                dirSt.removeComponent(entity)  // 2
                             }
                             if i % 13 == 0 {
                                 dataSt.removeComponent(entity) // 3
