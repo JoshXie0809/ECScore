@@ -250,10 +250,10 @@ func createEntities2(
                 if i >= (totalEntityNum / 2) && i <= (totalEntityNum * 3 / 4) {
                     if j % 10 == 0 {
                         if i % 7 == 0 {
-                            plSt.removeComponent(entity)
+                            posSt.removeComponent(entity)
                         }
                         if i % 11 == 0 {
-                            hSt.removeComponent(entity)
+                            dirSt.removeComponent(entity)
                         }
                         if i % 13 == 0 {
                             dataSt.removeComponent(entity)
@@ -267,7 +267,6 @@ func createEntities2(
                     }
                     j += 1
                 }
-
             }
         }
     }
