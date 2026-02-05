@@ -8,7 +8,7 @@ struct Game7Systems {
     public static func main() async throws {
         // ##################################################
         // parameter
-            let ITER_NUM = 16
+            let ITER_NUM = 100
             let totalEntityNum = 4096 * 512
             let seed = UInt32(12345)
             let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
@@ -27,7 +27,7 @@ struct Game7Systems {
             )
             
             print(run(gs))
-            sleep(1)
+
         }
     }
 }
@@ -116,78 +116,78 @@ let tb1 = clock.now
     )
 }
 
-@inline(__always) 
-func createEntities(
-    _ world: borrowing World, _ gs: GameSettings, 
-    _ rng: inout Xoshiro128, _ empToken: EMP_TOKEN
-) -> (Int, Int, Int) 
-{
-    let totalEntityNum = gs.ttEn
-    var (heroCount, monsterCount, npcCount) = (0, 0, 0)
-    let prob = gs.emplaceStrategy.rawValue
+// @inline(__always) 
+// func createEntities(
+//     _ world: borrowing World, _ gs: GameSettings, 
+//     _ rng: inout Xoshiro128, _ empToken: EMP_TOKEN
+// ) -> (Int, Int, Int) 
+// {
+//     let totalEntityNum = gs.ttEn
+//     var (heroCount, monsterCount, npcCount) = (0, 0, 0)
+//     let prob = gs.emplaceStrategy.rawValue
     
-    emplace(world.base, tokens: empToken) {
-        entities, pack in
-        var ( plSt, hSt, dmgSt, posSt, 
-            dataSt, spSt, dirSt, emptySt ) = pack.storages
-        for i in 0..<totalEntityNum {
-            var targetType: PlayerType? = nil
+//     emplace(world.base, tokens: empToken) {
+//         entities, pack in
+//         var ( plSt, hSt, dmgSt, posSt, 
+//             dataSt, spSt, dirSt, emptySt ) = pack.storages
+//         for i in 0..<totalEntityNum {
+//             var targetType: PlayerType? = nil
 
-            if i == 0 {
-                targetType = .hero
-            } else if (i % 6) == 0 {
-                let roll = rng.next() % 100
-                targetType = (roll < 3) ? .npc : (roll < 30) ? .hero : .monster
-            } else if (i % 4) == 0 {
-                targetType = .hero
-            } else if (i % 2) == 0 {
-                targetType = .monster
-            }
+//             if i == 0 {
+//                 targetType = .hero
+//             } else if (i % 6) == 0 {
+//                 let roll = rng.next() % 100
+//                 targetType = (roll < 3) ? .npc : (roll < 30) ? .hero : .monster
+//             } else if (i % 4) == 0 {
+//                 targetType = .hero
+//             } else if (i % 2) == 0 {
+//                 targetType = .monster
+//             }
 
-            if let type = targetType {
-                switch type {
-                case .hero: heroCount += 1
-                case .monster: monsterCount += 1
-                case .npc: npcCount += 1
-                }
+//             if let type = targetType {
+//                 switch type {
+//                 case .hero: heroCount += 1
+//                 case .monster: monsterCount += 1
+//                 case .npc: npcCount += 1
+//                 }
 
-                let (p, h, d) = World.Spawner.spawnEntityComponent(&rng, type)
+//                 let (p, h, d) = World.Spawner.spawnEntityComponent(&rng, type)
 
-                let entity = entities.createEntity()
-                plSt.addComponent(entity, p)
-                hSt.addComponent(entity, h)
-                dmgSt.addComponent(entity, d)
-                spSt.addComponent(entity, SpriteComponent()) 
+//                 let entity = entities.createEntity()
+//                 plSt.addComponent(entity, p)
+//                 hSt.addComponent(entity, h)
+//                 dmgSt.addComponent(entity, d)
+//                 spSt.addComponent(entity, SpriteComponent()) 
 
-                let roll1 = rng.next() 
-                let roll2 = rng.next()
-                let roll3 = rng.next() 
-                let roll4 = rng.next() 
-                let roll5 = rng.next()
+//                 let roll1 = rng.next() 
+//                 let roll2 = rng.next()
+//                 let roll3 = rng.next() 
+//                 let roll4 = rng.next() 
+//                 let roll5 = rng.next()
 
-                if roll1 % 100 > prob { // empty
-                    emptySt.addComponent(entity, EmptyComponent()) 
-                    continue
-                } 
+//                 if roll1 % 100 > prob { // empty
+//                     emptySt.addComponent(entity, EmptyComponent()) 
+//                     continue
+//                 } 
 
-                if (roll2 % 100 & 1) == 0 { // all-component
-                    dataSt.addComponent(entity, DataComponent(seed: roll3))
-                } 
+//                 if (roll2 % 100 & 1) == 0 { // all-component
+//                     dataSt.addComponent(entity, DataComponent(seed: roll3))
+//                 } 
 
-                // minimal
-                let pos = PositionComponent(
-                    x: Float(roll4 % World.maxX), 
-                    y: Float(roll5 % World.maxY)
-                )
+//                 // minimal
+//                 let pos = PositionComponent(
+//                     x: Float(roll4 % World.maxX), 
+//                     y: Float(roll5 % World.maxY)
+//                 )
 
-                posSt.addComponent(entity, pos)
-                dirSt.addComponent(entity, DirectionComponent())    
+//                 posSt.addComponent(entity, pos)
+//                 dirSt.addComponent(entity, DirectionComponent())    
 
-            }
-        }
-    }
-    return (heroCount, monsterCount, npcCount) 
-}
+//             }
+//         }
+//     }
+//     return (heroCount, monsterCount, npcCount) 
+// }
 
 typealias EMP_TOKEN = (
     TypeToken<PlayerComponent>, 
