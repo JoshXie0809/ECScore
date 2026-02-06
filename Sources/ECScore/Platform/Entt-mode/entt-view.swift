@@ -163,9 +163,11 @@ public func view<T>(
         let blockId = vp.segmentIndex
         let count = storage.segments[blockId]?.count ?? 0
         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
+        let buffer = UnsafeMutableBufferPointer(start: dataPtr, count: count)
+
         for i in 0..<count {
             // taskId = 0
-            action(0, ComponentProxy<T>(pointer: dataPtr.advanced(by: i)) )
+            action(0, ComponentProxy<T>(pointer: buffer.baseAddress!.advanced(by: i) ))
         }
     }
 
@@ -264,10 +266,12 @@ public func view<S: SystemBody, T> (
         let blockId = vp.segmentIndex
         let count = storage.segments[blockId]?.count ?? 0
         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
+        // 告訴編譯器這是一塊連續區間
+        let buffer = UnsafeMutableBufferPointer(start: dataPtr, count: count)
         for i in 0..<count {
             body.execute(
                 taskId: 0, 
-                components: (ComponentProxy(pointer: (dataPtr).advanced(by: i)))
+                components: ComponentProxy(pointer: buffer.baseAddress!.advanced(by: i))
             )
         }
     }
