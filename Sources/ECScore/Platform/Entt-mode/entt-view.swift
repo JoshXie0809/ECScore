@@ -24,6 +24,40 @@ let SparseSet_L2_BaseMask: UInt64 = 0xFFFFFFFFFFFFFFFF
 //     }
 // }
 
+// func getMinimum_ActiveMemberNumber_OfStorages<each T>(
+//     _ storages: borrowing (repeat PFStorageBox<each T>)
+// ) -> Int 
+// {
+//     var minimum = Int.max
+//     for storage in repeat each storages {
+//         minimum = min(minimum, storage.activeEntityCount)
+//     }
+//     return minimum
+// }
+
+// func getMinimum_LastActiveSection_OfStorages<each T>(
+//     _ storages: borrowing (repeat PFStorageBox<each T>)
+// ) -> Int 
+// {
+//     var minimum = Int.max
+//     for storage in repeat each storages {
+//         minimum = min(minimum, storage.lastActiveSegment)
+//     }
+//     return minimum
+// }
+
+// func getMaximum_FirstActiveSection_OfStorages<each T>(
+//     _ storages: borrowing (repeat PFStorageBox<each T>)
+// ) -> Int 
+// {
+//     var maximum = Int.min
+//     for storage in repeat each storages {
+//         maximum = max(maximum, storage.firstActiveSegment)
+//     }
+//     return maximum
+// }
+
+@inlinable
 func getStorages<each T>(
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     _ tokens: borrowing (repeat TypeToken<each T>)
@@ -32,38 +66,6 @@ func getStorages<each T>(
     (repeat (each tokens).getStorage(base: base))
 }
 
-func getMinimum_ActiveMemberNumber_OfStorages<each T>(
-    _ storages: borrowing (repeat PFStorageBox<each T>)
-) -> Int 
-{
-    var minimum = Int.max
-    for storage in repeat each storages {
-        minimum = min(minimum, storage.activeEntityCount)
-    }
-    return minimum
-}
-
-func getMinimum_LastActiveSection_OfStorages<each T>(
-    _ storages: borrowing (repeat PFStorageBox<each T>)
-) -> Int 
-{
-    var minimum = Int.max
-    for storage in repeat each storages {
-        minimum = min(minimum, storage.lastActiveSegment)
-    }
-    return minimum
-}
-
-func getMaximum_FirstActiveSection_OfStorages<each T>(
-    _ storages: borrowing (repeat PFStorageBox<each T>)
-) -> Int 
-{
-    var maximum = Int.min
-    for storage in repeat each storages {
-        maximum = max(maximum, storage.firstActiveSegment)
-    }
-    return maximum
-}
 
 @usableFromInline
 struct ViewPlan: Sendable {
@@ -75,12 +77,12 @@ struct ViewPlan: Sendable {
 func createViewPlans<each T>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>)
-) -> ContiguousArray<ViewPlan>
+) -> (ContiguousArray<ViewPlan>, (repeat PFStorageBox<each T>))
 {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
     var global_First = Int.min; repeat maxHelper(&global_First, (each storages).firstActiveSegment);
     var global_Last = Int.max; repeat minHelper(&global_Last, (each storages).lastActiveSegment);
-    if global_First > global_Last { return [] }
+    if global_First > global_Last { return ([], storages) }
     
     var global_Minimum_ActiveSegmentCount = Int.max; repeat minHelper(&global_Minimum_ActiveSegmentCount, (each storages).activeSegmentCount);
     var viewPlans = ContiguousArray<ViewPlan>()
@@ -96,17 +98,16 @@ func createViewPlans<each T>(
     }
     
     repeat _fixLifetime(each storages)
-    return viewPlans
+    return (viewPlans, storages)
 }
 
 @inline(__always)
 func executeViewPlans<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
-    with: borrowing (repeat TypeToken<each T>),
+    storages: (repeat PFStorageBox<each T>),
     _ action: (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
 ) {
-    let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
 
     for vp in viewPlans {
         var blockMask = vp.mask
@@ -145,8 +146,8 @@ public func view<each T> (
     with: borrowing (repeat TypeToken<each T>),
     _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
-    let vps = createViewPlans( base: base, with: (repeat each with) )
-    executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), action)
+    let (vps, storages) = createViewPlans( base: base, with: (repeat each with) )
+    executeViewPlans(base: base, viewPlans: vps, storages: (repeat each storages), action)
 }
 
 // single componet
@@ -156,11 +157,11 @@ public func view<T>(
     with: TypeToken<T>,
     _ action: (_: Int, _: ComponentProxy<T>) -> Void
 ) {
-    let vps = createViewPlans( base: base, with: with )
-    let storage: PFStorageBox<T> = with.getStorage(base: base)
+    let (vps, storage) = createViewPlans( base: base, with: with )
+    
     for vp in vps {
         let blockId = vp.segmentIndex
-        let count = storage.segments[blockId]!.count
+        let count = storage.segments[blockId]?.count ?? 0
         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
         for i in 0..<count {
             // taskId = 0
@@ -194,11 +195,10 @@ public protocol SystemBody {
 func executeViewPlans<S: SystemBody, each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
-    with: borrowing (repeat TypeToken<each T>),
+    storages: (repeat PFStorageBox<each T>),
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) // 強制型別對齊
 {
-    let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
 
     for vp in viewPlans {
         var blockMask = vp.mask
@@ -246,10 +246,9 @@ public func view<S: SystemBody, each T> (
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) 
 {
-    let vps = createViewPlans(base: base, with: (repeat each with))
-    executeViewPlans(base: base, viewPlans: vps, with: (repeat each with), body)
+    let (vps, storages) = createViewPlans(base: base, with: (repeat each with))
+    executeViewPlans(base: base, viewPlans: vps, storages: (repeat each storages), body)
 }
-
 
 // static single componet
 @inline(__always)
@@ -259,12 +258,11 @@ public func view<S: SystemBody, T> (
     _ body: borrowing S
 ) where S.Components == ComponentProxy<T>
 {
-    let vps = createViewPlans( base: base, with: with )
-    let storage: PFStorageBox<T> = with.getStorage(base: base)
+    let (vps, storage) = createViewPlans( base: base, with: with )
 
     for vp in vps {
         let blockId = vp.segmentIndex
-        let count = storage.segments[blockId]!.count
+        let count = storage.segments[blockId]?.count ?? 0
         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
         for i in 0..<count {
             body.execute(
