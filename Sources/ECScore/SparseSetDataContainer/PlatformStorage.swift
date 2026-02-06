@@ -177,7 +177,9 @@ public final class PFStorageHandle<T: Component> {
 }
 
 public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
+    @inline(__always)
     private let handle: PFStorageHandle<T>
+    @inline(__always)
     public init(_ h: PFStorageHandle<T>) { self.handle = h}
         
     public mutating func rawAdd(eid: EntityId, component: Any) {
@@ -262,7 +264,6 @@ struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
 
 extension PFStorageBox: Component where T: Component {
     public static func createPFStorage() -> any AnyPlatformStorage {
-        // 核心修正：使用 Self 而不是 T
         return PFStorageBox<Self>(PFStorageHandle<Self>())
     }
 }

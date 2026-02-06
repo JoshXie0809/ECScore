@@ -125,6 +125,7 @@ struct SparseSet_L2<T: Component>: SparseSet {
 extension Block64_L2 {
     // 獲取 Page 陣列的原始指標
     @inlinable
+    @inline(__always)
     func getPageRawPointer() -> UnsafePointer<Page64> {
         // ContiguousArray 保證記憶體連續性，直接獲取基底地址
         return pageOnBlock.withUnsafeBufferPointer { $0.baseAddress! }
@@ -132,8 +133,9 @@ extension Block64_L2 {
 }
 
 struct PagePtr<T> {
+    @inline(__always)
     let ptr: UnsafePointer<Page64>
-    @inlinable
+    @inline(__always)
     func getEntityOnPagePointer_Uncheck(_ pageIdx: Int) -> EntityOnPagePtr<T> {
         EntityOnPagePtr(ptr: ptr.advanced(by: pageIdx).pointee.entityOnPage.withUnsafeBufferPointer { $0.baseAddress! } )
     }

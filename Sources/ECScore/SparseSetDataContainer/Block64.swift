@@ -1,8 +1,8 @@
 struct Block64_L2 { // Layer 2
-    private(set) var blockMask: UInt64 = 0
-    private(set) var activePageCount: Int = 0
-    private(set) var activeEntityCount: Int = 0
-    private(set) var pageOnBlock = 
+    @inline(__always) private(set) var blockMask: UInt64 = 0
+    @inline(__always) private(set) var activePageCount: Int = 0
+    @inline(__always) private(set) var activeEntityCount: Int = 0
+    @inline(__always) private(set) var pageOnBlock = 
         ContiguousArray<Page64>(repeating: Page64(), count: 64)
 
     @inline(__always)
