@@ -24,7 +24,7 @@ struct MoveSystem {
             // // try this
             // let nx = (dir.vx * dtSeconds) + pos.x // only get
             // let ny = (dir.vy * dtSeconds) + pos.y
-            // pos.x = nx
+            // pos.x = nx // only set
             // pos.y = ny
         }
 

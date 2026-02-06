@@ -50,7 +50,7 @@ public struct FastProxyMacro: MemberMacro, ExtensionMacro {
         return ["""
         \(raw: access)struct ProxyMembers: ECScore.FastProxyPointer {
             \(raw: access)typealias T = \(raw: typeName)
-            private let ptr: UnsafeMutablePointer<\(raw: typeName)>
+            @inline(__always) private let ptr: UnsafeMutablePointer<\(raw: typeName)>
             @inline(__always) \(raw: access)init(ptr: UnsafeMutablePointer<\(raw: typeName)>) { self.ptr = ptr }
             \(raw: propertiesCode)
         }

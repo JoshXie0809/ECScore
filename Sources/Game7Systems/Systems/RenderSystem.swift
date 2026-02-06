@@ -23,9 +23,9 @@ struct RenderSystem {
 }
 
 struct RenderLogic: SystemBody {
-    let buffer: UnsafeMutablePointer<UInt8>
-    let height: Int
-    let width: Int
+    @inline(__always) let buffer: UnsafeMutablePointer<UInt8>
+    @inline(__always) let height: Int
+    @inline(__always) let width: Int
 
     public typealias Components = (ComponentProxy<PositionComponent>, ComponentProxy<SpriteComponent>)
     @inlinable 

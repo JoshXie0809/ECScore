@@ -115,7 +115,7 @@ struct VelocityComponent: Component {
 extension VelocityComponent: FastComponentProtocol {
     struct ProxyMembers: FastProxyPointer{
         typealias T = VelocityComponent
-        private let ptr: UnsafeMutablePointer<T>
+        @inline(__always) private let ptr: UnsafeMutablePointer<T>
         @inline(__always) 
         init(ptr: UnsafeMutablePointer<T>) { self.ptr = ptr }
 
