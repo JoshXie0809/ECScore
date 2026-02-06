@@ -53,7 +53,7 @@ public protocol FastComponentProtocol: Component {
 
 @frozen
 @dynamicMemberLookup
-public struct ComponentProxy<T> {
+public struct ComponentProxy<T>: @unchecked Sendable {
     private let pointer: UnsafeMutablePointer<T>
 
     @inline(__always)

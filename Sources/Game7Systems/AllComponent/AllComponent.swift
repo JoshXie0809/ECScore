@@ -104,10 +104,41 @@ struct SpriteComponent: Component {
 
 // @@ ############################################################################## 6
 
-@FastProxy
+// @FastProxy is same as below, but I don't implement a lot of edge case
+// so if has any error, just use defalut @DynamicLookup
 struct VelocityComponent: Component {
     var vx: Float = 1
     var vy: Float = 1
+}
+
+// or DIY
+extension VelocityComponent: FastComponentProtocol {
+    struct ProxyMembers: FastProxyPointer{
+        typealias T = VelocityComponent
+        private let ptr: UnsafeMutablePointer<T>
+        @inline(__always) 
+        init(ptr: UnsafeMutablePointer<T>) { self.ptr = ptr }
+
+        @inline(__always) 
+        var vx: Float { 
+            @inline(__always) _read {
+                yield ptr.pointee.vx
+            }
+            @inline(__always) nonmutating _modify {
+                yield &ptr.pointee.vx
+            }
+        }
+
+        @inline(__always) 
+        var vy: Float { 
+            @inline(__always) _read {
+                yield ptr.pointee.vy
+            }
+            @inline(__always) nonmutating _modify {
+                yield &ptr.pointee.vy
+            }
+        }
+    }
 }
 
 // @@ ############################################################################## 6
