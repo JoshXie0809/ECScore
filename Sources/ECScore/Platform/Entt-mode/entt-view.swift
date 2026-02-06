@@ -126,7 +126,9 @@ func executeViewPlans<each T> (
                 // do action here
                 // ############################################################################
                 action(0, 
-                    repeat ComponentProxy(pointer: (each dataPtrs).advanced(by: Int((each entityOnPagePtrs).ptr.advanced(by: slotIdx).pointee.compArrIdx)))
+                    repeat ComponentProxy(
+                        pointer: (each dataPtrs).advanced(by: Int((each entityOnPagePtrs).ptr.advanced(by: slotIdx).pointee.compArrIdx))
+                    )
                 )
                 // ############################################################################
                 // end
@@ -163,11 +165,10 @@ public func view<T>(
         let blockId = vp.segmentIndex
         let count = storage.segments[blockId]?.count ?? 0
         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
-        let buffer = UnsafeMutableBufferPointer(start: dataPtr, count: count)
 
         for i in 0..<count {
             // taskId = 0
-            action(0, ComponentProxy<T>(pointer: buffer.baseAddress!.advanced(by: i) ))
+            action(0, ComponentProxy<T>(pointer: dataPtr.advanced(by: i) ))
         }
     }
 
@@ -223,11 +224,12 @@ func executeViewPlans<S: SystemBody, each T> (
                 // 因為 S 是具體的 Struct，編譯器會在這裡直接展開代碼 (Inline)
                 body.execute(
                     taskId: 0, 
-                    components: (
+                    components: ( 
                         repeat ComponentProxy(
                             pointer: (each dataPtrs).advanced(by: Int((each entityOnPagePtrs).ptr.advanced(by: slotIdx).pointee.compArrIdx))
                         )
                     )
+                    
                 )
                 // ############################################################################
                 
