@@ -46,13 +46,11 @@ func createViewPlans<each T, each WT, each WOT>(
     viewPlans.reserveCapacity(estimated_space)
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
-    let wot_allSegments = (repeat (each wot_storages).segments)
     
     for i in stride(from: global_First, through: global_Last, by: 1) {
         var segment_i_mask = SparseSet_L2_BaseMask
         repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
         repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
-        repeat segment_i_mask &= ~((each wot_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask)
         
         if segment_i_mask != 0 {
             viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
