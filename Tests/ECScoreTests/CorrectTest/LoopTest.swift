@@ -3,11 +3,11 @@ import Foundation
 @testable import ECScore
 
 
-@Test func interstionTest() async throws {
+@Test func intersectionTest() async throws {
 
     var rng = Xoshiro128(seed: UInt32(11111))
 
-    for _ in 1...10 {
+    for _ in 1...100 {
         let base = makeBootedPlatform()
         let ttokens = interop(base, 
             MockComponentA.self, 
