@@ -107,7 +107,7 @@ let tb1 = clock.now
 
     return RunResult(
         gs: gs, 
-        d0: ts0-ts1, // set-up-time
+        d0: ts1-ts0, // set-up-time
         d1: ta1-ta0, 
         d2: tb1-tb0, 
         hmn: hmn, 
