@@ -169,6 +169,8 @@ func executeViewPlans<each T, each WT, each WOT> (
         // ###################################################### Sparse_Set_L2_i
     }
     repeat _fixLifetime(each storages)
+    repeat _fixLifetime(each wt_storages)
+    repeat _fixLifetime(each wot_storages)
 }
 
 @inline(__always)
