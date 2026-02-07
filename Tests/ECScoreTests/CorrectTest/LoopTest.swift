@@ -10,10 +10,11 @@ struct MockComponentA5: Component {}
 
 
 @Test func intersectionTest() async throws {
-
+    // let ITER = 1000 
+    let ITER = 10
     var rng = Xoshiro128(seed: UInt32(33333))
 
-    for _ in 1...100 {
+    for _ in 1...ITER {
         let base = makeBootedPlatform()
         let ttokens = interop(base, 
             MockComponentA.self, 
@@ -34,8 +35,10 @@ struct MockComponentA5: Component {}
         emplace(base, tokens: ttokens) {
             entities, pack in
             var (a, b, c, d, e, a1, a2, a3, a4, a5) = pack.storages
+            var d_list = [EmplaceEntityId]()
+            d_list.reserveCapacity(50_000)
 
-            for _ in 1...10_000 {
+            for _ in 1...50_000 {
                 let entity = entities.createEntity()
 
                 let roll1 = rng.next() & 1
@@ -49,6 +52,8 @@ struct MockComponentA5: Component {}
                 let rolla4 = rng.next() & 1
                 let rolla5 = rng.next() & 1
                 
+                let destroy_roll = rng.next() & 1
+                
                 if roll1 == 0 { a.addComponent(entity, MockComponentA()) }
                 if roll2 == 0 { b.addComponent(entity, MockComponentB()) }
                 if roll3 == 0 { c.addComponent(entity, MockComponentC()) }
@@ -61,13 +66,36 @@ struct MockComponentA5: Component {}
                 if rolla4 != 0 { a4.addComponent(entity, MockComponentA4()) }
                 if rolla5 != 0 { a5.addComponent(entity, MockComponentA5()) }
 
+                var isTrue = false
                 if 
                 roll1 == 0 && roll2 == 0 && roll3 == 0 && roll4 == 0 && roll5 == 0 &&
                 rolla1 == 0 && rolla2 == 0 && rolla3 == 0 && rolla4 == 0 && rolla5 == 0 {
+                    isTrue = true
                     count += 1
                 }
 
+                if destroy_roll == 0 {
+                    d_list.append(entity)
+                    if isTrue { count -= 1 }
+                }
             }
+
+            for entity in d_list {
+                a.removeComponent(entity)
+                b.removeComponent(entity)
+                c.removeComponent(entity)
+                d.removeComponent(entity)
+                e.removeComponent(entity)
+
+                a1.removeComponent(entity)
+                a2.removeComponent(entity)
+                a3.removeComponent(entity)
+                a4.removeComponent(entity)
+                a5.removeComponent(entity)
+
+                entities.destroyEntity(entity)
+            }
+
         }
 
         let withTagTokens = interop(base, MockComponentA.self, MockComponentB.self, MockComponentC.self, MockComponentA1.self, MockComponentA2.self)
