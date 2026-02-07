@@ -1,10 +1,4 @@
-protocol SparseSet {
-    mutating func remove(_ eid: EntityId)
-}
-
-// 0x0FFF = 4096-1
-
-struct SparseSet_L2<T: Component>: SparseSet {
+struct SparseSet_L2<T: Component> {
     private(set) var sparse: Block64_L2
     private(set) var components : ContiguousArray<T>
     private(set) var reverseEntities: ContiguousArray<BlockId>
@@ -156,5 +150,16 @@ struct EntityOnPagePtr<T> {
     @inlinable
     func getSlotCompArrIdx_Uncheck(_ slotIdx: Int) -> Int {
         return Int(ptr.advanced(by: slotIdx).pointee.compArrIdx)
+    }
+}
+
+struct SentinelContainer<T: Component>: @unchecked Sendable {
+    let ptr: UnsafeMutablePointer<SparseSet_L2<T>>
+    
+    init() {
+        // 這裡分配記憶體，保證地址永久固定
+        ptr = UnsafeMutablePointer<SparseSet_L2<T>>.allocate(capacity: 1)
+        // 初始化為空的 SparseSet
+        ptr.initialize(to: SparseSet_L2<T>())
     }
 }

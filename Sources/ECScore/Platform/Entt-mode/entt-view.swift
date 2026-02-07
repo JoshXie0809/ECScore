@@ -107,9 +107,9 @@ func createViewPlans<each T, each WT, each WOT>(
     
     for i in stride(from: global_First, through: global_Last, by: 1) {
         var segment_i_mask = SparseSet_L2_BaseMask
-        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee?.sparse.blockMask ?? 0
-        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee?.sparse.blockMask ?? 0
-        repeat segment_i_mask &= ~((each wot_allSegments).advanced(by: i).pointee?.sparse.blockMask ?? 0)
+        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+        repeat segment_i_mask &= ~((each wot_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask)
         
         if segment_i_mask != 0 {
             viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
@@ -148,7 +148,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             var pageMask = SparseSet_L2_BaseMask
             repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
             repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
-            repeat pageMask &= ~((each wot_allSegment)?.sparse.pageOnBlock[pageIdx].pageMask ?? 0 )
+            repeat pageMask &= ~((each wot_allSegment).pointee.sparse.pageOnBlock[pageIdx].pageMask)
 
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
@@ -194,7 +194,7 @@ public func view<T>(
     
     for vp in vps {
         let blockId = vp.segmentIndex
-        let count = storage.segments[blockId]?.count ?? 0
+        let count = storage.segments[blockId].pointee.count
         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
 
         for i in 0..<count {
@@ -297,7 +297,7 @@ public func view<S: SystemBody, T> (
 
     for vp in vps {
         let blockId = vp.segmentIndex
-        let count = storage.segments[blockId]?.count ?? 0
+        let count = storage.segments[blockId].pointee.count
         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
 
         for i in 0..<count {

@@ -141,13 +141,13 @@ struct PFStorageTests {
         
         // 驗證：segments 長度應該變為 2 (index 0, index 1)
         #expect(storage.segments.count == 2)
-        #expect(storage.segments[1] != nil)
+        #expect(storage.segments[1] != storage.sentinelPtr)
         
         // 2. 移除該實體
         storage.remove(eid: eidBig)
         
         // 驗證選配優化：當 L2 完全空了，segment 應該被設回 nil 以釋放內存
-        #expect(storage.segments[1] == nil)
+        #expect(storage.segments[1] == storage.sentinelPtr)
     }
     
     @Test("大量數據分頁壓力測試", arguments: [0, 4095, 4096, 8191, 8192])
@@ -156,8 +156,8 @@ struct PFStorageTests {
         let eid = EntityId(id: id, version: 1)
         
         storage.add(eid: eid, component: Position(x: 0, y: 0))
-        #expect(storage.segments[id >> 12] != nil)
-        #expect(storage.segments[id >> 12]!.sparse.contains(id & 0x0FFF))
+        #expect(storage.segments[id >> 12] != storage.sentinelPtr)
+        #expect(storage.segments[id >> 12].pointee.sparse.contains(id & 0x0FFF))
     }
 }
 
@@ -227,9 +227,8 @@ func testForceSwapLogic() async throws {
     var sum: Float = 0
     // 使用你最快的「非 nil segment 遍歷」邏輯
     for segment in storage.segments {
-        guard let l2 = segment else { continue }
-        for i in 0..<l2.count {
-            sum += l2.components[i].x
+        for i in 0..<segment.pointee.count {
+            sum += segment.pointee.components[i].x
         }
     }
     

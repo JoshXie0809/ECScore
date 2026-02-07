@@ -1,16 +1,19 @@
-struct PFStorage<T: Component>: ~Copyable {
+struct PFStorage2<T: Component>: ~Copyable {
     private(set) var segments: ContiguousArray<SparseSet_L2<T>?>
     private(set) var activeEntityCount = 0
     private(set) var firstActiveSegment: Int = Int.max
     private(set) var lastActiveSegment: Int = Int.min
     private(set) var activeSegmentCount: Int = 0
 
+    private let sentinelPtr: UnsafeMutablePointer<SparseSet_L2<T>>
+
     var storageType: any Component.Type { T.self }
     var segmentCount : Int { segments.count }
     
     init() {
+        self.sentinelPtr = UnsafeMutablePointer<SparseSet_L2<T>>.allocate(capacity: 1)
+        self.sentinelPtr.initialize(to: SparseSet_L2<T>()) // 初始化為空的 SparseSet        
         self.segments = ContiguousArray<SparseSet_L2<T>?>(repeating: nil, count: 1)
-        // self.segments[0] = SparseSet_L2<T>()
     }
 
     @inline(__always)
@@ -234,11 +237,11 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
     
     @inline(__always)
     func get_SparseSetL2_PagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
-        PagePtr(ptr: handle.pfstorage.segments[blockIdx]!.sparse.getPageRawPointer())
+        PagePtr(ptr: handle.pfstorage.segments[blockIdx].pointee.sparse.getPageRawPointer())
     }
 
     @inline(__always)
-    var segments: UnsafePointer<SparseSet_L2<T>?> {
+    var segments: UnsafePointer<UnsafeMutablePointer<SparseSet_L2<T>>> {
         handle.pfstorage.getSegmentsRawPointer_Internal()
     }
 
