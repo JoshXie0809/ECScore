@@ -19,9 +19,9 @@ func printBit(_ val: UInt64) {
 }
 
 struct Page64: CustomStringConvertible {
-    private(set) var pageMask: UInt64 = 0
-    private(set) var activeCount: Int = 0
-    private(set) var entityOnPage = 
+    @inline(__always) private(set) var pageMask: UInt64 = 0
+    @inline(__always) private(set) var activeCount: Int = 0
+    @inline(__always) private(set) var entityOnPage = 
         ContiguousArray<SparseSetEntry>(
             repeating: SparseSetEntry(compArrIdx: Int16(-1)), 
             count: 64
