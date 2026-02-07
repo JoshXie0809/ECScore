@@ -2,10 +2,16 @@ import Testing
 import Foundation
 @testable import ECScore
 
+struct MockComponentA1: Component {}
+struct MockComponentA2: Component {}
+struct MockComponentA3: Component {}
+struct MockComponentA4: Component {}
+struct MockComponentA5: Component {}
+
 
 @Test func intersectionTest() async throws {
 
-    var rng = Xoshiro128(seed: UInt32(11111))
+    var rng = Xoshiro128(seed: UInt32(31323))
 
     for _ in 1...100 {
         let base = makeBootedPlatform()
@@ -15,6 +21,11 @@ import Foundation
             MockComponentC.self,
             MockComponentD.self,
             MockComponentE.self,
+            MockComponentA1.self, 
+            MockComponentA2.self, 
+            MockComponentA3.self, 
+            MockComponentA4.self, 
+            MockComponentA5.self, 
         )
 
         var count = 0
@@ -22,7 +33,7 @@ import Foundation
 
         emplace(base, tokens: ttokens) {
             entities, pack in
-            var (a, b, c, d, e) = pack.storages
+            var (a, b, c, d, e, a1, a2, a3, a4, a5) = pack.storages
 
             for _ in 1...10_000 {
                 let entity = entities.createEntity()
@@ -32,6 +43,11 @@ import Foundation
                 let roll3 = rng.next() & 1
                 let roll4 = rng.next() & 1
                 let roll5 = rng.next() & 1
+                let rolla1 = rng.next() & 1
+                let rolla2 = rng.next() & 1
+                let rolla3 = rng.next() & 1
+                let rolla4 = rng.next() & 1
+                let rolla5 = rng.next() & 1
                 
                 if roll1 == 0 { a.addComponent(entity, MockComponentA()) }
                 if roll2 == 0 { b.addComponent(entity, MockComponentB()) }
@@ -39,15 +55,23 @@ import Foundation
                 if roll4 != 0 { d.addComponent(entity, MockComponentD()) }
                 if roll5 != 0 { e.addComponent(entity, MockComponentE()) }
 
-                if roll1 == 0 && roll2 == 0 && roll3 == 0 && roll4 == 0 && roll5 == 0 {
+                if rolla1 == 0 { a1.addComponent(entity, MockComponentA1()) }
+                if rolla2 == 0 { a2.addComponent(entity, MockComponentA2()) }
+                if rolla3 != 0 { a3.addComponent(entity, MockComponentA3()) }
+                if rolla4 != 0 { a4.addComponent(entity, MockComponentA4()) }
+                if rolla5 != 0 { a5.addComponent(entity, MockComponentA5()) }
+
+                if 
+                roll1 == 0 && roll2 == 0 && roll3 == 0 && roll4 == 0 && roll5 == 0 &&
+                rolla1 == 0 && rolla2 == 0 && rolla3 == 0 && rolla4 == 0 && rolla5 == 0 {
                     count += 1
                 }
 
             }
         }
 
-        let withTagTokens = interop(base, MockComponentA.self, MockComponentB.self, MockComponentC.self,)
-        let withoutTagTokens = interop(base, MockComponentD.self, MockComponentE.self)
+        let withTagTokens = interop(base, MockComponentA.self, MockComponentB.self, MockComponentC.self, MockComponentA1.self, MockComponentA2.self)
+        let withoutTagTokens = interop(base, MockComponentD.self, MockComponentE.self, MockComponentA3.self, MockComponentA4.self, MockComponentA5.self)
         
         view(base: base, with: (), withTag: withTagTokens, withoutTag: withoutTagTokens) {
             _ in
