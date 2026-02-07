@@ -11,7 +11,7 @@ struct MockComponentA5: Component {}
 
 @Test func intersectionTest() async throws {
 
-    var rng = Xoshiro128(seed: UInt32(31323))
+    var rng = Xoshiro128(seed: UInt32(33333))
 
     for _ in 1...100 {
         let base = makeBootedPlatform()
@@ -78,15 +78,13 @@ struct MockComponentA5: Component {}
 
             validated_count += 1
         }
-
+        // print(count)
         #expect(count == validated_count)
 
     }
 }
 
-
-
-
+//  swift test -c release --sanitize=address --filter intersectionTest
 
 struct Xoshiro128 {
     var state: (UInt32, UInt32, UInt32, UInt32)
