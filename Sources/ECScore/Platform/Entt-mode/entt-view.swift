@@ -74,52 +74,81 @@ struct ViewPlan: Sendable {
 }
 
 @inline(__always)
-func createViewPlans<each T>( 
+func createViewPlans<each T, each WT, each WOT>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    with: borrowing (repeat TypeToken<each T>)
-) -> (ContiguousArray<ViewPlan>, (repeat PFStorageBox<each T>))
+    with: (repeat TypeToken<each T>),
+    withTag: (repeat TypeToken<each WT>),
+    withoutTag: (repeat TypeToken<each WOT>),
+) -> (ContiguousArray<ViewPlan>, (repeat PFStorageBox<each T>), (repeat PFStorageBox<each WT>), (repeat PFStorageBox<each WOT>))
 {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
+    let wt_storages: (repeat PFStorageBox<each WT>) = (repeat (each withTag).getStorage(base: base))
+    let wot_storages: (repeat PFStorageBox<each WOT>) = (repeat (each withoutTag).getStorage(base: base))
+
     var global_First = Int.min; repeat maxHelper(&global_First, (each storages).firstActiveSegment);
+    repeat maxHelper(&global_First, (each wt_storages).firstActiveSegment)
     var global_Last = Int.max; repeat minHelper(&global_Last, (each storages).lastActiveSegment);
-    if global_First > global_Last { return ([], storages) }
-    
+    repeat minHelper(&global_Last, (each wt_storages).lastActiveSegment)
+    guard global_First != Int.min, global_Last != Int.max else { 
+        fatalError("ECS Query Error: At least one inclusive component or tag is required to define the search range.") 
+    }
+
+    if global_First > global_Last { return ([], storages, wt_storages, wot_storages) }
+
     var global_Minimum_ActiveSegmentCount = Int.max; repeat minHelper(&global_Minimum_ActiveSegmentCount, (each storages).activeSegmentCount);
+    repeat minHelper(&global_Minimum_ActiveSegmentCount, (each wt_storages).activeSegmentCount)
+
     var viewPlans = ContiguousArray<ViewPlan>()
     let estimated_space = min(global_Minimum_ActiveSegmentCount, global_Last - global_First + 1)
     viewPlans.reserveCapacity(estimated_space)
     let allSegments = (repeat (each storages).segments)
+    let wt_allSegments = (repeat (each wt_storages).segments)
+    let wot_allSegments = (repeat (each wot_storages).segments)
+    
     for i in stride(from: global_First, through: global_Last, by: 1) {
         var segment_i_mask = SparseSet_L2_BaseMask
         repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee?.sparse.blockMask ?? 0
+        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee?.sparse.blockMask ?? 0
+        repeat segment_i_mask &= ~((each wot_allSegments).advanced(by: i).pointee?.sparse.blockMask ?? 0)
+        
         if segment_i_mask != 0 {
             viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
         }
     }
     
     repeat _fixLifetime(each storages)
-    return (viewPlans, storages)
+    repeat _fixLifetime(each wt_storages)
+    repeat _fixLifetime(each wot_storages)
+
+    return (viewPlans, storages, wt_storages, wot_storages)
 }
 
 @inline(__always)
-func executeViewPlans<each T> (
+func executeViewPlans<each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
     storages: (repeat PFStorageBox<each T>),
+    wt_storages: (repeat PFStorageBox<each WT>), 
+    wot_storages: (repeat PFStorageBox<each WOT>),
     _ action: (_ taskId: Int, _ pack: repeat ComponentProxy<each T>) -> Void
 ) {
-
+    let wot_allSegments = (repeat (each wot_storages).segments)
     for vp in viewPlans {
         var blockMask = vp.mask
-        let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(vp.segmentIndex))
-        let pagePtrs = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(vp.segmentIndex))
-        
+        let segmentIndex = vp.segmentIndex
+        let dataPtrs = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex))
+        let pagePtrs = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex))
+        let wt_pagePtrs = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex))
+        let wot_allSegment = (repeat (each wot_allSegments).advanced(by: segmentIndex).pointee)
+
         // ###################################################### Sparse_Set_L2_i
         while blockMask != 0 { 
             let pageIdx = blockMask.trailingZeroBitCount
             let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
             var pageMask = SparseSet_L2_BaseMask
             repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+            repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+            repeat pageMask &= ~((each wot_allSegment)?.sparse.pageOnBlock[pageIdx].pageMask ?? 0 )
 
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
@@ -148,8 +177,8 @@ public func view<each T> (
     with: borrowing (repeat TypeToken<each T>),
     _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
-    let (vps, storages) = createViewPlans( base: base, with: (repeat each with) )
-    executeViewPlans(base: base, viewPlans: vps, storages: (repeat each storages), action)
+    let (vps, storages, _, _) = createViewPlans( base: base, with: (repeat each with), withTag: (), withoutTag: () )
+    executeViewPlans(base: base, viewPlans: vps, storages: (repeat each storages), wt_storages: (), wot_storages: (), action)
 }
 
 // single componet
@@ -159,7 +188,7 @@ public func view<T>(
     with: TypeToken<T>,
     _ action: (_: Int, _: ComponentProxy<T>) -> Void
 ) {
-    let (vps, storage) = createViewPlans( base: base, with: with )
+    let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
     
     for vp in vps {
         let blockId = vp.segmentIndex
@@ -250,7 +279,7 @@ public func view<S: SystemBody, each T> (
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) 
 {
-    let (vps, storages) = createViewPlans(base: base, with: (repeat each with))
+    let (vps, storages, _, _) = createViewPlans(base: base, with: (repeat each with), withTag: (), withoutTag: ())
     executeViewPlans(base: base, viewPlans: vps, storages: (repeat each storages), body)
 }
 
@@ -262,7 +291,7 @@ public func view<S: SystemBody, T> (
     _ body: borrowing S
 ) where S.Components == ComponentProxy<T>
 {
-    let (vps, storage) = createViewPlans( base: base, with: with )
+    let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
 
     for vp in vps {
         let blockId = vp.segmentIndex
