@@ -2,12 +2,12 @@ typealias BlockOffset = Int16
 typealias CompArrayIndex = Int16
 
 struct SparseSetEntry {
-    var compArrIdx: CompArrayIndex // 紀錄在 dense Array 4096 中的第幾個位置
+    @inline(__always) var compArrIdx: CompArrayIndex // 紀錄在 dense Array 4096 中的第幾個位置
 }
 
 struct BlockId {
-    var offset: BlockOffset
-    var version: Int // gen is for validation
+    @inline(__always) var offset: BlockOffset
+    @inline(__always) var version: Int // gen is for validation
 }
 
 func printBit(_ val: UInt64) {
