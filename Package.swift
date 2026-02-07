@@ -58,7 +58,7 @@ let package = Package(
 
         .executableTarget(
             name: "Game7Systems",
-            dependencies: ["ECScore", "ECScoreMacros"],
+            dependencies: ["ECScore"],
             path: "Sources/Game7Systems",
             swiftSettings: crossModuleOptimizationSettings
         ),

@@ -43,15 +43,17 @@ struct GameSettings {
 struct RunResult: CustomStringConvertible {
     let gs: GameSettings
     let renderString: String
+    let setupWorldDuration: Duration
     let createEntityDuration: Duration
     let updateEntityDuration: Duration
     let hmn: (Int, Int, Int)
     let allSysDuration: (Duration, Duration, Duration, Duration, Duration, Duration, Duration)
 
-    init(gs: GameSettings, d1: Duration, d2: Duration, hmn: (Int, Int, Int), rs: String, 
+    init(gs: GameSettings, d0: Duration, d1: Duration, d2: Duration, hmn: (Int, Int, Int), rs: String, 
         alld: (Duration, Duration, Duration, Duration, Duration, Duration, Duration)
     ) {
         self.gs = gs
+        self.setupWorldDuration = d0
         self.createEntityDuration = d1
         self.updateEntityDuration = d2
         self.renderString = rs
@@ -73,11 +75,13 @@ struct RunResult: CustomStringConvertible {
         let s11 = allSysDuration.4
         let s12 = allSysDuration.5
         let s13 = allSysDuration.6
+        let s14 = setupWorldDuration
         var res = ""
         res += "======================================================\n"
         res += "                 iterId : \(s01)" + "\n"
         res += "        emplaceStrategy : \(s02)" + "\n"
         res += "  total entities number : \(s03)" + "\n"
+        res += "   setup world duration : \(s14)" + "\n"
         res += " entity create duration : \(s04)" + "\n"
         res += "systems update duration : \(s05)" + "\n"
         res += "   (hero, monster, npc) : \(s06)" + "\n"
