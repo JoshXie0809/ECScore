@@ -8,7 +8,14 @@ public func view<each T, each WT, each WOT> (
     _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
-    executeViewPlans(base: base, viewPlans: vps, storages: (repeat each storages), wt_storages: (repeat each wots), wot_storages: (repeat each wts), action)
+    executeViewPlans(
+        base: base, 
+        viewPlans: vps, 
+        storages: (repeat each storages), 
+        wt_storages: (repeat each wts), 
+        wot_storages: (repeat each wots), 
+        action
+    )
 }
 
 // static View (with system body)
@@ -22,7 +29,14 @@ public func view<S: SystemBody, each T, each WT, each WOT> (
 ) where S.Components == (repeat ComponentProxy<each T>) 
 {
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
-    executeViewPlans(base: base, viewPlans: vps, storages: (repeat each storages), wt_storages: (repeat each wots), wot_storages: (repeat each wts), body)
+    executeViewPlans(
+        base: base, 
+        viewPlans: vps, 
+        storages: (repeat each storages), 
+        wt_storages: (repeat each wts), 
+        wot_storages: (repeat each wots), 
+        body
+    )
 }
 
 
