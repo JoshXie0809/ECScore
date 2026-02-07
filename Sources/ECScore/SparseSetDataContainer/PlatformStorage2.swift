@@ -16,7 +16,7 @@ struct PFStorage<T: Component>: ~Copyable {
         self.sentinelPtr.initialize(to: SparseSet_L2<T>()) 
         
         self.segments = ContiguousArray()
-        self.segments.reserveCapacity(64) // init some place
+        self.segments.reserveCapacity(1024) // init some place
     }
 
     deinit {
