@@ -8,7 +8,7 @@ struct RenderSystem {
     init(base: borrowing VBPF) {
         // 預先取得組件位置，確保效能
         self.renderToken = interop(base, PositionComponent.self, SpriteComponent.self)
-        self.withTagToken = interop(base, EmptyComponent.self)
+        // self.withTagToken = interop(base, EmptyComponent.self)
     }
 
     @inline(__always)
