@@ -6,7 +6,7 @@ struct World: ~Copyable {
 
     private var resource: World.Resource
     var dt: Duration { resource.dt }
-    var renderString: String { resource.frameBuffer.renderToString() }
+    var renderStringCount: Int { resource.frameBuffer.renderToStringCount() }
     var frameBuffer: FrameBuffer { resource.frameBuffer }
 
     // 使用你的 ECScore Registry

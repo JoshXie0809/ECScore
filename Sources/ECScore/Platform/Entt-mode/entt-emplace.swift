@@ -8,6 +8,7 @@ public extension TypeToken {
     }
 }
 
+@inlinable
 @inline(__always)
 public func emplace<each T>(
     _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -21,11 +22,13 @@ public func emplace<each T>(
 public struct EmplaceEntityId {
     fileprivate let entity: EntityId
     fileprivate init(_ eid: EntityId) { self.entity = eid }
+    init(entity: EntityId) { self.entity = entity }
 }
 
 public struct EmplaceEntities: ~Copyable {
     private let entities: Platform_Entity
-    fileprivate init(_ entities: Platform_Entity) { self.entities = entities}
+    @usableFromInline 
+    init(_ entities: Platform_Entity) { self.entities = entities}
 
     @inline(__always)
     public func createEntity() -> EmplaceEntityId {
@@ -40,7 +43,8 @@ public struct EmplaceEntities: ~Copyable {
 
 public struct EmplaceStorage<T: Component> {
     private var storage: PFStorageBox<T>
-    fileprivate init(_ st: PFStorageBox<T>) { self.storage = st}
+    @usableFromInline
+    init(_ st: PFStorageBox<T>) { self.storage = st}
     
     @inline(__always)
     public mutating func addComponent(_ eeid: EmplaceEntityId, _ comp: T) {
@@ -56,5 +60,6 @@ public struct EmplaceStorage<T: Component> {
 public struct EmplacePack<each T: Component>: ~Copyable {
     // 將所有 Storage 放在一個元組裡
     public let storages: (repeat EmplaceStorage<each T>)
-    fileprivate init(_ sts: (repeat EmplaceStorage<each T>)) { self.storages = sts }
+    @usableFromInline
+    init(_ sts: (repeat EmplaceStorage<each T>)) { self.storages = sts }
 }

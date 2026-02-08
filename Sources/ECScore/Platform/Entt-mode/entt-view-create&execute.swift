@@ -24,6 +24,7 @@ struct SegmentAnchor {
     let isActive: (Int) -> Bool
 }
 
+@usableFromInline
 @inline(__always)
 func chooseSegmentAnchor<T: Component>(
     _ anchor: inout SegmentAnchor?,
@@ -46,6 +47,7 @@ func chooseSegmentAnchor<T: Component>(
     }
 }
 
+@usableFromInline
 @inline(__always)
 func createViewPlans<each T, each WT, each WOT>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -120,6 +122,7 @@ func createViewPlans<each T, each WT, each WOT>(
     return (viewPlans, storages, wt_storages, wot_storages)
 }
 
+@usableFromInline
 @inline(__always)
 func executeViewPlans<each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -170,11 +173,13 @@ func executeViewPlans<each T, each WT, each WOT> (
     repeat _fixLifetime(each wot_storages)
 }
 
+@usableFromInline
 @inline(__always)
 func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
     minimum = min(minimum, new)
 }
 
+@usableFromInline
 @inline(__always)
 func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
@@ -189,6 +194,7 @@ public protocol SystemBody {
     func execute(taskId: Int, components: borrowing Components)
 }
 
+@usableFromInline
 @inline(__always)
 func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,

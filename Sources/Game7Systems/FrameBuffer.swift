@@ -27,15 +27,15 @@ class FrameBuffer {
         self.buffer.withUnsafeMutableBufferPointer { $0.baseAddress! }
     }
 
-    func renderToString() -> String {
-        var result = ""
+    func renderToStringCount() -> Int {
+        var result = 0
         for y in 0..<height {
             let start = y * width
             let end = start + width
             let line = buffer[start..<end]
             
-            if let row = String(bytes: line, encoding: .ascii) {
-                result += row + "\n"
+            for x in line {
+                if x != UInt8(ascii: " ") { result += 1}
             }
         }
         return result

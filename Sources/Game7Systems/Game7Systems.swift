@@ -111,7 +111,7 @@ let tb1 = clock.now
         d1: ta1-ta0, 
         d2: tb1-tb0, 
         hmn: hmn, 
-        rs: world.renderString,
+        rsc: world.renderStringCount,
         alld: allSysDuration
     )
 }
