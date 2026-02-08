@@ -19,7 +19,7 @@ struct MoveSystem {
 
         // view(base: world.base, with: mvToken) 
         // { _, pos, dir in
-        //     // swift dynamic lookup sometimes has problem when get-set simutaneously
+        //     // swift dynamic lookup sometimes has more cost when get-set simutaneously
         //     // case
         //     pos.x += (dir.vx * dtSeconds) // get and set 
         //     pos.y += (dir.vy * dtSeconds)
@@ -42,8 +42,13 @@ struct MoveSystem {
         @inline(__always)
         func execute(taskId: Int, components: Components) {
             let (pos, dir) = components
-            pos.x += (dir.vx * dtSeconds)
-            pos.y += (dir.vy * dtSeconds)
+            let vx = dir.vx
+            let vy = dir.vy
+            let dx = vx * dtSeconds
+            let dy = vy * dtSeconds
+            
+            pos.x += dx
+            pos.y += dy
         }
     }
 }

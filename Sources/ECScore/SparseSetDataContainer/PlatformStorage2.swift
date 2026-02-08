@@ -123,7 +123,7 @@ struct PFStorage<T: Component>: ~Copyable {
         if storagePtr.pointee.count == 0 {
             freePage(storagePtr)
             // set as sentinel
-            segments[blockIdx] = sentinelPtr   
+            segments[blockIdx] = sentinelPtr
             activeSegmentCount -= 1
 
             if activeSegmentCount == 0 {

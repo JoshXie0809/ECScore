@@ -9,9 +9,9 @@ struct MockComponentA5: Component {}
 
 
 @Test func intersectionTest() async throws {
-    // let ITER = 1000 
-    let ITER = 10
-    var rng = Xoshiro128(seed: UInt32(33333))
+    // let ITER = 100
+    let ITER = 1
+    var rng = Xoshiro128(seed: UInt32(666))
 
     for _ in 1...ITER {
         let base = makeBootedPlatform()

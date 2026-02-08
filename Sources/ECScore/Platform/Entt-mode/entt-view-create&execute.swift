@@ -16,7 +16,6 @@ struct ViewPlan: Sendable {
     @inline(__always) let mask: UInt64
 }
 
-
 @usableFromInline
 @inline(__always)
 func createViewPlans<each T, each WT, each WOT>( 
@@ -30,10 +29,11 @@ func createViewPlans<each T, each WT, each WOT>(
     let wt_storages: (repeat PFStorageBox<each WT>) = (repeat (each withTag).getStorage(base: base))
     let wot_storages: (repeat PFStorageBox<each WOT>) = (repeat (each withoutTag).getStorage(base: base))
 
-    var global_First = Int.min; repeat maxHelper(&global_First, (each storages).firstActiveSegment);
-    repeat maxHelper(&global_First, (each wt_storages).firstActiveSegment)
-    var global_Last = Int.max; repeat minHelper(&global_Last, (each storages).lastActiveSegment);
-    repeat minHelper(&global_Last, (each wt_storages).lastActiveSegment)
+    var global_First = Int.min
+    var global_Last = Int.max
+    var minActiveSegments = Int.max
+    repeat absorbInclusiveMeta(&global_First, &global_Last, &minActiveSegments, each storages)
+    repeat absorbInclusiveMeta(&global_First, &global_Last, &minActiveSegments, each wt_storages)
 
     guard global_First != Int.min, global_Last != Int.max else { 
         fatalError("ECS createViewPlans Error: At least one inclusive component or tag is required to define the search range.") 
@@ -41,11 +41,9 @@ func createViewPlans<each T, each WT, each WOT>(
 
     if global_First > global_Last { return ([], storages, wt_storages, wot_storages) }
 
-    var minActiveSegments = Int.max; repeat minHelper(&minActiveSegments, (each storages).activeSegmentCount)
-    repeat minHelper(&minActiveSegments, (each wt_storages).activeSegmentCount)
     var viewPlans = ContiguousArray<ViewPlan>()
-    let estimated_space = min(minActiveSegments, global_Last - global_First + 1)
-    viewPlans.reserveCapacity(estimated_space)
+    let scanSegmentCount = global_Last - global_First + 1
+    viewPlans.reserveCapacity(min(minActiveSegments, scanSegmentCount))
     
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
@@ -70,7 +68,6 @@ func createViewPlans<each T, each WT, each WOT>(
 @usableFromInline
 @inline(__always)
 func executeViewPlans<each T, each WT, each WOT> (
-    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
     storages: borrowing (repeat PFStorageBox<each T>),
     wt_storages: borrowing (repeat PFStorageBox<each WT>), 
@@ -131,6 +128,19 @@ func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
 }
 
+@usableFromInline
+@inline(__always)
+func absorbInclusiveMeta<T>(
+    _ global_First: inout Int,
+    _ global_Last: inout Int,
+    _ minActiveSegments: inout Int,
+    _ storage: borrowing PFStorageBox<T>
+) {
+    maxHelper(&global_First, storage.firstActiveSegment)
+    minHelper(&global_Last, storage.lastActiveSegment)
+    minHelper(&minActiveSegments, storage.activeSegmentCount)
+}
+
 // static view
 public protocol SystemBody {
     associatedtype Components
@@ -144,7 +154,6 @@ public protocol SystemBody {
 @usableFromInline
 @inline(__always)
 func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
-    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
     storages: borrowing (repeat PFStorageBox<each T>),
     wt_storages: borrowing (repeat PFStorageBox<each WT>), 
