@@ -3,7 +3,7 @@ import ECScore
 // @@ ############################################################################## 1
 @FastProxy
 struct DataComponent: Component {
-    public static let defaultSeed: UInt32 = 340_383
+    static let defaultSeed: UInt32 = 340_383
 
     var thingy: Int = 0
     var dingy: Double = 0.0
