@@ -24,7 +24,7 @@ struct Page64: CustomStringConvertible {
     @inline(__always) private(set) var entityOnPage = 
         ContiguousArray<SparseSetEntry>(
             repeating: SparseSetEntry(compArrIdx: Int16(-1)), 
-            count: 64
+            count: 65 // 64 + padding 1 = 65 
         )
 
     var description: String {
