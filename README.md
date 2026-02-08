@@ -8,7 +8,7 @@ ECScore is a performance-oriented ECS (Entity Component System) library in Swift
 - Fast view/query execution using block/page/slot bitmasks.
 - `with` / `withTag` / `withoutTag` filtering for ECS queries.
 - Type-safe platform lifecycle via `Raw -> Validated -> Proof` flow.
-- Swift macros for ergonomics and proxy performance (`@Component`, `@FastProxy`).
+- Swift macros for ergonomics and proxy performance (`@FastProxy`).
 - Built-in stress workload (`Game7Systems`) and benchmarks.
 
 ## Project Structure
@@ -52,43 +52,47 @@ swift run -c release Game7Systems
 
 ## Core Usage
 
-### Boot platform
+### Define Component
 
 ```swift
-let _base = BasePlatform()
-let registry = RegistryPlatform()
-let entities = EntityPlatForm_Ver0()
-_base.boot(registry: registry, entities: entities)
-
-var pf = Raw(value: _base).upgrade(Platform_Facts.self)
-precondition(validate(validated: &pf, .handshake))
-guard case let .success(base) = pf.certify(Proof_Handshake.self) else {
-    fatalError("platform handshake failed")
+@FastProxy // for view function
+struct SomePlainData: Component {
+    // plain old data
+    var: data1: Int // do not define attr in 1 line
+    var: data2: Float
 }
-```
 
-### Register/interop component types
+// get the base platform of the ECS
+let base = makeBootedPlatform()
 
-```swift
+// register type to platform and get the tokens for useage
 let tokens = interop(base, PositionComponent.self, VelocityComponent.self)
-```
 
-### Query with view
 
-```swift
-view(base: base, with: tokens) { _taskId, pos, vel in
+// Query with tokens (closure mode)
+view(base: base, with: tokens) { 
+    _taskId, pos, vel in
     _ = _taskId
     pos.x += vel.vx
     pos.y += vel.vy
 }
-```
 
-### Query with include/exclude tags
+// Query with include/exclude tags (set the condtions)
+let includeTokens = interop(base, 
+    // ... tags you want the entity to include 
+)
+let excludeTokens = interop(base, 
+    // ... tags you want the entity to exclude 
+)
 
-```swift
 view(base: base, with: (), withTag: includeTokens, withoutTag: excludeTokens) { _ in
     // matched entity
+    // ...
 }
+
+// more static view useages can be find in "Sources/Game7Systems/Systems/*.swift"
+// more query  view useages can be find in "Tests/ECScoreTests/CorrectTest/LoopTest.swift
+
 ```
 
 ## Performance Notes

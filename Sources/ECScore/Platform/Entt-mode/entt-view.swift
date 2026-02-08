@@ -2,9 +2,9 @@
 @inline(__always)
 public func view<each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
-    with: (repeat TypeToken<each T>),
-    withTag: (repeat TypeToken<each WT>),
-    withoutTag: (repeat TypeToken<each WOT>),
+    with: borrowing (repeat TypeToken<each T>),
+    withTag: borrowing (repeat TypeToken<each WT>),
+    withoutTag: borrowing (repeat TypeToken<each WOT>),
     _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
@@ -23,8 +23,8 @@ public func view<each T, each WT, each WOT> (
 public func view<S: SystemBody, each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    withTag: (repeat TypeToken<each WT>),
-    withoutTag: (repeat TypeToken<each WOT>),
+    withTag: borrowing (repeat TypeToken<each WT>),
+    withoutTag: borrowing (repeat TypeToken<each WOT>),
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) 
 {
@@ -87,7 +87,7 @@ public func view<S: SystemBody, each T> (
 public func view<S: SystemBody, each T, each WT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    withTag: (repeat TypeToken<each WT>),
+    withTag: borrowing (repeat TypeToken<each WT>),
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) 
 {
@@ -97,7 +97,7 @@ public func view<S: SystemBody, each T, each WT> (
 public func view<S: SystemBody, each T, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    withoutTag: (repeat TypeToken<each WOT>),
+    withoutTag: borrowing (repeat TypeToken<each WOT>),
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) 
 {

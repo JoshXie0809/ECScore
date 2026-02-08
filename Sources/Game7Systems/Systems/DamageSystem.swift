@@ -10,9 +10,26 @@ struct DmgSystem {
     @inline(__always)
     func update(_ world: borrowing World)
     {
-        view(base: world.base, with: dmgToken) 
-        { _, health, damage in
+        let logic = Self.DamageLogic()
+        view(base: world.base, with: dmgToken, logic) 
 
+        // view(base: world.base, with: dmgToken) 
+        // { _, health, damage in
+        //     let totalDamage = damage.atk - damage.def
+        //     if (health.hp > 0 && totalDamage > 0) {
+        //         health.hp = max(health.hp - totalDamage, 0)
+        //     }
+        // }
+    }
+
+    struct DamageLogic: SystemBody {
+        typealias Components = (ComponentProxy<HealthComponent>, ComponentProxy<DamageComponent>)
+        
+        @inlinable 
+        @inline(__always)
+        func execute(taskId: Int, components: Components) {
+
+            let (health, damage) = components
             let totalDamage = damage.atk - damage.def
             if (health.hp > 0 && totalDamage > 0) {
                 health.hp = max(health.hp - totalDamage, 0)
