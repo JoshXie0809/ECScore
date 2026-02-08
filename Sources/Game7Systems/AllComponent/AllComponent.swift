@@ -2,7 +2,7 @@ import ECScore
 
 // @@ ############################################################################## 1
 @FastProxy
-public struct DataComponent: Component {
+struct DataComponent: Component {
     public static let defaultSeed: UInt32 = 340_383
 
     var thingy: Int = 0
@@ -29,7 +29,7 @@ public struct DataComponent: Component {
 
 
 // @@ ############################################################################## 2
-public struct EmptyComponent: Component {}
+struct EmptyComponent: Component {}
 
 // @@ ############################################################################## 2
 
@@ -39,33 +39,33 @@ public struct EmptyComponent: Component {}
 
 // @@ ############################################################################## 3
 
-public enum PlayerType {
+enum PlayerType {
     case npc
     case monster
     case hero
 }
 
 @FastProxy
-public struct PlayerComponent: Component {
+struct PlayerComponent: Component {
     var rng: Xoshiro128 = Xoshiro128(seed: 0)
     var type: PlayerType = .npc
 }
 
-public enum StatusEffect {
+enum StatusEffect {
     case spawn
     case dead
     case alive
 }
 
 @FastProxy
-public struct HealthComponent: Component {
+struct HealthComponent: Component {
     var hp: Int = 0
     var maxHp: Int = 0
     var status: StatusEffect = .spawn
 }
 
 @FastProxy
-public struct DamageComponent: Component {
+struct DamageComponent: Component {
     var atk: Int = 0
     var def: Int = 0
 }
@@ -78,7 +78,7 @@ public struct DamageComponent: Component {
 // @@ ############################################################################## 4
 
 @FastProxy
-public struct PositionComponent: Component {
+struct PositionComponent: Component {
     var x: Float = 0
     var y: Float = 0
 }
@@ -92,7 +92,7 @@ public struct PositionComponent: Component {
 // @@ ############################################################################## 5
 
 @FastProxy
-public struct SpriteComponent: Component {
+struct SpriteComponent: Component {
     var character: UInt8 = UInt8(ascii: " ")
 }
 
@@ -106,21 +106,23 @@ public struct SpriteComponent: Component {
 
 // @FastProxy is same as below, but I don't implement a lot of edge case
 // so if has any error, just use defalut @DynamicLookup
-public struct VelocityComponent: Component {
+struct VelocityComponent: Component {
     var vx: Float = 1
     var vy: Float = 1
 }
 
 // or DIY
 extension VelocityComponent: FastComponentProtocol {
-    public struct ProxyMembers: FastProxyPointer{
-        public typealias T = VelocityComponent
-        @inline(__always) private let ptr: UnsafeMutablePointer<T>
+    struct ProxyMembers: FastProxyPointer{
+        typealias T = VelocityComponent
         @inline(__always) 
-        public init(ptr: UnsafeMutablePointer<T>) { self.ptr = ptr }
+        private let ptr: UnsafeMutablePointer<T>
+        
+        @inline(__always) 
+        init(ptr: UnsafeMutablePointer<T>) { self.ptr = ptr }
 
         @inline(__always) 
-        public var vx: Float { 
+        var vx: Float { 
             @inline(__always) _read {
                 yield ptr.pointee.vx
             }
@@ -130,7 +132,7 @@ extension VelocityComponent: FastComponentProtocol {
         }
 
         @inline(__always) 
-        public var vy: Float { 
+        var vy: Float { 
             @inline(__always) _read {
                 yield ptr.pointee.vy
             }

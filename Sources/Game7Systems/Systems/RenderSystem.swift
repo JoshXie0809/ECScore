@@ -1,6 +1,6 @@
 import ECScore
 
-public struct RenderSystem {
+struct RenderSystem {
     // 定義所需組件的 Token
     let renderToken: (TypeToken<PositionComponent>, TypeToken<SpriteComponent>)
     // let withTagToken: TypeToken<EmptyComponent>
@@ -23,16 +23,16 @@ public struct RenderSystem {
         _fixLifetime(buffer)
     }
 
-    public struct RenderLogic: SystemBody {
-        public let buffer: UnsafeMutablePointer<UInt8>
-        public let height: Int
-        public let width: Int
+    struct RenderLogic: SystemBody {
+        let buffer: UnsafeMutablePointer<UInt8>
+        let height: Int
+        let width: Int
 
-        public typealias Components = (ComponentProxy<PositionComponent>, ComponentProxy<SpriteComponent>)
+        typealias Components = (ComponentProxy<PositionComponent>, ComponentProxy<SpriteComponent>)
 
         @inlinable 
         @inline(__always)
-        public func execute(taskId: Int, components: Components) {
+        func execute(taskId: Int, components: Components) {
             let (pos, sprite) = components
             let x = Int(pos.x)
             let y = Int(pos.y)
