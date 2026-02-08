@@ -17,37 +17,6 @@ struct ViewPlan: Sendable {
 }
 
 @usableFromInline
-struct SegmentAnchor {
-    let activeSegmentCount: Int
-    let firstActiveSegment: Int
-    let lastActiveSegment: Int
-    let isActive: (Int) -> Bool
-}
-
-@usableFromInline
-@inline(__always)
-func chooseSegmentAnchor<T: Component>(
-    _ anchor: inout SegmentAnchor?,
-    _ storage: PFStorageBox<T>
-) {
-    let candidate = SegmentAnchor(
-        activeSegmentCount: storage.activeSegmentCount,
-        firstActiveSegment: storage.firstActiveSegment,
-        lastActiveSegment: storage.lastActiveSegment,
-        isActive: { i in storage.isActiveSegment(i) }
-    )
-
-    guard let current = anchor else {
-        anchor = candidate
-        return
-    }
-
-    if candidate.activeSegmentCount < current.activeSegmentCount {
-        anchor = candidate
-    }
-}
-
-@usableFromInline
 @inline(__always)
 func createViewPlans<each T, each WT, each WOT>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -64,54 +33,28 @@ func createViewPlans<each T, each WT, each WOT>(
     repeat maxHelper(&global_First, (each wt_storages).firstActiveSegment)
     var global_Last = Int.max; repeat minHelper(&global_Last, (each storages).lastActiveSegment);
     repeat minHelper(&global_Last, (each wt_storages).lastActiveSegment)
+
     guard global_First != Int.min, global_Last != Int.max else { 
         fatalError("ECS createViewPlans Error: At least one inclusive component or tag is required to define the search range.") 
     }
 
     if global_First > global_Last { return ([], storages, wt_storages, wot_storages) }
 
-    var anchor: SegmentAnchor? = nil
-    repeat chooseSegmentAnchor(&anchor, (each storages))
-    repeat chooseSegmentAnchor(&anchor, (each wt_storages))
-    guard let anchor else {
-        fatalError("ECS createViewPlans Error: failed to choose an anchor storage.")
-    }
-
-    let scanFirst = max(global_First, anchor.firstActiveSegment)
-    let scanLast = min(global_Last, anchor.lastActiveSegment)
-    if scanFirst > scanLast { return ([], storages, wt_storages, wot_storages) }
-    let scanSpan = scanLast - scanFirst + 1
-
+    var minActiveSegments = Int.max; repeat minHelper(&minActiveSegments, (each storages).activeSegmentCount)
+    repeat minHelper(&minActiveSegments, (each wt_storages).activeSegmentCount)
     var viewPlans = ContiguousArray<ViewPlan>()
-    let estimated_space = min(anchor.activeSegmentCount, scanSpan)
+    let estimated_space = min(minActiveSegments, global_Last - global_First + 1)
     viewPlans.reserveCapacity(estimated_space)
+    
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
-
-    // Use anchor sentinel-guard only for sparse ranges.
-    // For dense ranges this extra branch can be pure overhead.
-    let useSparseAnchorScan = anchor.activeSegmentCount * 5 < scanSpan * 4
-    if useSparseAnchorScan {
-        for i in stride(from: scanFirst, through: scanLast, by: 1) {
-            if !anchor.isActive(i) { continue }
-
-            var segment_i_mask = SparseSet_L2_BaseMask
-            repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
-            repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
-            
-            if segment_i_mask != 0 {
-                viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
-            }
-        }
-    } else {
-        for i in stride(from: scanFirst, through: scanLast, by: 1) {
-            var segment_i_mask = SparseSet_L2_BaseMask
-            repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
-            repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
-            
-            if segment_i_mask != 0 {
-                viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
-            }
+    for i in stride(from: global_First, through: global_Last, by: 1) {
+        var segment_i_mask = SparseSet_L2_BaseMask
+        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+        
+        if segment_i_mask != 0 {
+            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
         }
     }
     
