@@ -245,6 +245,12 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
         handle.pfstorage.getSegmentsRawPointer_Internal()
     }
 
+    @inline(__always)
+    func isActiveSegment(_ blockIdx: Int) -> Bool {
+        if blockIdx < 0 || blockIdx >= handle.pfstorage.segments.count { return false }
+        return handle.pfstorage.segments[blockIdx] != handle.pfstorage.sentinelPtr
+    }
+
     var view: PFStorageView<T> {
         PFStorageView(handle)
     }

@@ -1,5 +1,4 @@
 import Testing
-import Foundation
 @testable import ECScore
 
 struct MockComponentA1: Component {}
@@ -35,8 +34,8 @@ struct MockComponentA5: Component {}
         emplace(base, tokens: ttokens) {
             entities, pack in
             var (a, b, c, d, e, a1, a2, a3, a4, a5) = pack.storages
-            var d_list = [EmplaceEntityId]()
-            d_list.reserveCapacity(50_000)
+            var entitiesToDestroy = [EmplaceEntityId]()
+            entitiesToDestroy.reserveCapacity(50_000)
 
             for _ in 1...50_000 {
                 let entity = entities.createEntity()
@@ -75,12 +74,12 @@ struct MockComponentA5: Component {}
                 }
 
                 if destroy_roll == 0 {
-                    d_list.append(entity)
+                    entitiesToDestroy.append(entity)
                     if isTrue { count -= 1 }
                 }
             }
 
-            for entity in d_list {
+            for entity in entitiesToDestroy {
                 a.removeComponent(entity)
                 b.removeComponent(entity)
                 c.removeComponent(entity)

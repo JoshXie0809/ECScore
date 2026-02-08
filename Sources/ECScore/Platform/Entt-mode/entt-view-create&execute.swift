@@ -16,6 +16,36 @@ struct ViewPlan: Sendable {
     let mask: UInt64
 }
 
+@usableFromInline
+struct SegmentAnchor {
+    let activeSegmentCount: Int
+    let firstActiveSegment: Int
+    let lastActiveSegment: Int
+    let isActive: (Int) -> Bool
+}
+
+@inline(__always)
+func chooseSegmentAnchor<T: Component>(
+    _ anchor: inout SegmentAnchor?,
+    _ storage: PFStorageBox<T>
+) {
+    let candidate = SegmentAnchor(
+        activeSegmentCount: storage.activeSegmentCount,
+        firstActiveSegment: storage.firstActiveSegment,
+        lastActiveSegment: storage.lastActiveSegment,
+        isActive: { i in storage.isActiveSegment(i) }
+    )
+
+    guard let current = anchor else {
+        anchor = candidate
+        return
+    }
+
+    if candidate.activeSegmentCount < current.activeSegmentCount {
+        anchor = candidate
+    }
+}
+
 @inline(__always)
 func createViewPlans<each T, each WT, each WOT>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -38,22 +68,48 @@ func createViewPlans<each T, each WT, each WOT>(
 
     if global_First > global_Last { return ([], storages, wt_storages, wot_storages) }
 
-    var global_Minimum_ActiveSegmentCount = Int.max; repeat minHelper(&global_Minimum_ActiveSegmentCount, (each storages).activeSegmentCount);
-    repeat minHelper(&global_Minimum_ActiveSegmentCount, (each wt_storages).activeSegmentCount)
+    var anchor: SegmentAnchor? = nil
+    repeat chooseSegmentAnchor(&anchor, (each storages))
+    repeat chooseSegmentAnchor(&anchor, (each wt_storages))
+    guard let anchor else {
+        fatalError("ECS createViewPlans Error: failed to choose an anchor storage.")
+    }
+
+    let scanFirst = max(global_First, anchor.firstActiveSegment)
+    let scanLast = min(global_Last, anchor.lastActiveSegment)
+    if scanFirst > scanLast { return ([], storages, wt_storages, wot_storages) }
+    let scanSpan = scanLast - scanFirst + 1
 
     var viewPlans = ContiguousArray<ViewPlan>()
-    let estimated_space = min(global_Minimum_ActiveSegmentCount, global_Last - global_First + 1)
+    let estimated_space = min(anchor.activeSegmentCount, scanSpan)
     viewPlans.reserveCapacity(estimated_space)
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
-    
-    for i in stride(from: global_First, through: global_Last, by: 1) {
-        var segment_i_mask = SparseSet_L2_BaseMask
-        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
-        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
-        
-        if segment_i_mask != 0 {
-            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
+
+    // Use anchor sentinel-guard only for sparse ranges.
+    // For dense ranges this extra branch can be pure overhead.
+    let useSparseAnchorScan = anchor.activeSegmentCount * 5 < scanSpan * 4
+    if useSparseAnchorScan {
+        for i in stride(from: scanFirst, through: scanLast, by: 1) {
+            if !anchor.isActive(i) { continue }
+
+            var segment_i_mask = SparseSet_L2_BaseMask
+            repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+            repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+            
+            if segment_i_mask != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
+            }
+        }
+    } else {
+        for i in stride(from: scanFirst, through: scanLast, by: 1) {
+            var segment_i_mask = SparseSet_L2_BaseMask
+            repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+            repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
+            
+            if segment_i_mask != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
+            }
         }
     }
     
