@@ -80,6 +80,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     var blockMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
+    let _ = (repeat (each dataPtrs_now).pointee)
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
@@ -95,6 +96,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         blockMask_now = viewPlans[i].mask
         segmentIndex_now = viewPlans[i].segmentIndex
         dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
+        let _ = (repeat (each dataPtrs_now).pointee)
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
@@ -256,6 +258,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     var blockMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
+    let _ = (repeat (each dataPtrs_now).pointee)
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
@@ -271,6 +274,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         blockMask_now = viewPlans[i].mask
         segmentIndex_now = viewPlans[i].segmentIndex
         dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
+        let _ = (repeat (each dataPtrs_now).pointee)
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
