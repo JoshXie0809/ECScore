@@ -8,7 +8,6 @@ public extension TypeToken {
     }
 }
 
-@inlinable
 @inline(__always)
 public func emplace<each T>(
     _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -22,12 +21,13 @@ public func emplace<each T>(
 public struct EmplaceEntityId {
     fileprivate let entity: EntityId
     fileprivate init(_ eid: EntityId) { self.entity = eid }
+    @inline(__always)
     init(entity: EntityId) { self.entity = entity }
 }
 
 public struct EmplaceEntities: ~Copyable {
-    private let entities: Platform_Entity
-    @usableFromInline 
+    @inline(__always)
+    fileprivate let entities: Platform_Entity
     init(_ entities: Platform_Entity) { self.entities = entities}
 
     @inline(__always)
@@ -42,8 +42,8 @@ public struct EmplaceEntities: ~Copyable {
 }
 
 public struct EmplaceStorage<T: Component> {
-    private var storage: PFStorageBox<T>
-    @usableFromInline
+    @inline(__always)
+    fileprivate var storage: PFStorageBox<T>
     init(_ st: PFStorageBox<T>) { self.storage = st}
     
     @inline(__always)

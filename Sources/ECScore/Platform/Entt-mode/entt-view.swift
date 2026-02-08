@@ -1,5 +1,4 @@
 // View (with closure)
-@inlinable
 @inline(__always)
 public func view<each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -20,7 +19,6 @@ public func view<each T, each WT, each WOT> (
 }
 
 // static View (with system body)
-@inlinable
 @inline(__always)
 public func view<S: SystemBody, each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -44,7 +42,6 @@ public func view<S: SystemBody, each T, each WT, each WOT> (
 
 // overloading view
 // ##############################################################################################################
-@inlinable
 @inline(__always)
 public func view<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -54,7 +51,6 @@ public func view<each T> (
     view(base: base, with: (repeat each with), withTag: (), withoutTag: (), action)
 }
 
-@inlinable
 @inline(__always)
 public func view<each T, each WT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -65,7 +61,6 @@ public func view<each T, each WT> (
     view(base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (), action)
 }
 
-@inlinable
 @inline(__always)
 public func view<each T, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -80,7 +75,6 @@ public func view<each T, each WOT> (
 // overloading static view
 // ##############################################################################################################
 
-@inlinable
 @inline(__always)
 public func view<S: SystemBody, each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -91,7 +85,6 @@ public func view<S: SystemBody, each T> (
     view(base: base, with: (repeat each with), withTag: (), withoutTag: (), body)
 }
 
-@inlinable
 @inline(__always)
 public func view<S: SystemBody, each T, each WT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -103,7 +96,6 @@ public func view<S: SystemBody, each T, each WT> (
     view(base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (), body)
 }
 
-@inlinable
 @inline(__always)
 public func view<S: SystemBody, each T, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,

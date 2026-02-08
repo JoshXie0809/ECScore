@@ -55,12 +55,10 @@ public protocol FastComponentProtocol: Component {
 @dynamicMemberLookup
 public struct ComponentProxy<T>: @unchecked Sendable {
     @inline(__always) 
-    @usableFromInline 
-    internal let pointer: UnsafeMutablePointer<T>
+    private let pointer: UnsafeMutablePointer<T>
 
     @inline(__always)
-    @_transparent
-    public init(pointer: UnsafeMutablePointer<T>) {
+    init(pointer: UnsafeMutablePointer<T>) {
         self.pointer = pointer
     }
 
@@ -68,10 +66,10 @@ public struct ComponentProxy<T>: @unchecked Sendable {
     // 當 T 符合 FastComponentProtocol 時，編譯器優先選擇這個具備具體 Proxy 型別的下標
     @inline(__always)
     public subscript<V>(dynamicMember keyPath: WritableKeyPath<T.ProxyMembers, V>) -> V where T: FastComponentProtocol {
-        @_transparent @inline(__always) _read {
+        @inline(__always) _read {
             yield T.ProxyMembers(ptr: pointer)[keyPath: keyPath]
         }
-        @_transparent @inline(__always) nonmutating _modify {
+        @inline(__always) nonmutating _modify {
             var fast = T.ProxyMembers(ptr: pointer)
             yield &fast[keyPath: keyPath]
         }
@@ -81,7 +79,7 @@ public struct ComponentProxy<T>: @unchecked Sendable {
     @_disfavoredOverload
     @inline(__always)
     public subscript<V>(dynamicMember keyPath: WritableKeyPath<T, V>) -> V {
-        @_transparent @inline(__always) _read { yield pointer.pointee[keyPath: keyPath] }
-        @_transparent @inline(__always) nonmutating _modify { yield &pointer.pointee[keyPath: keyPath] }
+        @inline(__always) _read { yield pointer.pointee[keyPath: keyPath] }
+        @inline(__always) nonmutating _modify { yield &pointer.pointee[keyPath: keyPath] }
     }
 }

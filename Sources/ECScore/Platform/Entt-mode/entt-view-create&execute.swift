@@ -12,11 +12,10 @@ func getStorages<each T>(
 
 @usableFromInline
 struct ViewPlan: Sendable {
-    let segmentIndex: Int
-    let mask: UInt64
+    @inline(__always) let segmentIndex: Int
+    @inline(__always) let mask: UInt64
 }
 
-@usableFromInline
 @inline(__always)
 func createViewPlans<each T, each WT, each WOT>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -65,14 +64,13 @@ func createViewPlans<each T, each WT, each WOT>(
     return (viewPlans, storages, wt_storages, wot_storages)
 }
 
-@usableFromInline
 @inline(__always)
 func executeViewPlans<each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
-    storages: (repeat PFStorageBox<each T>),
-    wt_storages: (repeat PFStorageBox<each WT>), 
-    wot_storages: (repeat PFStorageBox<each WOT>),
+    storages: borrowing (repeat PFStorageBox<each T>),
+    wt_storages: borrowing (repeat PFStorageBox<each WT>), 
+    wot_storages: borrowing (repeat PFStorageBox<each WOT>),
     _ action: (_ taskId: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
     let wot_allSegments = (repeat (each wot_storages).segments)
@@ -116,13 +114,12 @@ func executeViewPlans<each T, each WT, each WOT> (
     repeat _fixLifetime(each wot_storages)
 }
 
-@usableFromInline
+
 @inline(__always)
 func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
     minimum = min(minimum, new)
 }
 
-@usableFromInline
 @inline(__always)
 func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
@@ -137,14 +134,14 @@ public protocol SystemBody {
     func execute(taskId: Int, components: borrowing Components)
 }
 
-@usableFromInline
+
 @inline(__always)
 func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     viewPlans: ContiguousArray<ViewPlan>,
-    storages: (repeat PFStorageBox<each T>),
-    wt_storages: (repeat PFStorageBox<each WT>), 
-    wot_storages: (repeat PFStorageBox<each WOT>),
+    storages: borrowing (repeat PFStorageBox<each T>),
+    wt_storages: borrowing (repeat PFStorageBox<each WT>), 
+    wot_storages: borrowing (repeat PFStorageBox<each WOT>),
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) // 強制型別對齊
 {
