@@ -28,17 +28,13 @@ class FrameBuffer {
     }
 
     func renderToStringCount() -> Int {
+        let space = UInt8(ascii: " ")
         var result = 0
-        for y in 0..<height {
-            let start = y * width
-            let end = start + width
-            let line = buffer[start..<end]
-            
-            for x in line {
-                if x != UInt8(ascii: " ") { result += 1}
-            }
+        for ch in buffer {
+            if ch != space { result += 1 }
         }
         return result
     }
+
 }
 
