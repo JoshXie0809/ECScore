@@ -1,6 +1,6 @@
 import ECScore
 
-typealias DirectionComponent = VelocityComponent
+public typealias DirectionComponent = VelocityComponent
 struct MoreComplexSystem {
     let mcToken: (TypeToken<PositionComponent>, TypeToken<DirectionComponent>, TypeToken<DataComponent>)
 

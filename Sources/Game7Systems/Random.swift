@@ -1,6 +1,6 @@
 import Foundation
 
-struct Xoshiro128 {
+public struct Xoshiro128 {
     var state: (UInt32, UInt32, UInt32, UInt32)
 
     init(seed: UInt32) {

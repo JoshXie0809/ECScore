@@ -1,6 +1,6 @@
 import ECScore
 
-struct MoveSystem {
+public struct MoveSystem {
     let mvToken: (TypeToken<PositionComponent>, TypeToken<DirectionComponent>)
 
     init(base: borrowing VBPF) {
@@ -34,13 +34,13 @@ struct MoveSystem {
 
     }
 
-    struct MoveLogic: SystemBody {
-        @inline(__always) let dtSeconds: Float
+    public struct MoveLogic: SystemBody {
+        public let dtSeconds: Float
 
-        typealias Components = (ComponentProxy<PositionComponent>, ComponentProxy<DirectionComponent>)
+        public typealias Components = (ComponentProxy<PositionComponent>, ComponentProxy<DirectionComponent>)
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) {
+        public func execute(taskId: Int, components: Components) {
             let (pos, dir) = components
             pos.x += (dir.vx * dtSeconds)
             pos.y += (dir.vy * dtSeconds)

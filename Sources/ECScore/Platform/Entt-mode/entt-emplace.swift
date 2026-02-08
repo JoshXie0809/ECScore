@@ -8,6 +8,7 @@ public extension TypeToken {
     }
 }
 
+@inlinable
 @inline(__always)
 public func emplace<each T>(
     _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -19,22 +20,33 @@ public func emplace<each T>(
 }
 
 public struct EmplaceEntityId {
-    fileprivate let entity: EntityId
-    fileprivate init(_ eid: EntityId) { self.entity = eid }
+    @usableFromInline
+    internal let entity: EntityId
+    
+    @inlinable
     @inline(__always)
-    init(entity: EntityId) { self.entity = entity }
+    internal init(_ eid: EntityId) { self.entity = eid }
+
+    
+    
 }
 
 public struct EmplaceEntities: ~Copyable {
     @inline(__always)
-    fileprivate let entities: Platform_Entity
+    @usableFromInline
+    internal let entities: Platform_Entity
+
+    @inline(__always)
+    @usableFromInline
     init(_ entities: Platform_Entity) { self.entities = entities}
 
+    @inlinable
     @inline(__always)
     public func createEntity() -> EmplaceEntityId {
         EmplaceEntityId(entities.spawn(1)[0])
     }
 
+    @inlinable
     @inline(__always)
     public func destroyEntity(_ eeid: EmplaceEntityId) {
         entities.despawn(eeid.entity)
@@ -42,15 +54,21 @@ public struct EmplaceEntities: ~Copyable {
 }
 
 public struct EmplaceStorage<T: Component> {
+    @usableFromInline
     @inline(__always)
-    fileprivate var storage: PFStorageBox<T>
+    internal var storage: PFStorageBox<T>
+
+    @usableFromInline
+    @inline(__always)
     init(_ st: PFStorageBox<T>) { self.storage = st}
     
+    @inlinable
     @inline(__always)
     public mutating func addComponent(_ eeid: EmplaceEntityId, _ comp: T) {
         storage.add(eid: eeid.entity, component: comp)
     }
 
+    @inlinable
     @inline(__always)
     public mutating func removeComponent(_ eeid: EmplaceEntityId) {
         storage.remove(eid: eeid.entity)

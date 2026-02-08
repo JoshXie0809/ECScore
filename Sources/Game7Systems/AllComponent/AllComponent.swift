@@ -2,8 +2,8 @@ import ECScore
 
 // @@ ############################################################################## 1
 @FastProxy
-struct DataComponent: Component {
-    static let defaultSeed: UInt32 = 340_383
+public struct DataComponent: Component {
+    public static let defaultSeed: UInt32 = 340_383
 
     var thingy: Int = 0
     var dingy: Double = 0.0
@@ -29,7 +29,7 @@ struct DataComponent: Component {
 
 
 // @@ ############################################################################## 2
-struct EmptyComponent: Component {}
+public struct EmptyComponent: Component {}
 
 // @@ ############################################################################## 2
 
@@ -39,33 +39,33 @@ struct EmptyComponent: Component {}
 
 // @@ ############################################################################## 3
 
-enum PlayerType {
+public enum PlayerType {
     case npc
     case monster
     case hero
 }
 
 @FastProxy
-struct PlayerComponent: Component {
+public struct PlayerComponent: Component {
     var rng: Xoshiro128 = Xoshiro128(seed: 0)
     var type: PlayerType = .npc
 }
 
-enum StatusEffect {
+public enum StatusEffect {
     case spawn
     case dead
     case alive
 }
 
 @FastProxy
-struct HealthComponent: Component {
+public struct HealthComponent: Component {
     var hp: Int = 0
     var maxHp: Int = 0
     var status: StatusEffect = .spawn
 }
 
 @FastProxy
-struct DamageComponent: Component {
+public struct DamageComponent: Component {
     var atk: Int = 0
     var def: Int = 0
 }
@@ -78,7 +78,7 @@ struct DamageComponent: Component {
 // @@ ############################################################################## 4
 
 @FastProxy
-struct PositionComponent: Component {
+public struct PositionComponent: Component {
     var x: Float = 0
     var y: Float = 0
 }
@@ -92,7 +92,7 @@ struct PositionComponent: Component {
 // @@ ############################################################################## 5
 
 @FastProxy
-struct SpriteComponent: Component {
+public struct SpriteComponent: Component {
     var character: UInt8 = UInt8(ascii: " ")
 }
 
@@ -106,21 +106,21 @@ struct SpriteComponent: Component {
 
 // @FastProxy is same as below, but I don't implement a lot of edge case
 // so if has any error, just use defalut @DynamicLookup
-struct VelocityComponent: Component {
+public struct VelocityComponent: Component {
     var vx: Float = 1
     var vy: Float = 1
 }
 
 // or DIY
 extension VelocityComponent: FastComponentProtocol {
-    struct ProxyMembers: FastProxyPointer{
-        typealias T = VelocityComponent
+    public struct ProxyMembers: FastProxyPointer{
+        public typealias T = VelocityComponent
         @inline(__always) private let ptr: UnsafeMutablePointer<T>
         @inline(__always) 
-        init(ptr: UnsafeMutablePointer<T>) { self.ptr = ptr }
+        public init(ptr: UnsafeMutablePointer<T>) { self.ptr = ptr }
 
         @inline(__always) 
-        var vx: Float { 
+        public var vx: Float { 
             @inline(__always) _read {
                 yield ptr.pointee.vx
             }
@@ -130,7 +130,7 @@ extension VelocityComponent: FastComponentProtocol {
         }
 
         @inline(__always) 
-        var vy: Float { 
+        public var vy: Float { 
             @inline(__always) _read {
                 yield ptr.pointee.vy
             }

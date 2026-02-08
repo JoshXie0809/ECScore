@@ -1,6 +1,6 @@
 import ECScore
 
-struct HealthSystem {
+public struct HealthSystem {
     let hToken: TypeToken<HealthComponent>
 
     init(base: borrowing VBPF) {
@@ -34,12 +34,12 @@ struct HealthSystem {
         // }
     }
 
-    struct HealtLogic: SystemBody {
-        typealias Components = ComponentProxy<HealthComponent>
+    public struct HealtLogic: SystemBody {
+        public typealias Components = ComponentProxy<HealthComponent>
 
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) 
+        public func execute(taskId: Int, components: Components) 
         {
             let health = components
 

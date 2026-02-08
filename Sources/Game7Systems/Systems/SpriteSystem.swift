@@ -1,14 +1,14 @@
 import ECScore
 
-struct SpriteSystem {
-    struct SpriteCharacter {
+public struct SpriteSystem {
+    public struct SpriteCharacter {
         // 使用 UInt8(ascii:) 直接定義，對齊 C++ 的 char 效能
-        static let playerSprite: UInt8  = UInt8(ascii: "@")
-        static let monsterSprite: UInt8 = UInt8(ascii: "k")
-        static let npcSprite: UInt8     = UInt8(ascii: "h")
-        static let graveSprite: UInt8   = UInt8(ascii: "|")
-        static let spawnSprite: UInt8   = UInt8(ascii: "_")
-        static let nonSprite: UInt8     = UInt8(ascii: " ")
+        public static let playerSprite: UInt8  = UInt8(ascii: "@")
+        public static let monsterSprite: UInt8 = UInt8(ascii: "k")
+        public static let npcSprite: UInt8     = UInt8(ascii: "h")
+        public static let graveSprite: UInt8   = UInt8(ascii: "|")
+        public static let spawnSprite: UInt8   = UInt8(ascii: "_")
+        public static let nonSprite: UInt8     = UInt8(ascii: " ")
     }
 
     let spriteToken: (TypeToken<SpriteComponent>, TypeToken<PlayerComponent>, TypeToken<HealthComponent>)
@@ -42,12 +42,12 @@ struct SpriteSystem {
 
     }
 
-    struct SpriteLogic: SystemBody {
-        typealias Components = (ComponentProxy<SpriteComponent>, ComponentProxy<PlayerComponent>, ComponentProxy<HealthComponent>)
+    public struct SpriteLogic: SystemBody {
+        public typealias Components = (ComponentProxy<SpriteComponent>, ComponentProxy<PlayerComponent>, ComponentProxy<HealthComponent>)
 
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) 
+        public func execute(taskId: Int, components: Components) 
         {   
             let (sprite, player, health) = components
             sprite.character = switch health.status {
@@ -62,4 +62,6 @@ struct SpriteSystem {
             }
         }
     }
+
 }
+

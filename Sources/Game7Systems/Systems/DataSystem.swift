@@ -1,6 +1,6 @@
 import ECScore
 
-struct DataSystem {
+public struct DataSystem {
     let dataToken: TypeToken<DataComponent>
 
     init(base: borrowing VBPF) {
@@ -24,13 +24,13 @@ struct DataSystem {
         // }
     }
 
-    struct DataLogic: SystemBody {
-        @inline(__always) let dtSeconds: Double
+    public struct DataLogic: SystemBody {
+        public  let dtSeconds: Double
 
-        typealias Components = ComponentProxy<DataComponent>
+        public typealias Components = ComponentProxy<DataComponent>
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) {
+        public func execute(taskId: Int, components: Components) {
 
             let data = components
             data.thingy = (data.thingy + 1) % 1_000_000

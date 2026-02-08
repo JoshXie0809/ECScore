@@ -16,6 +16,8 @@ struct ViewPlan: Sendable {
     @inline(__always) let mask: UInt64
 }
 
+
+@usableFromInline
 @inline(__always)
 func createViewPlans<each T, each WT, each WOT>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -47,6 +49,7 @@ func createViewPlans<each T, each WT, each WOT>(
     
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
+    
     for i in stride(from: global_First, through: global_Last, by: 1) {
         var segment_i_mask = SparseSet_L2_BaseMask
         repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.sparse.blockMask
@@ -64,6 +67,7 @@ func createViewPlans<each T, each WT, each WOT>(
     return (viewPlans, storages, wt_storages, wot_storages)
 }
 
+@usableFromInline
 @inline(__always)
 func executeViewPlans<each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
@@ -115,11 +119,13 @@ func executeViewPlans<each T, each WT, each WOT> (
 }
 
 
+@usableFromInline
 @inline(__always)
 func minHelper(_ minimum: inout Int, _ new: borrowing Int) {
     minimum = min(minimum, new)
 }
 
+@usableFromInline
 @inline(__always)
 func maxHelper(_ maximum: inout Int, _ new: borrowing Int) {
     maximum = max(maximum, new)
@@ -135,6 +141,7 @@ public protocol SystemBody {
 }
 
 
+@usableFromInline
 @inline(__always)
 func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,

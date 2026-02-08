@@ -1,6 +1,6 @@
 import ECScore
 
-struct DmgSystem {
+public struct DmgSystem {
     let dmgToken: (TypeToken<HealthComponent>, TypeToken<DamageComponent>)
 
     init(base: borrowing VBPF) {
@@ -22,12 +22,12 @@ struct DmgSystem {
         // }
     }
 
-    struct DamageLogic: SystemBody {
-        typealias Components = (ComponentProxy<HealthComponent>, ComponentProxy<DamageComponent>)
+    public struct DamageLogic: SystemBody {
+        public typealias Components = (ComponentProxy<HealthComponent>, ComponentProxy<DamageComponent>)
         
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) {
+        public func execute(taskId: Int, components: Components) {
 
             let (health, damage) = components
             let totalDamage = damage.atk - damage.def
