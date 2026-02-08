@@ -84,16 +84,23 @@ func executeViewPlans<each T, each WT, each WOT> (
         let wot_allSegment = (repeat (each wot_allSegments).advanced(by: segmentIndex).pointee)
 
         // ###################################################### Sparse_Set_L2_i
-        while blockMask != 0 { 
-            let pageIdx = blockMask.trailingZeroBitCount
+        var now_pageIdx = blockMask.trailingZeroBitCount
+        blockMask &= (blockMask - 1) 
+
+        while blockMask != 0 {
+            let pageIdx = now_pageIdx
+            now_pageIdx = blockMask.trailingZeroBitCount
+            blockMask &= (blockMask - 1)
+
             let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
             var pageMask = SparseSet_L2_BaseMask
             repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
             repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
             repeat pageMask &= ~((each wot_allSegment).pointee.sparse.pageOnBlock[pageIdx].pageMask)
-
+            
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
+                pageMask &= (pageMask - 1)
                 // do action here
                 // ############################################################################
                 action(0, 
@@ -102,14 +109,31 @@ func executeViewPlans<each T, each WT, each WOT> (
                     )
                 )
                 // ############################################################################
-                // end
-                pageMask &= (pageMask - 1)
             }
-            // end
-            blockMask &= (blockMask - 1)
         }
+
+        let pageIdx = now_pageIdx
+        let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+        var pageMask = SparseSet_L2_BaseMask
+        repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+        repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+        repeat pageMask &= ~((each wot_allSegment).pointee.sparse.pageOnBlock[pageIdx].pageMask)
+        
+        while pageMask != 0 {
+            let slotIdx = pageMask.trailingZeroBitCount
+            pageMask &= (pageMask - 1)
+            // ############################################################################
+            action(0, 
+                repeat ComponentProxy(
+                    pointer: (each dataPtrs).advanced(by: Int((each entityOnPagePtrs).ptr.advanced(by: slotIdx).pointee.compArrIdx))
+                )
+            )
+            // ############################################################################
+        }
+
         // ###################################################### Sparse_Set_L2_i
     }
+
     repeat _fixLifetime(each storages)
     repeat _fixLifetime(each wt_storages)
     repeat _fixLifetime(each wot_storages)
@@ -170,9 +194,15 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         let wt_pagePtrs = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex))
         let wot_allSegment = (repeat (each wot_allSegments).advanced(by: segmentIndex).pointee)
 
-    // ###################################################### Sparse_Set_L2_i
+        // ###################################################### Sparse_Set_L2_i
+        var now_pageIdx = blockMask.trailingZeroBitCount
+        blockMask &= (blockMask - 1) 
+
         while blockMask != 0 { 
-            let pageIdx = blockMask.trailingZeroBitCount
+            let pageIdx = now_pageIdx
+            now_pageIdx = blockMask.trailingZeroBitCount
+
+            blockMask &= (blockMask - 1)
             let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
             var pageMask = SparseSet_L2_BaseMask
             repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
@@ -181,6 +211,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
+                pageMask &= (pageMask - 1)
                 // ############################################################################
                 // 這裡發生了改變：我們構建一個 Tuple 傳給 body.execute
                 // 因為 S 是具體的 Struct，編譯器會在這裡直接展開代碼 (Inline)
@@ -193,10 +224,32 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
                     )
                 )
                 // ############################################################################
-                pageMask &= (pageMask - 1)
+
             }
-            blockMask &= (blockMask - 1)
         }
+
+        let pageIdx = now_pageIdx
+        let entityOnPagePtrs = (repeat (each pagePtrs).getEntityOnPagePointer_Uncheck(pageIdx))
+        var pageMask = SparseSet_L2_BaseMask
+        repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+        repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee.pageMask
+        repeat pageMask &= ~((each wot_allSegment).pointee.sparse.pageOnBlock[pageIdx].pageMask)
+
+        while pageMask != 0 {
+            let slotIdx = pageMask.trailingZeroBitCount
+            pageMask &= (pageMask - 1)
+            // ############################################################################
+            body.execute(
+                taskId: 0, 
+                components: ( 
+                    repeat ComponentProxy(
+                        pointer: (each dataPtrs).advanced(by: Int((each entityOnPagePtrs).ptr.advanced(by: slotIdx).pointee.compArrIdx))
+                    )
+                )
+            )
+            // ############################################################################
+        }
+
         // ###################################################### Sparse_Set_L2_i
     }
     repeat _fixLifetime(each storages)
