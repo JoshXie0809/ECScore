@@ -33,7 +33,7 @@ struct Block64_L2 { // Layer 2
         let (pageIdx, slotIdx) = (index >> 6, index & 63)
 
         // check whether or not blockId is in 0~63
-        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")
+        assert(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")
         let bit = UInt64(1) << pageIdx
         if blockMask & bit == 0 { addPage(bit)  } // active page
 
@@ -44,9 +44,9 @@ struct Block64_L2 { // Layer 2
     @inline(__always)
     mutating func removeEntityOnBlock(_ index: Int) {
         let (pageIdx, slotIdx) = (index >> 6, index & 63)
-        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")
+        assert(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")
         let bit = UInt64(1) << pageIdx
-        precondition(blockMask & bit != 0, "remove entity on inactive page")
+        assert(blockMask & bit != 0, "remove entity on inactive page")
 
         pageOnBlock[pageIdx].remove(slotIdx) // fn will check whether or not pageId is in 0~63
         activeEntityCount -= 1
@@ -73,9 +73,9 @@ struct Block64_L2 { // Layer 2
     mutating func updateComponentArrayIdx(_ index: Int, _ updateFn: (inout SparseSetEntry) -> Void ) {
         let (pageIdx, slotIdx) = (index >> 6, index & 63)
 
-        precondition(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")        
+        assert(pageIdx >= 0 && pageIdx < 64, "invalid Block64_L2 index")        
         let bit = UInt64(1) << pageIdx
-        precondition(blockMask & bit != 0, "update entity on inactive page")
+        assert(blockMask & bit != 0, "update entity on inactive page")
 
         pageOnBlock[pageIdx].update(slotIdx, updateFn)
     }

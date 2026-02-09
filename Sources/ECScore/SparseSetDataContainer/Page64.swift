@@ -1,13 +1,23 @@
-typealias BlockOffset = Int16
-typealias CompArrayIndex = Int16
+public typealias BlockOffset = Int16
+public typealias CompArrayIndex = Int16
 
-struct SparseSetEntry {
-    @inline(__always) var compArrIdx: CompArrayIndex // 紀錄在 dense Array 4096 中的第幾個位置
+public struct SparseSetEntry: Sendable {
+    // 必須是 public 或是 @usableFromInline 才能被 @inlinable 存取
+    public var compArrIdx: CompArrayIndex 
+    
+    @inline(__always)
+    public init(compArrIdx: CompArrayIndex) {
+        self.compArrIdx = compArrIdx
+    }
 }
 
-struct BlockId {
-    @inline(__always) var offset: BlockOffset
-    @inline(__always) var version: Int // gen is for validation
+public struct BlockId: Sendable {
+    public var offset: BlockOffset
+    
+    @inline(__always)
+    public init(offset: BlockOffset) {
+        self.offset = offset
+    }
 }
 
 func printBit(_ val: UInt64) {

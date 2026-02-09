@@ -85,4 +85,9 @@ public class Entities {
     func getVersion(_ id: Int) -> Int {
         return versions[id]
     }
+
+    @usableFromInline
+    func getActiveEntitiesMask_Uncheck(_ block: Int) -> UInt64 {
+        isActive[block]
+    } 
 }

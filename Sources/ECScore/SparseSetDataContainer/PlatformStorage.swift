@@ -237,11 +237,11 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
     
     @inline(__always)
     func get_SparseSetL2_PagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
-        PagePtr(ptr: handle.pfstorage.segments[blockIdx].pointee.sparse.getPageRawPointer())
+        PagePtr(ptr: handle.pfstorage.segments[blockIdx].pointee.getPageMasksPointer())
     }
 
     @inline(__always)
-    var segments: UnsafePointer<UnsafeMutablePointer<SparseSet_L2<T>>> {
+    var segments: UnsafePointer<UnsafeMutablePointer<SparseSet_L2_2<T>>> {
         handle.pfstorage.getSegmentsRawPointer_Internal()
     }
 

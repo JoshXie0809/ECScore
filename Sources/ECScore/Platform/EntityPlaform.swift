@@ -3,10 +3,12 @@ public protocol Platform_Entity: Platform, Component, AnyObject {
     func despawn(_: EntityId)
     func forEachLiveId(_ body: (EntityId) -> Void)
     func isValid(_ eid: EntityId) -> Bool
+    func getActiveEntitiesMask_Uncheck(_ block: Int) -> UInt64
     var maxId: Int { get }
 }
 
 public class EntityPlatForm_Ver0: Platform_Entity, Component {
+    @inline(__always)
     private var entities = Entities()
     public init() {}
 
@@ -27,6 +29,11 @@ public class EntityPlatForm_Ver0: Platform_Entity, Component {
     public func despawn(_ eid: EntityId) {
         entities.despawn(eid)
     }
+
+    @inline(__always)
+    public func getActiveEntitiesMask_Uncheck(_ block: Int) -> UInt64 {
+        entities.getActiveEntitiesMask_Uncheck(block)
+    } 
 
     public static func createPFStorage() -> any AnyPlatformStorage {
         return PFStorageBox(PFStorageHandle<Self>())

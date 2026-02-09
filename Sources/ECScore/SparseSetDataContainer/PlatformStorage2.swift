@@ -1,19 +1,19 @@
 struct PFStorage<T: Component>: ~Copyable {
     // this is not nill version
-    private(set) var segments: ContiguousArray<UnsafeMutablePointer<SparseSet_L2<T>>>
+    private(set) var segments: ContiguousArray<UnsafeMutablePointer<SparseSet_L2_2<T>>>
     private(set) var activeEntityCount = 0
     private(set) var firstActiveSegment: Int = Int.max
     private(set) var lastActiveSegment: Int = Int.min
     private(set) var activeSegmentCount: Int = 0
 
-    public let sentinelPtr: UnsafeMutablePointer<SparseSet_L2<T>>
+    public let sentinelPtr: UnsafeMutablePointer<SparseSet_L2_2<T>>
 
     var storageType: any Component.Type { T.self }
     var segmentCount : Int { segments.count }
     
     init() {
-        self.sentinelPtr = UnsafeMutablePointer<SparseSet_L2<T>>.allocate(capacity: 1)
-        self.sentinelPtr.initialize(to: SparseSet_L2<T>()) 
+        self.sentinelPtr = UnsafeMutablePointer<SparseSet_L2_2<T>>.allocate(capacity: 1)
+        self.sentinelPtr.initialize(to: SparseSet_L2_2<T>()) 
         
         self.segments = ContiguousArray()
         self.segments.reserveCapacity(1024) // init some place
@@ -33,15 +33,15 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inline(__always)
-    private func allocatePage() -> UnsafeMutablePointer<SparseSet_L2<T>> {
-        let ptr = UnsafeMutablePointer<SparseSet_L2<T>>.allocate(capacity: 1)
-        ptr.initialize(to: SparseSet_L2<T>())
+    private func allocatePage() -> UnsafeMutablePointer<SparseSet_L2_2<T>> {
+        let ptr = UnsafeMutablePointer<SparseSet_L2_2<T>>.allocate(capacity: 1)
+        ptr.initialize(to: SparseSet_L2_2<T>())
         return ptr
     }
 
     // 輔助：釋放 Page
     @inline(__always)
-    private func freePage(_ ptr: UnsafeMutablePointer<SparseSet_L2<T>>) {
+    private func freePage(_ ptr: UnsafeMutablePointer<SparseSet_L2_2<T>>) {
         ptr.deinitialize(count: 1)
         ptr.deallocate()
     }
@@ -161,7 +161,7 @@ struct PFStorage<T: Component>: ~Copyable {
         
         let ptr = segments[blockIdx]
         if ptr == sentinelPtr { return nil }        
-        return ptr.pointee.get(offset: offset, version: eid.version)
+        return ptr.pointee.components[offset]
     }
 
     @inlinable
@@ -191,7 +191,7 @@ struct PFStorage<T: Component>: ~Copyable {
             return nil
         }
         
-        return segmentPtr.pointee.get(offset: offset, version: eid.version)
+        return segmentPtr.pointee.components[offset]
     }
 
 
@@ -212,7 +212,7 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
-    func getSegmentsRawPointer_Internal() -> UnsafePointer<UnsafeMutablePointer<SparseSet_L2<T>>> {
+    func getSegmentsRawPointer_Internal() -> UnsafePointer<UnsafeMutablePointer<SparseSet_L2_2<T>>> {
         // 【核心優化成果】
         // 現在這裡回傳的是「指標的陣列」，而不是「Optional 的陣列」
         // 在 C 語言層面，這就是 T** (pointer to pointer)

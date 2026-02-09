@@ -12,6 +12,7 @@ public func view<each T, each WT, each WOT> (
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
     if vps.isEmpty { return }
     executeViewPlans(
+        entities: base.entities,
         viewPlans: vps, 
         storages: (repeat each storages), 
         wt_storages: (repeat each wts), 
@@ -35,6 +36,7 @@ public func view<S: SystemBody, each T, each WT, each WOT> (
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
     if vps.isEmpty { return }
     executeViewPlans(
+        entities: base.entities,
         viewPlans: vps, 
         storages: (repeat each storages), 
         wt_storages: (repeat each wts), 
