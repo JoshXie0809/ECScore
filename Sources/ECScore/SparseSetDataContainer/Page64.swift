@@ -33,9 +33,9 @@ struct Page64: CustomStringConvertible {
 
     @inline(__always)
     mutating func add(_ index: Int, _ sparseEntry: SparseSetEntry) {
-        precondition(index >= 0 && index < 64, "invalid Page64 index")
+        assert(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
-        precondition(pageMask & bit == 0, "double add on Page64")
+        assert(pageMask & bit == 0, "double add on Page64")
 
         entityOnPage[index] = sparseEntry
         pageMask |= bit
@@ -44,9 +44,9 @@ struct Page64: CustomStringConvertible {
 
     @inline(__always)
     mutating func remove(_ index: Int) {
-        precondition(index >= 0 && index < 64, "invalid Page64 index")
+        assert(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
-        precondition(pageMask & bit != 0, "remove inactive slot")
+        assert(pageMask & bit != 0, "remove inactive slot")
         
         // entityOnPage[index] = SparseEntry(denseIdx: -1) // inactive
         pageMask &= ~bit
@@ -55,9 +55,9 @@ struct Page64: CustomStringConvertible {
 
     @inline(__always)
     mutating func update(_ index: Int, _ updateFn: (inout SparseSetEntry) -> Void ) {
-        precondition(index >= 0 && index < 64, "invalid Page64 index")
+        assert(index >= 0 && index < 64, "invalid Page64 index")
         let bit = UInt64(1) << index
-        precondition(pageMask & bit != 0, "update inactive slot")
+        assert(pageMask & bit != 0, "update inactive slot")
 
         updateFn(&entityOnPage[index])
     }
