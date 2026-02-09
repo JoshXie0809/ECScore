@@ -73,9 +73,10 @@ func executeViewPlans<each T, each WT, each WOT> (
     wot_storages: borrowing (repeat PFStorageBox<each WOT>),
     _ action: (_ taskId: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
-    let wot_allSegments = (repeat (each wot_storages).segments)
     let count = viewPlans.count
-
+    guard count != 0 else { return }
+    
+    let wot_allSegments = (repeat (each wot_storages).segments)
     var blockMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
@@ -260,8 +261,10 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     _ body: borrowing S
 ) where S.Components == (repeat ComponentProxy<each T>) // 強制型別對齊
 {
-    let wot_allSegments = (repeat (each wot_storages).segments)
     let count = viewPlans.count
+    guard count != 0 else { return }
+    
+    let wot_allSegments = (repeat (each wot_storages).segments)
 
     var blockMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
