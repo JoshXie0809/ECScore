@@ -216,10 +216,10 @@
 //     let count = 50000
 //     let eids = entities.spawn(count)
     
-//     // 1. 批次寫入測試
-//     for i in 0..<count {
-//         storage.add(eid: eids[i], component: Position(x: Float(i), y: 0))
-//     }
+// //     // 1. 批次寫入測試
+// //     for i in 0..<count {
+// //         storage.add(eid: eids[i], component: Position(x: Float(i), y: 0))
+// //     }
     
 //     // 2. 測量全量遍歷耗時
 //     let start = DispatchTime.now()
@@ -236,7 +236,7 @@
 //     let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
 //     let timeInterval = Double(nanoTime) / 1_000_000
     
-//     print("50,000 entities traversal time: \(timeInterval) ms")
+// //     print("50,000 entities traversal time: \(timeInterval) ms")
     
 //     // 驗證計算結果正確
 //     #expect(sum > 0)
