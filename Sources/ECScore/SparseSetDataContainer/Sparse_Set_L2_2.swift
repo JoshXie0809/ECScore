@@ -100,7 +100,17 @@ public struct SparseSet_L2_2<T: Component> {
 
     /// 提供連續的 SparseEntries 指標，供快速索引轉換
     @inlinable
-    public func getSparseEntriesPointer() -> UnsafePointer<SparseSetEntry> {
-        return sparseEntries.withUnsafeBufferPointer { $0.baseAddress! }
+    public func getSparseEntriesPointer() -> SSEPtr<T>  {
+        return SSEPtr(ptr: sparseEntries.withUnsafeBufferPointer { $0.baseAddress! })
+    }
+}
+
+public struct SSEPtr<T> {
+    @usableFromInline
+    let ptr: UnsafePointer<SparseSetEntry>
+    
+    @usableFromInline
+    init(ptr: UnsafePointer<SparseSetEntry>) {
+        self.ptr = ptr
     }
 }

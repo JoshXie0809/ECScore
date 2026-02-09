@@ -86,7 +86,8 @@ func executeViewPlans<each T, each WT, each WOT> (
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
-
+    var sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
+    
     let _ = (repeat (each pagePtrs_now).ptr.pointee)
     let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
     let _ = (repeat (each wot_allSegment_now).pointee)
@@ -98,6 +99,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         let wt_pagePtrs = wt_pagePtrs_now
         let wot_allSegment = wot_allSegment_now
         let blockIdx = segmentIndex_now
+        let sparsePtrs = sparsePtrs_now
 
         // update next
         blockMask_now = viewPlans[i].mask
@@ -108,6 +110,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
+        sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
         let _ = (repeat (each pagePtrs_now).ptr.pointee)
         let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
@@ -131,11 +134,16 @@ func executeViewPlans<each T, each WT, each WOT> (
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
                 pageMask &= (pageMask - 1)
+
+                let entityOffset = (pageIdx << 6) + slotIdx
+
                 // do action here
                 // ############################################################################
                 action(0, 
                     repeat ComponentProxy(
-                        pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                        pointer: (each dataPtrs).advanced(
+                            by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                        )
                     )
                 )
                 // ############################################################################
@@ -152,10 +160,14 @@ func executeViewPlans<each T, each WT, each WOT> (
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
+            let entityOffset = (pageIdx << 6) + slotIdx
+
             // ############################################################################
             action(0, 
                 repeat ComponentProxy(
-                    pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                    pointer: (each dataPtrs).advanced(
+                        by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                    )
                 )
             )
             // ############################################################################
@@ -170,6 +182,8 @@ func executeViewPlans<each T, each WT, each WOT> (
     let wt_pagePtrs = wt_pagePtrs_now
     let wot_allSegment = wot_allSegment_now
     let blockIdx = segmentIndex_now
+    let sparsePtrs = sparsePtrs_now
+
 
     var now_pageIdx = blockMask.trailingZeroBitCount
     blockMask &= (blockMask - 1) 
@@ -188,9 +202,13 @@ func executeViewPlans<each T, each WT, each WOT> (
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
+            let entityOffset = (pageIdx << 6) + slotIdx
+
             action(0, 
                 repeat ComponentProxy(
-                    pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                    pointer: (each dataPtrs).advanced(
+                        by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                    )
                 )
             )
         }
@@ -205,10 +223,14 @@ func executeViewPlans<each T, each WT, each WOT> (
     
     while pageMask != 0 {
         let slotIdx = pageMask.trailingZeroBitCount
+        let entityOffset = (pageIdx << 6) + slotIdx
+
         pageMask &= (pageMask - 1)
         action(0, 
             repeat ComponentProxy(
-                pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                pointer: (each dataPtrs).advanced(
+                    by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                )
             )
         )
     }
@@ -278,6 +300,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
+    var sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
     let _ = (repeat (each pagePtrs_now).ptr.pointee)
     let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
@@ -290,6 +313,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         let wt_pagePtrs = wt_pagePtrs_now
         let wot_allSegment = wot_allSegment_now
         let blockIdx = segmentIndex_now
+        let sparsePtrs = sparsePtrs_now
 
         // update next
         blockMask_now = viewPlans[i].mask
@@ -300,6 +324,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
+        sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
         let _ = (repeat (each pagePtrs_now).ptr.pointee)
         let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
@@ -324,6 +349,8 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
                 pageMask &= (pageMask - 1)
+                let entityOffset = (pageIdx << 6) + slotIdx
+
                 // ############################################################################
                 // 這裡發生了改變：我們構建一個 Tuple 傳給 body.execute
                 // 因為 S 是具體的 Struct，編譯器會在這裡直接展開代碼 (Inline)
@@ -331,7 +358,9 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
                     taskId: 0, 
                     components: ( 
                         repeat ComponentProxy(
-                            pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                            pointer: (each dataPtrs).advanced(
+                                by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                            )
                         )
                     )
                 )
@@ -350,12 +379,16 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
+            let entityOffset = (pageIdx << 6) + slotIdx
+
             // ############################################################################
             body.execute(
                 taskId: 0, 
                 components: ( 
                     repeat ComponentProxy(
-                        pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                        pointer: (each dataPtrs).advanced(
+                            by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                        )
                     )
                 )
             )
@@ -371,6 +404,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     let wt_pagePtrs = wt_pagePtrs_now
     let wot_allSegment = wot_allSegment_now
     let blockIdx = segmentIndex_now
+    let sparsePtrs = sparsePtrs_now
 
     // ###################################################### Sparse_Set_L2_i
     var now_pageIdx = blockMask.trailingZeroBitCount
@@ -390,18 +424,17 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
-            // ############################################################################
-            // 這裡發生了改變：我們構建一個 Tuple 傳給 body.execute
-            // 因為 S 是具體的 Struct，編譯器會在這裡直接展開代碼 (Inline)
+            let entityOffset = (pageIdx << 6) + slotIdx
             body.execute(
                 taskId: 0, 
                 components: ( 
                     repeat ComponentProxy(
-                        pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                        pointer: (each dataPtrs).advanced(
+                            by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                        )
                     )
                 )
             )
-            // ############################################################################
 
         }
     }
@@ -416,16 +449,17 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     while pageMask != 0 {
         let slotIdx = pageMask.trailingZeroBitCount
         pageMask &= (pageMask - 1)
-        // ############################################################################
+        let entityOffset = (pageIdx << 6) + slotIdx
         body.execute(
             taskId: 0, 
             components: ( 
                 repeat ComponentProxy(
-                    pointer: (each dataPtrs).advanced(by: blockIdx << 6 + slotIdx)
+                    pointer: (each dataPtrs).advanced(
+                        by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
+                    )
                 )
             )
         )
-        // ############################################################################
     }
 
     // ###################################################### Sparse_Set_L2_i

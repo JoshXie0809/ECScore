@@ -129,7 +129,6 @@ public func view<T>(
     _ action: (_: Int, _: ComponentProxy<T>) -> Void
 ) {
     let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
-    
     for vp in vps {
         let blockId = vp.segmentIndex
         let count = storage.segments[blockId].pointee.count

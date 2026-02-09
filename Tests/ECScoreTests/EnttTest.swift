@@ -203,7 +203,9 @@ struct BattleTag: Component {}
     emplace(base, tokens: ttokens) { (entities, pack) in
         var (pos, vel, dmg, def, hp, charStatus, battag,
             a, b, c, d, etag) = pack.storages
+        
         let entityCount = 4096
+
         for _ in 0..<entityCount {
             let e = entities.createEntity()
             let roll = Int.random(in: 1...150)
@@ -256,7 +258,8 @@ struct BattleTag: Component {}
     // ###################################
 
     let start = clock.now
-    for _ in 0..<2 {
+
+    for _ in 0..<5 {
         // move sys
         view(base: base, with: ttokens2) { 
             _, pos, vel in
@@ -287,7 +290,7 @@ struct BattleTag: Component {}
             else {
                 switch charStatus.status {
                 case .dead:
-                    health.hp = 0
+                    health.hp = -1
                 case .deadEdge:
                     charStatus.status = .alive
                 case .alive:
