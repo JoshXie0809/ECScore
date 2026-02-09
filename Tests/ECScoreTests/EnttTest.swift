@@ -193,14 +193,6 @@ struct BattleTag: Component {}
 // }
 
 
-
-
-
-
-
-
-
-
 @Test func emplaceAndViewTest() async throws {
     let base = makeBootedPlatform()
     let ttokens = interop(

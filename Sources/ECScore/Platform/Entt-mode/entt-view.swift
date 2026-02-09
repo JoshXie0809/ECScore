@@ -62,7 +62,7 @@ public func view<each T> (
 public func view<each T, each WT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    withTag: (repeat TypeToken<each WT>),
+    withTag: borrowing (repeat TypeToken<each WT>),
     _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
     view(base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (), action)
@@ -73,7 +73,7 @@ public func view<each T, each WT> (
 public func view<each T, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    withoutTag: (repeat TypeToken<each WOT>),
+    withoutTag: borrowing (repeat TypeToken<each WOT>),
     _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
     view(base: base, with: (repeat each with), withTag: (), withoutTag: (repeat each withoutTag), action)

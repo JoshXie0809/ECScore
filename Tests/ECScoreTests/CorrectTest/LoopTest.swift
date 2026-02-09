@@ -268,3 +268,33 @@ struct Xoshiro128 {
         return self.next() % range + l
     }
 }
+
+@Test func singleComponentTest() async throws {
+    let base = makeBootedPlatform()
+    let pToken = interop(base, Position.self)
+    let seed = UInt32.random(in: 0...18766)
+    var rng = Xoshiro128(seed: seed)
+
+    var count = 0
+    emplace(base, tokens: pToken) {
+        entities, pack in
+        var pSt = pack.storages
+
+        for _ in 0..<1_000_000 {
+            let entity = entities.createEntity()
+            let roll = rng.next() & (4096 * 4 - 1)
+            if roll == 0 { 
+                count += 1
+                pSt.addComponent(entity, Position(x: 1.23, y: 3.23)) 
+            }
+        }
+    }
+    var vc = 0
+    view(base: base, with: pToken) {
+        _, pos in
+        vc += 1
+    }
+
+    print(seed, count)
+    #expect(count == vc)
+}

@@ -213,7 +213,7 @@ func testForceSwapLogic() async throws {
 @Test func testLargeScalePerformance() async throws {
     var storage = PFStorage<Position>()
     let entities = Entities()
-    let count = 50000
+    let count = 50_000
     let eids = entities.spawn(count)
     
     // 1. 批次寫入測試
@@ -222,10 +222,10 @@ func testForceSwapLogic() async throws {
     }
     
     // 2. 測量全量遍歷耗時
-    let start = DispatchTime.now()
-    
+    let start = DispatchTime.now()    
     var sum: Float = 0
-    // 使用你最快的「非 nil segment 遍歷」邏輯
+
+    
     for segment in storage.segments {
         for i in 0..<segment.pointee.count {
             sum += segment.pointee.components[i].x
@@ -239,7 +239,7 @@ func testForceSwapLogic() async throws {
     print("50,000 entities traversal time: \(timeInterval) ms")
     
     // 驗證計算結果正確
-    #expect(sum > 0)
+    #expect( abs(sum - 25_000 * 50_000) / 50_000 < 1  )
 }
 
 @Test func doubleAddCheck() async throws {
