@@ -80,12 +80,10 @@ func executeViewPlans<each T, each WT, each WOT> (
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
     let _ = (repeat (each dataPtrs_now).pointee)
+
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-    let _ = (repeat (each pagePtrs_now).ptr.pointee)
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-    let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
-    let _ = (repeat (each wot_allSegment_now).pointee)
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
@@ -99,17 +97,14 @@ func executeViewPlans<each T, each WT, each WOT> (
         segmentIndex_now = viewPlans[i].segmentIndex
         dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
         let _ = (repeat (each dataPtrs_now).pointee)
+        
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-        let _ = (repeat (each pagePtrs_now).ptr.pointee)
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-        let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
-        let _ = (repeat (each wot_allSegment_now).pointee)
-
 
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
-        blockMask &= (blockMask - 1) 
+        blockMask &= (blockMask - 1)
 
         while blockMask != 0 {
             let pageIdx = now_pageIdx
@@ -264,12 +259,10 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
     let _ = (repeat (each dataPtrs_now).pointee)
+
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-    let _ = (repeat (each pagePtrs_now).ptr.pointee)
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-    let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
-    let _ = (repeat (each wot_allSegment_now).pointee)
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
@@ -283,12 +276,10 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         segmentIndex_now = viewPlans[i].segmentIndex
         dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
         let _ = (repeat (each dataPtrs_now).pointee)
+
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-        let _ = (repeat (each pagePtrs_now).ptr.pointee)
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-        let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
-        let _ = (repeat (each wot_allSegment_now).pointee)
         
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
