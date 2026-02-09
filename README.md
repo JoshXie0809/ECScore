@@ -90,10 +90,15 @@ view(base: base, with: (), withTag: includeTokens, withoutTag: excludeTokens) { 
     // ...
 }
 
-// more static view useages can be find in "Sources/Game7Systems/Systems/*.swift"
-// more query  view useages can be find in "Tests/ECScoreTests/CorrectTest/LoopTest.swift
 
 ```
+
+more static view useages can be find in 
+https://github.com/JoshXie0809/ECScore/tree/main/Sources/Game7Systems/Systems
+
+
+more query  view useages can be find in 
+https://github.com/JoshXie0809/ECScore/blob/main/Tests/ECScoreTests/CorrectTest/LoopTest.swift
 
 ## Performance Notes
 
