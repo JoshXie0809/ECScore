@@ -1,3 +1,5 @@
+let HardwareBufferPadding = 16
+
 struct SparseSet_L2<T: Component> {
     private(set) var sparse: Block64_L2
     private(set) var components : ContiguousArray<T>
@@ -10,10 +12,10 @@ struct SparseSet_L2<T: Component> {
 
     init() {
         self.components = ContiguousArray<T>()
-        self.components.reserveCapacity(4096)
+        self.components.reserveCapacity(4096 + HardwareBufferPadding)
         self.sparse = Block64_L2()
         self.reverseEntities = ContiguousArray<BlockId>()
-        self.reverseEntities.reserveCapacity(4096)
+        self.reverseEntities.reserveCapacity(4096 + HardwareBufferPadding)
     }
 
     @inlinable

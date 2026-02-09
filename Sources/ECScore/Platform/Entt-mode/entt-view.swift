@@ -10,7 +10,7 @@ public func view<each T, each WT, each WOT> (
     _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
 ) {
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
-    if vps.count == 0 { return }
+    if vps.isEmpty { return }
     executeViewPlans(
         viewPlans: vps, 
         storages: (repeat each storages), 
@@ -33,7 +33,7 @@ public func view<S: SystemBody, each T, each WT, each WOT> (
 ) where S.Components == (repeat ComponentProxy<each T>) 
 {
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
-    if vps.count == 0 { return }
+    if vps.isEmpty { return }
     executeViewPlans(
         viewPlans: vps, 
         storages: (repeat each storages), 
