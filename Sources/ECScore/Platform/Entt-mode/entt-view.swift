@@ -121,50 +121,52 @@ public func view<S: SystemBody, each T, each WOT> (
 }
 // ##############################################################################################################
 
-// single componet
-@inline(__always)
-public func view<T>(
-    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, 
-    with: TypeToken<T>,
-    _ action: (_: Int, _: ComponentProxy<T>) -> Void
-) {
-    let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
-    for vp in vps {
-        let blockId = vp.segmentIndex
-        let count = storage.segments[blockId].pointee.count
-        let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
 
-        for i in 0..<count {
-            // taskId = 0
-            action(0, ComponentProxy<T>(pointer: dataPtr.advanced(by: i) ))
-        }
-    }
 
-    _fixLifetime(storage)
-}
+// // single componet
+// @inline(__always)
+// public func view<T>(
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, 
+//     with: TypeToken<T>,
+//     _ action: (_: Int, _: ComponentProxy<T>) -> Void
+// ) {
+//     let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
+//     for vp in vps {
+//         let blockId = vp.segmentIndex
+//         let count = storage.segments[blockId].pointee.count
+//         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
 
-// static single componet
-@inline(__always)
-public func view<S: SystemBody, T> (
-    base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, 
-    with: TypeToken<T>,
-    _ body: borrowing S
-) where S.Components == ComponentProxy<T>
-{
-    let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
+//         for i in 0..<count {
+//             // taskId = 0
+//             action(0, ComponentProxy<T>(pointer: dataPtr.advanced(by: i) ))
+//         }
+//     }
 
-    for vp in vps {
-        let blockId = vp.segmentIndex
-        let count = storage.segments[blockId].pointee.count
-        let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
+//     _fixLifetime(storage)
+// }
 
-        for i in 0..<count {
-            body.execute(
-                taskId: 0, 
-                components: ComponentProxy(pointer: dataPtr.advanced(by: i))
-            )
-        }
-    }
+// // static single componet
+// @inline(__always)
+// public func view<S: SystemBody, T> (
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>, 
+//     with: TypeToken<T>,
+//     _ body: borrowing S
+// ) where S.Components == ComponentProxy<T>
+// {
+//     let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
 
-    _fixLifetime(storage)
-}
+//     for vp in vps {
+//         let blockId = vp.segmentIndex
+//         let count = storage.segments[blockId].pointee.count
+//         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
+
+//         for i in 0..<count {
+//             body.execute(
+//                 taskId: 0, 
+//                 components: ComponentProxy(pointer: dataPtr.advanced(by: i))
+//             )
+//         }
+//     }
+
+//     _fixLifetime(storage)
+// }
