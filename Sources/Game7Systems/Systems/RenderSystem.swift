@@ -11,7 +11,7 @@ struct RenderSystem {
     }
 
     @inlinable
-
+    @inline(__always)
     func update(_ world: borrowing World) {
         let buffer = world.frameBuffer.getBufferPtr()
         let height = world.frameBuffer.height
