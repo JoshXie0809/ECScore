@@ -89,14 +89,42 @@ let tb0 = clock.now
     let fakeDt = Duration.nanoseconds(1_000_000_000 / 120)
     world.tick(fakeDt)
     // #####################################################################################
-    // run-stage
-        let sys1 = RunResult.durationHelper(mvSys.update(world))
-        let sys2 = RunResult.durationHelper(dataSys.update(world))
-        let sys3 = RunResult.durationHelper(mcSys.update(world))
-        let sys4 = RunResult.durationHelper(healthSys.update(world))
-        let sys5 = RunResult.durationHelper(dmgSys.update(world))
-        let sys6 = RunResult.durationHelper(spriteSys.update(world))
-        let sys7 = RunResult.durationHelper(renderSys.update(world))
+    // run-stage    
+        // 1. MoveSystem
+        let t1 = ContinuousClock.now
+        mvSys.update(world)
+        let sys1 = t1.duration(to: .now)
+
+        // 2. DataSystem
+        let t2 = ContinuousClock.now
+        dataSys.update(world)
+        let sys2 = t2.duration(to: .now)
+
+        // 3. MoreComplexSystem
+        let t3 = ContinuousClock.now
+        mcSys.update(world)
+        let sys3 = t3.duration(to: .now)
+
+        // 4. HealthSystem
+        let t4 = ContinuousClock.now
+        healthSys.update(world)
+        let sys4 = t4.duration(to: .now)
+
+        // 5. DamageSystem
+        let t5 = ContinuousClock.now
+        dmgSys.update(world)
+        let sys5 = t5.duration(to: .now)
+
+        // 6. SpriteSystem
+        let t6 = ContinuousClock.now
+        spriteSys.update(world)
+        let sys6 = t6.duration(to: .now)
+
+        // 7. RenderSystem
+        let t7 = ContinuousClock.now
+        renderSys.update(world)
+        let sys7 = t7.duration(to: .now)
+
         let allSysDuration = (sys1, sys2, sys3, sys4, sys5, sys6, sys7)
     // #####################################################################################
 
