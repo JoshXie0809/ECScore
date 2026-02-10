@@ -21,12 +21,12 @@ public struct SparseSet_L2_2<T: Component> {
     public init() {
         self.pageMasks = ContiguousArray<UInt64>(repeating: 0, count: 64)
         
-        let oid = ObjectIdentifier(T.self)
-        let staggerIdx = abs(oid.hashValue) & 7
+        // let oid = ObjectIdentifier(T.self)
+        // let staggerIdx = abs(oid.hashValue) & 7
+        // let byteOffset = staggerIdx * 64
 
-        let byteOffset = staggerIdx * 64
-        self.staggerOffset = max(byteOffset / MemoryLayout<T>.stride, 1)
-        self.sparseStaggerOffset = max(byteOffset / MemoryLayout<SparseSetEntry>.stride, 1)
+        self.staggerOffset = 0 // max(byteOffset / MemoryLayout<T>.stride, 1)
+        self.sparseStaggerOffset = 0 // max(byteOffset / MemoryLayout<SparseSetEntry>.stride, 1)
 
         // 定義安全區大小：16 條 Cache Lines (1024 Bytes)
         let paddingBytes = HardwareBufferPadding * 64 
