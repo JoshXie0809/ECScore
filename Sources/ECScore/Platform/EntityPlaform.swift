@@ -1,10 +1,23 @@
 public protocol Platform_Entity: Platform, Component, AnyObject {
+    
+    @inlinable @inline(__always)
     func spawn(_: Int) -> [EntityId]
+    
+    @inlinable @inline(__always)
     func despawn(_: EntityId)
+    
+    @inlinable @inline(__always)
     func forEachLiveId(_ body: (EntityId) -> Void)
+    
+    @inlinable @inline(__always)
     func isValid(_ eid: EntityId) -> Bool
-    func getActiveEntitiesMask_Uncheck(_ block: Int) -> UInt64
+
+    @inlinable @inline(__always)
     var maxId: Int { get }
+
+    @inlinable @inline(__always)
+    var _activeMaskPtr: UnsafePointer<UInt64> { get }
+    
 }
 
 public class EntityPlatForm_Ver0: Platform_Entity, Component {
@@ -30,11 +43,6 @@ public class EntityPlatForm_Ver0: Platform_Entity, Component {
         entities.despawn(eid)
     }
 
-    @inline(__always)
-    public func getActiveEntitiesMask_Uncheck(_ block: Int) -> UInt64 {
-        entities.getActiveEntitiesMask_Uncheck(block)
-    } 
-
     public static func createPFStorage() -> any AnyPlatformStorage {
         return PFStorageBox(PFStorageHandle<Self>())
     }
@@ -45,5 +53,10 @@ public class EntityPlatForm_Ver0: Platform_Entity, Component {
                 body(EntityId(id: i, version: entities.getVersion(i)))
             }
         }
+    }
+
+    @inline(__always)
+    public var _activeMaskPtr: UnsafePointer<UInt64> {
+        return entities._isActivePtr
     }
 }

@@ -76,6 +76,7 @@ func executeViewPlans<each T, each WT, each WOT> (
 ) {
     let count = viewPlans.count
     guard count != 0 else { return }
+    let entities_activeMaskPtr = entities._activeMaskPtr
     
     let wot_allSegments = (repeat (each wot_storages).segments)
     var blockMask_now = viewPlans[0].mask
@@ -126,7 +127,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             blockMask &= (blockMask - 1)
 
             
-            var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
+            var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
             repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
@@ -151,7 +152,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         }
 
         let pageIdx = now_pageIdx
-        var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
+        var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
 
         repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
@@ -193,7 +194,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1)
 
-        var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
+        var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
 
         repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
@@ -215,7 +216,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     }
 
     let pageIdx = now_pageIdx
-    var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
+    var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
 
     repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
     repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
@@ -290,6 +291,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     let count = viewPlans.count
     guard count != 0 else { return }
     
+    let entities_activeMaskPtr = entities._activeMaskPtr
     let wot_allSegments = (repeat (each wot_storages).segments)
 
     var blockMask_now = viewPlans[0].mask
@@ -340,8 +342,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             now_pageIdx = blockMask.trailingZeroBitCount
 
             blockMask &= (blockMask - 1)
-            var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
-
+            var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee 
             repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
@@ -370,7 +371,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         }
 
         let pageIdx = now_pageIdx
-        var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
+        var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
 
         repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
@@ -415,7 +416,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         now_pageIdx = blockMask.trailingZeroBitCount
 
         blockMask &= (blockMask - 1)
-        var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
+        var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
 
         repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
@@ -440,8 +441,8 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     }
 
     let pageIdx = now_pageIdx
-    var pageMask = entities.getActiveEntitiesMask_Uncheck(blockIdx << 6 + pageIdx)
-    
+    var pageMask = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee    
+
     repeat pageMask &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
     repeat pageMask &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
     repeat pageMask &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])

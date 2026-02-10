@@ -92,5 +92,12 @@ public class Entities {
     @usableFromInline
     func getActiveEntitiesMask_Uncheck(_ block: Int) -> UInt64 {
         isActive[block]
-    } 
+    }
+    
+    @usableFromInline
+    @inline(__always)
+    var _isActivePtr: UnsafePointer<UInt64> {
+        // 直接獲取底層儲存的指針
+        return isActive.withUnsafeBufferPointer { $0.baseAddress! }
+    }
 }
