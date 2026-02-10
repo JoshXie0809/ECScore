@@ -239,6 +239,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     repeat _fixLifetime(each storages)
     repeat _fixLifetime(each wt_storages)
     repeat _fixLifetime(each wot_storages)
+    _fixLifetime(entities)
 }
 
 
@@ -468,6 +469,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     repeat _fixLifetime(each storages)
     repeat _fixLifetime(each wt_storages)
     repeat _fixLifetime(each wot_storages)
+    _fixLifetime(entities)
 }
 
 
