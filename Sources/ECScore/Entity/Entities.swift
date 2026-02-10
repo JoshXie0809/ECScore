@@ -23,10 +23,13 @@ extension EntityId: CustomStringConvertible {
 }
 
 public class Entities {
+    @inline(__always)
     private var freeList: [Int] = [] // where id can be reused
+    @inline(__always)
     private var versions:  [Int] = [] // the version for an id, init is 0
+    @inline(__always)
     private var isActive: [UInt64] = []
-
+    @inline(__always)
     var maxId : Int {
         versions.count - 1
     }

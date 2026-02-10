@@ -21,7 +21,7 @@ public struct SparseSet_L2_2<T: Component> {
         // 使用一塊連續的記憶體存放 4096 個 Sparse 索引
         self.sparseEntries = ContiguousArray<SparseSetEntry>(
             repeating: SparseSetEntry(compArrIdx: -1), 
-            count: 4096 + (HardwareBufferPadding * 256)
+            count: 4096 + (HardwareBufferPadding * 64)
         )
         
         self.components = ContiguousArray<T>()
@@ -82,8 +82,6 @@ public struct SparseSet_L2_2<T: Component> {
         }
         sparseEntries[offset].compArrIdx = -1
     }
-
-
 
     // MARK: - PFStorage 指標介面
     /// 供 ViewPlan 獲取數據陣列指標

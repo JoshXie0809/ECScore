@@ -123,6 +123,12 @@ public func view<S: SystemBody, each T, each WOT> (
 
 
 
+
+
+
+
+// fast path does not contain fast path
+
 // // single componet
 // @inline(__always)
 // public func view<T>(
@@ -135,13 +141,11 @@ public func view<S: SystemBody, each T, each WOT> (
 //         let blockId = vp.segmentIndex
 //         let count = storage.segments[blockId].pointee.count
 //         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
-
 //         for i in 0..<count {
 //             // taskId = 0
 //             action(0, ComponentProxy<T>(pointer: dataPtr.advanced(by: i) ))
 //         }
 //     }
-
 //     _fixLifetime(storage)
 // }
 
@@ -154,12 +158,10 @@ public func view<S: SystemBody, each T, each WOT> (
 // ) where S.Components == ComponentProxy<T>
 // {
 //     let (vps, storage, _, _) = createViewPlans( base: base, with: with, withTag: (), withoutTag: () )
-
 //     for vp in vps {
 //         let blockId = vp.segmentIndex
 //         let count = storage.segments[blockId].pointee.count
 //         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockId)
-
 //         for i in 0..<count {
 //             body.execute(
 //                 taskId: 0, 
@@ -167,6 +169,5 @@ public func view<S: SystemBody, each T, each WOT> (
 //             )
 //         }
 //     }
-
 //     _fixLifetime(storage)
 // }

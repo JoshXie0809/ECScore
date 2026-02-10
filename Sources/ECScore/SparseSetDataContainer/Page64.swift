@@ -28,70 +28,70 @@ func printBit(_ val: UInt64) {
     print()
 }
 
-struct Page64: CustomStringConvertible {
-    @inline(__always) private(set) var pageMask: UInt64 = 0
-    @inline(__always) private(set) var activeCount: Int = 0
-    @inline(__always) private(set) var entityOnPage = 
-        ContiguousArray<SparseSetEntry>(
-            repeating: SparseSetEntry(compArrIdx: Int16(-1)), 
-            count: 64 + HardwareBufferPadding // 64 + padding 16 = 80 (index: 64, 65, 66, 67, ... 80) can record information
-        )
+// struct Page64: CustomStringConvertible {
+//     @inline(__always) private(set) var pageMask: UInt64 = 0
+//     @inline(__always) private(set) var activeCount: Int = 0
+//     @inline(__always) private(set) var entityOnPage = 
+//         ContiguousArray<SparseSetEntry>(
+//             repeating: SparseSetEntry(compArrIdx: Int16(-1)), 
+//             count: 64 + HardwareBufferPadding // 64 + padding 16 = 80 (index: 64, 65, 66, 67, ... 80) can record information
+//         )
 
-    var description: String {
-        "Page64(n:\(activeCount))"
-    }
+//     var description: String {
+//         "Page64(n:\(activeCount))"
+//     }
 
-    @inline(__always)
-    mutating func add(_ index: Int, _ sparseEntry: SparseSetEntry) {
-        assert(index >= 0 && index < 64, "invalid Page64 index")
-        let bit = UInt64(1) << index
-        assert(pageMask & bit == 0, "double add on Page64")
+//     @inline(__always)
+//     mutating func add(_ index: Int, _ sparseEntry: SparseSetEntry) {
+//         assert(index >= 0 && index < 64, "invalid Page64 index")
+//         let bit = UInt64(1) << index
+//         assert(pageMask & bit == 0, "double add on Page64")
 
-        entityOnPage[index] = sparseEntry
-        pageMask |= bit
-        activeCount += 1
-    }
+//         entityOnPage[index] = sparseEntry
+//         pageMask |= bit
+//         activeCount += 1
+//     }
 
-    @inline(__always)
-    mutating func remove(_ index: Int) {
-        assert(index >= 0 && index < 64, "invalid Page64 index")
-        let bit = UInt64(1) << index
-        assert(pageMask & bit != 0, "remove inactive slot")
+//     @inline(__always)
+//     mutating func remove(_ index: Int) {
+//         assert(index >= 0 && index < 64, "invalid Page64 index")
+//         let bit = UInt64(1) << index
+//         assert(pageMask & bit != 0, "remove inactive slot")
         
-        // entityOnPage[index] = SparseEntry(denseIdx: -1) // inactive
-        pageMask &= ~bit
-        activeCount -= 1
-    }
+//         // entityOnPage[index] = SparseEntry(denseIdx: -1) // inactive
+//         pageMask &= ~bit
+//         activeCount -= 1
+//     }
 
-    @inline(__always)
-    mutating func update(_ index: Int, _ updateFn: (inout SparseSetEntry) -> Void ) {
-        assert(index >= 0 && index < 64, "invalid Page64 index")
-        let bit = UInt64(1) << index
-        assert(pageMask & bit != 0, "update inactive slot")
+//     @inline(__always)
+//     mutating func update(_ index: Int, _ updateFn: (inout SparseSetEntry) -> Void ) {
+//         assert(index >= 0 && index < 64, "invalid Page64 index")
+//         let bit = UInt64(1) << index
+//         assert(pageMask & bit != 0, "update inactive slot")
 
-        updateFn(&entityOnPage[index])
-    }
+//         updateFn(&entityOnPage[index])
+//     }
 
-    // 安全版：給一般邏輯使用
-    @inline(__always)
-    func get(_ index: Int) -> SparseSetEntry? {
-        let bit = UInt64(1) << index
-        return (pageMask & bit != 0) ? entityOnPage[index] : nil
-    }
+//     // 安全版：給一般邏輯使用
+//     @inline(__always)
+//     func get(_ index: Int) -> SparseSetEntry? {
+//         let bit = UInt64(1) << index
+//         return (pageMask & bit != 0) ? entityOnPage[index] : nil
+//     }
 
-    @inline(__always)
-    func getUnchecked(_ index: Int) -> SparseSetEntry {
-        return entityOnPage[index]
-    }
+//     @inline(__always)
+//     func getUnchecked(_ index: Int) -> SparseSetEntry {
+//         return entityOnPage[index]
+//     }
 
-    @inline(__always)
-    mutating func reset() {
-        self.pageMask = 0
-        self.activeCount = 0
-        // 注意：如果你不介意舊資料留在裡面，甚至不需要清空 entityOnPage
-        // 因為 mask = 0 已經讓那些資料在邏輯上不可見了
-    }
-}
+//     @inline(__always)
+//     mutating func reset() {
+//         self.pageMask = 0
+//         self.activeCount = 0
+//         // 注意：如果你不介意舊資料留在裡面，甚至不需要清空 entityOnPage
+//         // 因為 mask = 0 已經讓那些資料在邏輯上不可見了
+//     }
+// }
 
 // struct SparseSet_L2<T: Component>: Component {
 //     private(set) var sparse = Block64_L2()

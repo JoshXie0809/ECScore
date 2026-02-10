@@ -176,7 +176,8 @@ extension PFStorage: StorageTypeProvider {
 }
 
 public final class PFStorageHandle<T: Component> {
-    fileprivate var pfstorage = PFStorage<T>()
+    @inline(__always)
+    fileprivate(set) var pfstorage = PFStorage<T>()
 }
 
 public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendable {
@@ -184,23 +185,28 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
     private let handle: PFStorageHandle<T>
     @inline(__always)
     public init(_ h: PFStorageHandle<T>) { self.handle = h}
-        
+
+    @inline(__always)    
     public mutating func rawAdd(eid: EntityId, component: Any) {
         handle.pfstorage.rawAdd(eid: eid, component: component)
     }
 
+    @inline(__always)
     public mutating func add(eid: EntityId, component: T) {
         handle.pfstorage.add(eid: eid, component: component)
     }
 
+    @inline(__always)
     public mutating func remove(eid: EntityId) {
         handle.pfstorage.remove(eid: eid)
     }
 
+    @inline(__always)
     public func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
         handle.pfstorage.getWithDenseIndex_Uncheck(index)
     }
 
+    @inline(__always)
     public func get(_ eid: EntityId) -> Any? {
         handle.pfstorage.get(eid)
     }
