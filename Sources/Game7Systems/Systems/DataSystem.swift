@@ -7,6 +7,7 @@ struct DataSystem {
         self.dataToken = interop(base, DataComponent.self)
     }
 
+    @inlinable
     @inline(__always)
     func update(_ world: borrowing World)
     {
@@ -23,7 +24,7 @@ struct DataSystem {
         //     data.numgy = data.rng.next()
         // }
     }
-
+    
     struct DataLogic: SystemBody {
         let dtSeconds: Double
 
@@ -31,12 +32,15 @@ struct DataSystem {
         @inlinable 
         @inline(__always)
         func execute(taskId: Int, components: Components) {
+        
+            let _data = components
+            // get fast proxy
+            let data_fast = _data.fast
 
-            let data = components
-            data.thingy = (data.thingy + 1) % 1_000_000
-            data.dingy += 0.0001 * dtSeconds
-            data.mingy = !data.mingy
-            data.numgy = data.rng.next()
+            data_fast.thingy = (data_fast.thingy + 1) % 1_000_000
+            data_fast.dingy += 0.0001 * dtSeconds
+            data_fast.mingy = !data_fast.mingy
+            data_fast.numgy = data_fast.rng.next()
 
         }
     }

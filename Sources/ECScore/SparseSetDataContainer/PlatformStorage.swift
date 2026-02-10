@@ -246,6 +246,7 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
         PagePtr(ptr: handle.pfstorage.segments[blockIdx].pointee.getPageMasksPointer())
     }
 
+    @usableFromInline
     @inline(__always)
     var segments: UnsafePointer<UnsafeMutablePointer<SparseSet_L2_2<T>>> {
         handle.pfstorage.getSegmentsRawPointer_Internal()

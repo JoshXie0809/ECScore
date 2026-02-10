@@ -1,4 +1,4 @@
-let SparseSet_L2_BaseMask: UInt64 = 0xFFFFFFFFFFFFFFFF
+public let SparseSet_L2_BaseMask: UInt64 = 0xFFFFFFFFFFFFFFFF
 
 @inlinable
 func getStorages<each T>(
@@ -9,13 +9,18 @@ func getStorages<each T>(
     (repeat (each tokens).getStorage(base: base))
 }
 
-@usableFromInline
-struct ViewPlan: Sendable {
-    @inline(__always) let segmentIndex: Int
-    @inline(__always) let mask: UInt64
+public struct ViewPlan: Sendable {
+    public let segmentIndex: Int
+    public let mask: UInt64
+    
+    @inlinable
+    public init(segmentIndex: Int, mask: UInt64) {
+        self.segmentIndex = segmentIndex
+        self.mask = mask
+    }
 }
 
-@usableFromInline
+@inlinable
 @inline(__always)
 func createViewPlans<each T, each WT, each WOT>( 
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,

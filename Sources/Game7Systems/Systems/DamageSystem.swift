@@ -21,7 +21,7 @@ struct DmgSystem {
         //     }
         // }
     }
-
+    
     struct DamageLogic: SystemBody {
         typealias Components = (ComponentProxy<HealthComponent>, ComponentProxy<DamageComponent>)
         
@@ -29,10 +29,13 @@ struct DmgSystem {
         @inline(__always)
         func execute(taskId: Int, components: Components) {
 
-            let (health, damage) = components
-            let totalDamage = damage.atk - damage.def
-            if (health.hp > 0 && totalDamage > 0) {
-                health.hp = max(health.hp - totalDamage, 0)
+            let (_health, _damage) = components
+            // get fast proxy
+            let (health_fast, damage_fast) = (_health.fast, _damage.fast)
+            
+            let totalDamage = damage_fast.atk - damage_fast.def
+            if (health_fast.hp > 0 && totalDamage > 0) {
+                health_fast.hp = max(health_fast.hp - totalDamage, 0)
             }
 
         }

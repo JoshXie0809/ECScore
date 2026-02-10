@@ -7,6 +7,7 @@ struct MoveSystem {
         self.mvToken = interop(base, PositionComponent.self, DirectionComponent.self)
     }
 
+    @inlinable
     @inline(__always)
     func update(_ world: borrowing World)
     {
@@ -41,14 +42,25 @@ struct MoveSystem {
         @inlinable 
         @inline(__always)
         func execute(taskId: Int, components: Components) {
-            let (pos, dir) = components
-            let vx = dir.vx
-            let vy = dir.vy
+            let (_pos, _dir) = components
+            // get fast proxy
+            let (pos_fast, dir_fast) = (_pos.fast, _dir.fast)
+
+            // default path
+
+            // let vx = dir.vx
+            // let vy = dir.vy
+            // let dx = vx * dtSeconds
+            // let dy = vy * dtSeconds
+            // pos.x += dx
+            // pos.y += dy
+
+            let vx = dir_fast.vx
+            let vy = dir_fast.vy
             let dx = vx * dtSeconds
             let dy = vy * dtSeconds
-            
-            pos.x += dx
-            pos.y += dy
+            pos_fast.x += dx
+            pos_fast.y += dy
         }
     }
 }

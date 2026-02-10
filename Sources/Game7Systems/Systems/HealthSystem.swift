@@ -7,6 +7,7 @@ struct HealthSystem {
         self.hToken = interop(base, HealthComponent.self)
     }
 
+    @inlinable
     @inline(__always)
     func update(_ world: borrowing World)
     {
@@ -41,22 +42,24 @@ struct HealthSystem {
         @inline(__always)
         func execute(taskId: Int, components: Components) 
         {
-            let health = components
+            let _health = components
+            // get fast proxy
+            let health_fast = _health.fast
 
-            if(health.hp <= 0 && health.status != .dead) {
-                health.hp = 0
-                health.status = .dead
+            if(health_fast.hp <= 0 && health_fast.status != .dead) {
+                health_fast.hp = 0
+                health_fast.status = .dead
             }
-            else if(health.status == .dead && health.hp == 0) {
-                health.hp = health.maxHp
-                health.status = .spawn
+            else if(health_fast.status == .dead && health_fast.hp == 0) {
+                health_fast.hp = health_fast.maxHp
+                health_fast.status = .spawn
             }
-            else if(health.hp >= health.maxHp && health.status != .alive) {
-                health.hp = health.maxHp
-                health.status = .alive
+            else if(health_fast.hp >= health_fast.maxHp && health_fast.status != .alive) {
+                health_fast.hp = health_fast.maxHp
+                health_fast.status = .alive
             }
             else {
-                health.status = .alive
+                health_fast.status = .alive
             }
             
         }

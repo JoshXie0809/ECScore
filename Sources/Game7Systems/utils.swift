@@ -4,6 +4,7 @@ import Foundation
 // Validated BasePlatform
 typealias VBPF = Validated<BasePlatform, Proof_Handshake, Platform_Facts>
 
+@usableFromInline
 struct GameSettings {
     let iterId: Int
     let ttEn: Int
@@ -22,6 +23,7 @@ struct GameSettings {
     }
 }
 
+@usableFromInline
 struct RunResult: CustomStringConvertible {
     let gs: GameSettings
     let renderStringCount: Int
@@ -42,7 +44,8 @@ struct RunResult: CustomStringConvertible {
         self.hmn = hmn
         self.allSysDuration = alld
     }
-
+    
+    @usableFromInline
     var description: String {
         let s01 = gs.iterId
         let s02 = gs.emplaceStrategy
@@ -82,9 +85,10 @@ struct RunResult: CustomStringConvertible {
     }
 
     @inline(__always)
-    static func durationHelper(_ system: (borrowing World) -> Void, _ world: borrowing World ) -> Duration {
+    @usableFromInline
+    static func durationHelper(_ action: @autoclosure () -> Void) -> Duration {
         let t0 = clock.now
-        system(world)
+        action()
         return clock.now - t0
     }
 }

@@ -10,7 +10,8 @@ struct RenderSystem {
         self.renderToken = interop(base, PositionComponent.self, SpriteComponent.self)
     }
 
-    @inline(__always)
+    @inlinable
+
     func update(_ world: borrowing World) {
         let buffer = world.frameBuffer.getBufferPtr()
         let height = world.frameBuffer.height
@@ -33,10 +34,13 @@ struct RenderSystem {
         @inlinable 
         @inline(__always)
         func execute(taskId: Int, components: Components) {
-            let (pos, sprite) = components
-            let x = Int(pos.x)
-            let y = Int(pos.y)
-            let char = sprite.character
+            let (_pos, _sprite) = components
+            // get fast proxy
+            let (pos_fast, sprite_fast) = (_pos.fast, _sprite.self)
+            
+            let x = Int(pos_fast.x)
+            let y = Int(pos_fast.y)
+            let char = sprite_fast.character
 
             if y >= 0 && y < height && x >= 0 && x < width {
                 buffer[x + y * width] = char

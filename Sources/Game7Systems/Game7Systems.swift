@@ -90,13 +90,13 @@ let tb0 = clock.now
     world.tick(fakeDt)
     // #####################################################################################
     // run-stage
-        let sys1 = RunResult.durationHelper(mvSys.update, world)
-        let sys2 = RunResult.durationHelper(dataSys.update, world)
-        let sys3 = RunResult.durationHelper(mcSys.update, world)
-        let sys4 = RunResult.durationHelper(healthSys.update, world)
-        let sys5 = RunResult.durationHelper(dmgSys.update, world)
-        let sys6 = RunResult.durationHelper(spriteSys.update, world)
-        let sys7 = RunResult.durationHelper(renderSys.update, world)
+        let sys1 = RunResult.durationHelper(mvSys.update(world))
+        let sys2 = RunResult.durationHelper(dataSys.update(world))
+        let sys3 = RunResult.durationHelper(mcSys.update(world))
+        let sys4 = RunResult.durationHelper(healthSys.update(world))
+        let sys5 = RunResult.durationHelper(dmgSys.update(world))
+        let sys6 = RunResult.durationHelper(spriteSys.update(world))
+        let sys7 = RunResult.durationHelper(renderSys.update(world))
         let allSysDuration = (sys1, sys2, sys3, sys4, sys5, sys6, sys7)
     // #####################################################################################
 

@@ -13,7 +13,7 @@ struct Position: Component {
     person_ptr.pointee.x = Float(1234.5)
     person_ptr.pointee.y = Float(5432.1)
 
-    let person_proxy = Position.ProxyMembers(ptr: person_ptr)
-
-    _ = person_proxy
+    let person_proxy = ComponentProxy<Position>(pointer: person_ptr)
+    person_proxy.fast.x = 1.01
+    #expect(person_proxy.x == 1.01)
 }

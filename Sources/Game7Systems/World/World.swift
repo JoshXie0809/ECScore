@@ -1,5 +1,6 @@
 import ECScore
 
+@usableFromInline
 struct World: ~Copyable {
     static let maxX = UInt32(320)
     static let maxY = UInt32(240)

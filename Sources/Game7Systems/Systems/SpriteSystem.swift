@@ -17,6 +17,7 @@ struct SpriteSystem {
         self.spriteToken = interop(base, SpriteComponent.self, PlayerComponent.self, HealthComponent.self)
     }
 
+    @inlinable
     @inline(__always)
     func update(_ world: borrowing World) 
     {
@@ -49,10 +50,13 @@ struct SpriteSystem {
         @inline(__always)
         func execute(taskId: Int, components: Components) 
         {   
-            let (sprite, player, health) = components
-            sprite.character = switch health.status {
+            let (_sprite, _player, _health) = components
+            // get fast proxy
+            let (sprite_fast, player_fast, health_fast) = (_sprite.fast, _player.fast, _health.fast)
+            
+            let ch = switch health_fast.status {
             case .alive:
-                switch player.type {
+                switch player_fast.type {
                 case .hero:    SpriteCharacter.playerSprite
                 case .monster: SpriteCharacter.monsterSprite
                 case .npc:     SpriteCharacter.npcSprite
@@ -60,6 +64,8 @@ struct SpriteSystem {
             case .dead:  SpriteCharacter.graveSprite
             case .spawn: SpriteCharacter.spawnSprite
             }
+
+            sprite_fast.character = ch
         }
     }
 
