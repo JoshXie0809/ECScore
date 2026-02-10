@@ -73,8 +73,16 @@ let tokens = interop(base, PositionComponent.self, VelocityComponent.self)
 view(base: base, with: tokens) { 
     _taskId, pos, vel in
     _ = _taskId
+
+    // defalut access
     pos.x += vel.vx
     pos.y += vel.vy
+
+    // fast proxy access if you use @FastProxy on struct
+    let (pos_fast, vel_fast) = (pos.fast, vel.fast)
+
+    pos_fast.x += vel_fast.vx
+    pos_fast.y += vel_fast.vy
 }
 
 // Query with include/exclude tags (set the condtions)
