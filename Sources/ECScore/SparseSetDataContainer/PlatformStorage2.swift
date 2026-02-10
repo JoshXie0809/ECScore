@@ -106,6 +106,7 @@ struct PFStorage<T: Component>: ~Copyable {
         storagePtr.pointee.add(eid, component)
         self.activeEntityCount += (storagePtr.pointee.count - beforeCount)
     }
+    
 
     @inlinable
     mutating func remove(eid: borrowing EntityId) {
@@ -157,12 +158,13 @@ struct PFStorage<T: Component>: ~Copyable {
 
     @inlinable
     func get(_ eid: borrowing EntityId) -> T? {
-        let (blockIdx, offset) = (Int(eid.id >> 12), Int(eid.id & 4095))
+        let blockIdx = Int(eid.id >> 12)
         guard blockIdx < segments.count else { return nil }
-        
         let ptr = segments[blockIdx]
-        if ptr == sentinelPtr { return nil }        
-        return ptr.pointee.getRawDataPointer()[offset]
+        if ptr == sentinelPtr { return nil }
+        
+        // 直接調用 SparseSet 內部的 get，它會處理 Sparse -> Dense 的轉換
+        return ptr.pointee.get(EntityId(id: eid.id, version: eid.version))
     }
 
     @inlinable
