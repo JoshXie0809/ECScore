@@ -19,6 +19,13 @@ struct DataComponent: Component {
         self.numgy = generator.next()
         self.rng = generator
     }
+
+    init() {
+        self.seed = Self.defaultSeed
+        var generator = Xoshiro128(seed: seed)
+        self.numgy = generator.next()
+        self.rng = generator
+    }
 }
 
 // @@ ############################################################################## 1

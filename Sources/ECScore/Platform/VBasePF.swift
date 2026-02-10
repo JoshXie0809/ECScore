@@ -81,12 +81,22 @@ public func interop(
         idToAt[type_id] = at
     }
 
-    // ensure storages length
+    let pendingMounts = newRids.map { (rid, type) in
+        return (rid, type.createPFStorage())
+    }
+
     pf_val.ensureStorageCapacity()
 
-    for (rid, type) in newRids {
-        pf_val.mount(rid: rid, storage: type.createPFStorage())
+    for (rid, storage) in pendingMounts {
+        pf_val.mount(rid: rid, storage: storage)
     }
+
+    // // ensure storages length
+    // pf_val.ensureStorageCapacity()
+
+    // for (rid, type) in newRids {
+    //     pf_val.mount(rid: rid, storage: type.createPFStorage())
+    // }
 
     return InteropTokens(rids: rids, idToAt: idToAt)
 }

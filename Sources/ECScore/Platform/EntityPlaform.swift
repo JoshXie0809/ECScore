@@ -20,9 +20,9 @@ public protocol Platform_Entity: Platform, Component, AnyObject {
     
 }
 
-public class EntityPlatForm_Ver0: Platform_Entity, Component {
+public final class EntityPlatForm_Ver0: Platform_Entity, Component {
     @inline(__always)
-    private var entities = Entities()
+    private var entities: Entities = Entities()
     public init() {}
 
     @inline(__always)

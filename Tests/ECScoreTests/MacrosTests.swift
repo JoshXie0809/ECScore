@@ -3,8 +3,8 @@ import Testing
 
 @FastProxy
 struct Position: Component {
-    var x: Float
-    var y: Float
+    var x: Float = 0.0
+    var y: Float = 0.0
 }
 
 @Test func createFastProxy() async throws {

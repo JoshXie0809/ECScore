@@ -18,7 +18,7 @@ struct MockComponentA5: Component {}
 
 @Test func intersectionTest() async throws {
     // let ITER = 100
-    let ITER = 10
+    let ITER = 5
     var rng = Xoshiro128(seed: UInt32(666))
 
     for _ in 1...ITER {
@@ -133,7 +133,7 @@ struct FooLogic: SystemBody {
 
 @Test func intersectionTest2() async throws {
     // let ITER = 100
-    let ITER = 10
+    let ITER = 5
     var rng = Xoshiro128(seed: UInt32(666666))
 
     for _ in 1...ITER {

@@ -278,6 +278,8 @@ struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
 }
 
 extension PFStorageBox: Component where T: Component {
+    public init() { self.handle = PFStorageHandle<T>()}
+    
     public static func createPFStorage() -> any AnyPlatformStorage {
         return PFStorageBox<Self>(PFStorageHandle<Self>())
     }

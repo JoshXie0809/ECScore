@@ -147,7 +147,8 @@ struct PFStorage<T: Component>: ~Copyable {
                     temp_index -= count
                     continue
                 }
-                return segmentPtr.pointee.components[temp_index]
+                
+                return segmentPtr.pointee.getRawDataPointer()[temp_index]
             }
         }
 
@@ -161,7 +162,7 @@ struct PFStorage<T: Component>: ~Copyable {
         
         let ptr = segments[blockIdx]
         if ptr == sentinelPtr { return nil }        
-        return ptr.pointee.components[offset]
+        return ptr.pointee.getRawDataPointer()[offset]
     }
 
     @inlinable
@@ -176,7 +177,7 @@ struct PFStorage<T: Component>: ~Copyable {
                     temp_index -= count
                     continue
                 }
-                return segmentPtr.pointee.components[temp_index]
+                return segmentPtr.pointee.getRawDataPointer()[temp_index]            
             }
         }
         return nil
@@ -191,7 +192,7 @@ struct PFStorage<T: Component>: ~Copyable {
             return nil
         }
         
-        return segmentPtr.pointee.components[offset]
+        return segmentPtr.pointee.getRawDataPointer()[offset]
     }
 
 

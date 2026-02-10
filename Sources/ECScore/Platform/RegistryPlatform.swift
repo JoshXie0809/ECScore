@@ -9,7 +9,7 @@ public protocol Platform_Registry: AnyObject, Component {
     var count: Int { get }
 }
 
-public class RegistryPlatform : Platform, Platform_Registry, Component {
+public final class RegistryPlatform : Platform, Platform_Registry, Component {
     let entities: Entities = Entities()
     private var typeToRId: [TypeStrIdHashed_FNV1A_64: RegistryId] = [:]
     private var ridToType: [RegistryId: any Component.Type] = [:]

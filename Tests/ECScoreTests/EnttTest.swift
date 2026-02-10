@@ -3,24 +3,24 @@ import Foundation
 @testable import ECScore 
 
 struct Velocity: Component {
-    var vx: Float
-    var vy: Float
+    var vx: Float = 0.0
+    var vy: Float = 0.0
 }
 
 struct Damage: Component {
-    var atk: Int
+    var atk: Int = 0
 }
 
 struct Defence: Component {
-    var def: Int
+    var def: Int = 0
 }
 
 struct Health: Component {
-    var hp: Int
+    var hp: Int = 0
 }
 
 struct CharStatus: Component {
-    var status: Status
+    var status: Status = .alive
 
     enum Status {
         case alive
@@ -194,122 +194,122 @@ struct BattleTag: Component {}
 
 
 @Test func emplaceAndViewTest() async throws {
-    let base = makeBootedPlatform()
-    let ttokens = interop(
-        base, Position.self, Velocity.self, Damage.self, Defence.self, Health.self, CharStatus.self, BattleTag.self,
-        MockComponentA.self, MockComponentB.self, MockComponentC.self, MockComponentD.self, MockComponentE.self
-    )
 
-    emplace(base, tokens: ttokens) { (entities, pack) in
-        var (pos, vel, dmg, def, hp, charStatus, battag,
-            a, b, c, d, etag) = pack.storages
-        
-        let entityCount = 4096
+    for _ in 0..<10 {
+        let base = makeBootedPlatform()
+        let ttokens = interop(
+            base, Position.self, Velocity.self, Damage.self, Defence.self, Health.self, CharStatus.self, BattleTag.self,
+            MockComponentA.self, MockComponentB.self, MockComponentC.self, MockComponentD.self, MockComponentE.self
+        )
 
-        for _ in 0..<entityCount {
-            let e = entities.createEntity()
-            let roll = Int.random(in: 1...150)
+        emplace(base, tokens: ttokens) { (entities, pack) in
+            var (pos, vel, dmg, def, hp, charStatus, battag,
+                a, b, c, d, etag) = pack.storages
             
-            // 所有實體都具備基礎的物理與狀態組件（達到 100% 密度）
-            pos.addComponent(e, Position(x: Float.random(in: 0...320), y: Float.random(in: 0...240)))
-            vel.addComponent(e, Velocity(vx: Float.random(in: 0...10), vy: Float.random(in: 0...10)))
-            charStatus.addComponent(e, CharStatus(status: .alive))
+            let entityCount = 4096
 
-            if roll <= 3 { // NPC
-                hp.addComponent(e, Health(hp: Int.random(in: 6...12)))
-                dmg.addComponent(e, Damage(atk: 0)) // NPC 不攻擊
-                def.addComponent(e, Defence(def: Int.random(in: 3...8)))
-
-            } else if roll <= 30 { // Hero
-                hp.addComponent(e, Health(hp: Int.random(in: 5...15)))
-                dmg.addComponent(e, Damage(atk: Int.random(in: 4...10)))
-                def.addComponent(e, Defence(def: Int.random(in: 2...6)))
-                battag.addComponent(e, BattleTag())
+            for _ in 0..<entityCount {
+                let e = entities.createEntity()
+                let roll = Int.random(in: 1...150)
                 
-            } else if roll <= 100 { // Monster
-                hp.addComponent(e, Health(hp: Int.random(in: 4...12)))
-                dmg.addComponent(e, Damage(atk: Int.random(in: 3...9)))
-                def.addComponent(e, Defence(def: Int.random(in: 2...8)))
-                battag.addComponent(e, BattleTag())                
+                // 所有實體都具備基礎的物理與狀態組件（達到 100% 密度）
+                pos.addComponent(e, Position(x: Float.random(in: 0...320), y: Float.random(in: 0...240)))
+                vel.addComponent(e, Velocity(vx: Float.random(in: 0...10), vy: Float.random(in: 0...10)))
+                charStatus.addComponent(e, CharStatus(status: .alive))
 
-            } else {
-                d.addComponent(e, MockComponentD())
+                if roll <= 3 { // NPC
+                    hp.addComponent(e, Health(hp: Int.random(in: 6...12)))
+                    dmg.addComponent(e, Damage(atk: 0)) // NPC 不攻擊
+                    def.addComponent(e, Defence(def: Int.random(in: 3...8)))
+
+                } else if roll <= 30 { // Hero
+                    hp.addComponent(e, Health(hp: Int.random(in: 5...15)))
+                    dmg.addComponent(e, Damage(atk: Int.random(in: 4...10)))
+                    def.addComponent(e, Defence(def: Int.random(in: 2...6)))
+                    battag.addComponent(e, BattleTag())
+                    
+                } else if roll <= 100 { // Monster
+                    hp.addComponent(e, Health(hp: Int.random(in: 4...12)))
+                    dmg.addComponent(e, Damage(atk: Int.random(in: 3...9)))
+                    def.addComponent(e, Defence(def: Int.random(in: 2...8)))
+                    battag.addComponent(e, BattleTag())                
+
+                } else {
+                    d.addComponent(e, MockComponentD())
+                }
+
+                if Int.random(in: 0..<10) < 5 { a.addComponent(e, MockComponentA())}
+                if Int.random(in: 0..<10) < 5 { b.addComponent(e, MockComponentB())}
+                if Int.random(in: 0..<10) < 5 { c.addComponent(e, MockComponentC())}
+                if Int.random(in: 0..<10) < 5 { etag.addComponent(e, MockComponentE())}
+                
             }
+        }
+        // #########################################################
+        let dt = Float(1.0 / 120.0)
+        var deadCount = 0
+        var checkDeadCount = 0
+        let ttokens2 = interop(base, Position.self, Velocity.self)
+        let ttokens3 = interop(base, Damage.self, Defence.self, Health.self, CharStatus.self, BattleTag.self)
+        let ttokens4 = interop(base, CharStatus.self)
+        // #########################################################
 
-            if Int.random(in: 0..<10) < 5 { a.addComponent(e, MockComponentA())}
-            if Int.random(in: 0..<10) < 5 { b.addComponent(e, MockComponentB())}
-            if Int.random(in: 0..<10) < 5 { c.addComponent(e, MockComponentC())}
-            if Int.random(in: 0..<10) < 5 { etag.addComponent(e, MockComponentE())}
+        // ###################################
+        // Single thread
+        // ###################################
+
+        for _ in 0..<5 {
+            // move sys
+            view(base: base, with: ttokens2) { 
+                _, pos, vel in
+                pos.x += vel.vx * dt
+                pos.y += vel.vy * dt
+            }
             
-        }
-    }
-    // #########################################################
-    let clock = ContinuousClock()
-    let dt = Float(1.0 / 120.0)
-    var deadCount = 0
-    var checkDeadCount = 0
-    let ttokens2 = interop(base, Position.self, Velocity.self)
-    let ttokens3 = interop(base, Damage.self, Defence.self, Health.self, CharStatus.self, BattleTag.self)
-    let ttokens4 = interop(base, CharStatus.self)
-    // #########################################################
+            view(base: base, with: ttokens3) {
+                _, dmg, def, health, charStatus, _btag in
+                // attack-defence system
+                let totalDamage = dmg.atk - def.def // negative mean add hp
+                health.hp -= totalDamage
 
-    // ###################################
-    // Single thread
-    // ###################################
-
-    let start = clock.now
-
-    for _ in 0..<5 {
-        // move sys
-        view(base: base, with: ttokens2) { 
-            _, pos, vel in
-            pos.x += vel.vx * dt
-            pos.y += vel.vy * dt
-        }
-        
-        view(base: base, with: ttokens3) {
-            _, dmg, def, health, charStatus, _btag in
-            // attack-defence system
-            let totalDamage = dmg.atk - def.def // negative mean add hp
-            health.hp -= totalDamage
-
-            // charather-status
-            if health.hp <= 0 {
-                health.hp = 0
-                switch charStatus.status {
-                case .alive:
-                    // change to dead edge
-                    charStatus.status = .deadEdge
-                case .deadEdge:
-                    charStatus.status = .dead
-                    deadCount += 1
-                case .dead:
-                    charStatus.status = .dead
-                } 
-            }
-            else {
-                switch charStatus.status {
-                case .dead:
-                    health.hp = -1
-                case .deadEdge:
-                    charStatus.status = .alive
-                case .alive:
-                    charStatus.status = .alive
+                // charather-status
+                if health.hp <= 0 {
+                    health.hp = 0
+                    switch charStatus.status {
+                    case .alive:
+                        // change to dead edge
+                        charStatus.status = .deadEdge
+                    case .deadEdge:
+                        charStatus.status = .dead
+                        deadCount += 1
+                    case .dead:
+                        charStatus.status = .dead
+                    } 
+                }
+                else {
+                    switch charStatus.status {
+                    case .dead:
+                        health.hp = -1
+                    case .deadEdge:
+                        charStatus.status = .alive
+                    case .alive:
+                        charStatus.status = .alive
+                    }
                 }
             }
         }
-    }
 
-    view(base: base, with: ttokens4) {
-        _, charStatus in
-        if charStatus.status == .dead {
-            checkDeadCount += 1
+        view(base: base, with: ttokens4) {
+            _, charStatus in
+            if charStatus.status == .dead {
+                checkDeadCount += 1
+            }
         }
+        
+        #expect(deadCount == checkDeadCount)
+
     }
-    let end = clock.now
-    #expect(deadCount == checkDeadCount)
-    print("total dead:", deadCount)
-    print("plan & exec:", end - start)
+    
 }
 
 

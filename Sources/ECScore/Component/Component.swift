@@ -2,6 +2,7 @@ public protocol Component: ~Copyable {
     static func createPFStorage() -> AnyPlatformStorage
     static var typeIdString: String { get }
     static var _hs: TypeStrIdHashed_FNV1A_64 { get } // hashed string of typeIdString
+    init()
 }
 
 public typealias TypeStrIdHashed_FNV1A_64 = UInt64
