@@ -7,6 +7,14 @@ struct MockComponentA3: Component {}
 struct MockComponentA4: Component {}
 struct MockComponentA5: Component {}
 
+//@Test func checkASan() {
+//    print("--- ASan 檢查開始 ---")
+//    let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 10)
+//    // 故意寫入到第 100 個位置
+//    buffer[100] = 1
+//    print("如果看到這行，代表 ASan 沒開")
+//    buffer.deallocate()
+//}
 
 @Test func intersectionTest() async throws {
     // let ITER = 100
