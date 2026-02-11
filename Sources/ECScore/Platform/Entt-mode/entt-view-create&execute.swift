@@ -67,11 +67,14 @@ func createViewPlans<each T, each WT, each WOT>(
     var wtSegPtrs = (repeat (each wt_allSegments).advanced(by: global_First))
     var i = global_First
     while i <= global_Last {
-        var mask = SparseSet_L2_BaseMask
-        repeat mask &= (each segPtrs).pointee.pointee.blockMask
-        repeat mask &= (each wtSegPtrs).pointee.pointee.blockMask
-        if mask != 0 { viewPlans.append(.init(segmentIndex: i, mask: mask)) }
+        var mask1 = SparseSet_L2_BaseMask
+        var mask2 = SparseSet_L2_BaseMask
+        repeat mask1 &= (each segPtrs).pointee.pointee.blockMask
+        repeat mask2 &= (each wtSegPtrs).pointee.pointee.blockMask
+        let mask = mask1 & mask2
 
+        if mask != 0 { viewPlans.append(.init(segmentIndex: i, mask: mask)) }
+        
         segPtrs = (repeat (each segPtrs).advanced(by: 1))
         wtSegPtrs = (repeat (each wtSegPtrs).advanced(by: 1))
         i += 1
