@@ -98,9 +98,9 @@ func executeViewPlans<each T, each WT, each WOT> (
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
     var sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
     
-    let _ = (repeat (each pagePtrs_now).ptr.pointee)
-    let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
-    let _ = (repeat (each wot_allSegment_now).pointee)
+    _preheat((repeat (each pagePtrs_now).ptr.pointee))
+    _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
+    _preheat((repeat (each wot_allSegment_now).pointee))
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
@@ -122,9 +122,9 @@ func executeViewPlans<each T, each WT, each WOT> (
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
         sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
-        let _ = (repeat (each pagePtrs_now).ptr.pointee)
-        let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
-        let _ = (repeat (each wot_allSegment_now).pointee)
+        _preheat((repeat (each pagePtrs_now).ptr.pointee))
+        _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
+        _preheat((repeat (each wot_allSegment_now).pointee))
 
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
@@ -343,6 +343,8 @@ public protocol SystemBody {
     func execute(taskId: Int, components: borrowing Components)
 }
 
+@inline(never)
+func _preheat<each T>(_ value:repeat borrowing each T) {}
 
 @usableFromInline
 @inline(__always)
@@ -371,9 +373,9 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
     var sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
-    let _ = (repeat (each pagePtrs_now).ptr.pointee)
-    let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
-    let _ = (repeat (each wot_allSegment_now).pointee)
+    _preheat((repeat (each pagePtrs_now).ptr.pointee))
+    _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
+    _preheat((repeat (each wot_allSegment_now).pointee))
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
@@ -395,9 +397,9 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
         sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
-        let _ = (repeat (each pagePtrs_now).ptr.pointee)
-        let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
-        let _ = (repeat (each wot_allSegment_now).pointee)
+        _preheat((repeat (each pagePtrs_now).ptr.pointee))
+        _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
+        _preheat((repeat (each wot_allSegment_now).pointee))
 
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
