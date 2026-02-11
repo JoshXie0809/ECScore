@@ -52,15 +52,31 @@ func createViewPlans<each T, each WT, each WOT>(
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
     
-    for i in stride(from: global_First, through: global_Last, by: 1) {
-        var segment_i_mask = SparseSet_L2_BaseMask
-        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
-        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
+    // for i in stride(from: global_First, through: global_Last, by: 1) {
+    //     var segment_i_mask = SparseSet_L2_BaseMask
+    //     repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+    //     repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
         
-        if segment_i_mask != 0 {
-            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
-        }
+    //     if segment_i_mask != 0 {
+    //         viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
+    //     }
+    // }
+
+    // 示意（重點是「指標遞增」而不是每次 advanced(by: i)）
+    var segPtrs = (repeat (each allSegments).advanced(by: global_First))
+    var wtSegPtrs = (repeat (each wt_allSegments).advanced(by: global_First))
+    var i = global_First
+    while i <= global_Last {
+        var mask = SparseSet_L2_BaseMask
+        repeat mask &= (each segPtrs).pointee.pointee.blockMask
+        repeat mask &= (each wtSegPtrs).pointee.pointee.blockMask
+        if mask != 0 { viewPlans.append(.init(segmentIndex: i, mask: mask)) }
+
+        segPtrs = (repeat (each segPtrs).advanced(by: 1))
+        wtSegPtrs = (repeat (each wtSegPtrs).advanced(by: 1))
+        i += 1
     }
+
     
     repeat _fixLifetime(each storages)
     repeat _fixLifetime(each wt_storages)
