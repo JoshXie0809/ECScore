@@ -52,118 +52,18 @@ func createViewPlans<each T, each WT, each WOT>(
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
     
-    //    for i in stride(from: global_First, through: global_Last, by: 1) {
-    //        var segment_i_mask = SparseSet_L2_BaseMask
-    //        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
-    //        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
-    //
-    //        if segment_i_mask != 0 {
-    //            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
-    //        }
-    //    }
+    for i in stride(from: global_First, through: global_Last, by: 1) {
+        
+        var mask1 = SparseSet_L2_BaseMask
+        var mask2 = SparseSet_L2_BaseMask
+        repeat mask1 &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+        repeat mask2 &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
 
-    // var i = global_First
-    // if scanSegmentCount >= 4 {
-    //     let unrolledLast = global_Last - 3
-    //     while i <= unrolledLast {
-    //         let i0 = i
-    //         let i1 = i + 1
-    //         let i2 = i + 2
-    //         let i3 = i + 3
+        let segment_i_mask = mask1 & mask2
 
-    //         var segmentMask4 = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
-
-    //         repeat segmentMask4 &= SIMD4<UInt64>(
-    //             (each allSegments).advanced(by: i0).pointee.pointee.blockMask,
-    //             (each allSegments).advanced(by: i1).pointee.pointee.blockMask,
-    //             (each allSegments).advanced(by: i2).pointee.pointee.blockMask,
-    //             (each allSegments).advanced(by: i3).pointee.pointee.blockMask
-    //         )
-
-    //         repeat segmentMask4 &= SIMD4<UInt64>(
-    //             (each wt_allSegments).advanced(by: i0).pointee.pointee.blockMask,
-    //             (each wt_allSegments).advanced(by: i1).pointee.pointee.blockMask,
-    //             (each wt_allSegments).advanced(by: i2).pointee.pointee.blockMask,
-    //             (each wt_allSegments).advanced(by: i3).pointee.pointee.blockMask
-    //         )
-
-    //         if segmentMask4[0] != 0 {
-    //             viewPlans.append(ViewPlan(segmentIndex: i0, mask: segmentMask4[0]))
-    //         }
-    //         if segmentMask4[1] != 0 {
-    //             viewPlans.append(ViewPlan(segmentIndex: i1, mask: segmentMask4[1]))
-    //         }
-    //         if segmentMask4[2] != 0 {
-    //             viewPlans.append(ViewPlan(segmentIndex: i2, mask: segmentMask4[2]))
-    //         }
-    //         if segmentMask4[3] != 0 {
-    //             viewPlans.append(ViewPlan(segmentIndex: i3, mask: segmentMask4[3]))
-    //         }
-
-    //         i += 4
-    //     }
-    // }
-
-    // while i <= global_Last {
-    //     var segment_i_mask = SparseSet_L2_BaseMask
-    //     repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
-    //     repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
-
-    //     if segment_i_mask != 0 {
-    //         viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
-    //     }
-    //     i += 1
-    // }
-
-    // --- 優化核心：Unroll 4 + Independent Dependency Chains ---
-    var i = global_First
-    
-    if scanSegmentCount >= 4 {
-        let unrolledLast = global_Last - 3
-        while i <= unrolledLast {
-            // 定義 4 個獨立的累積器，斷開相依鏈
-            var m0 = SparseSet_L2_BaseMask
-            var m1 = SparseSet_L2_BaseMask
-            var m2 = SparseSet_L2_BaseMask
-            var m3 = SparseSet_L2_BaseMask
-
-            // 提前取出指針地址 (Peeling addresses)
-            // 現代 CPU 的 AGU 可以同時算出這四個地址
-            let base_i = i
-            
-            // 利用 Parameter Packs 暴力展開。
-            // 這裡不使用 SIMD 構造函數，避免裝箱開銷，直接讓 CPU 的多個 ALU 並行運算。
-            repeat (m0 &= (each allSegments).advanced(by: base_i).pointee.pointee.blockMask)
-            repeat (m1 &= (each allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask)
-            repeat (m2 &= (each allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask)
-            repeat (m3 &= (each allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask)
-
-            repeat (m0 &= (each wt_allSegments).advanced(by: base_i).pointee.pointee.blockMask)
-            repeat (m1 &= (each wt_allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask)
-            repeat (m2 &= (each wt_allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask)
-            repeat (m3 &= (each wt_allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask)
-
-            // 批次檢查並寫入。雖然有分支，但對於空資料，CPU 的分支預測器極強。
-            // 且這段代碼的記憶體訪問是非常連續的 (Cache-friendly)
-            if m0 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i, mask: m0)) }
-            if m1 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 1, mask: m1)) }
-            if m2 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 2, mask: m2)) }
-            if m3 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 3, mask: m3)) }
-
-            i += 4
+        if segment_i_mask != 0 {
+            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
         }
-    }
-
-    // 4. 處理剩餘的邊界
-    while i <= global_Last {
-        var mask = SparseSet_L2_BaseMask
-        repeat mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
-        repeat mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
-
-        if mask != 0 {
-            viewPlans.append(ViewPlan(segmentIndex: i, mask: mask))
-        }
-        i += 1
     }
     
     repeat _fixLifetime(each storages)
@@ -734,3 +634,117 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 //     let vps = createViewPlans( base: base, with: (repeat each with) )
 //     await executeViewPlansParallel(base: base, viewPlans: vps, with: (repeat each with), coresNum: coresNum, action)
 // }
+
+
+
+
+
+
+
+
+
+
+
+    // var i = global_First
+    // if scanSegmentCount >= 4 {
+    //     let unrolledLast = global_Last - 3
+    //     while i <= unrolledLast {
+    //         let i0 = i
+    //         let i1 = i + 1
+    //         let i2 = i + 2
+    //         let i3 = i + 3
+    //         var segmentMask4 = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
+
+    //         repeat segmentMask4 &= SIMD4<UInt64>(
+    //             (each allSegments).advanced(by: i0).pointee.pointee.blockMask,
+    //             (each allSegments).advanced(by: i1).pointee.pointee.blockMask,
+    //             (each allSegments).advanced(by: i2).pointee.pointee.blockMask,
+    //             (each allSegments).advanced(by: i3).pointee.pointee.blockMask
+    //         )
+
+    //         repeat segmentMask4 &= SIMD4<UInt64>(
+    //             (each wt_allSegments).advanced(by: i0).pointee.pointee.blockMask,
+    //             (each wt_allSegments).advanced(by: i1).pointee.pointee.blockMask,
+    //             (each wt_allSegments).advanced(by: i2).pointee.pointee.blockMask,
+    //             (each wt_allSegments).advanced(by: i3).pointee.pointee.blockMask
+    //         )
+
+    //         if segmentMask4[0] != 0 {
+    //             viewPlans.append(ViewPlan(segmentIndex: i0, mask: segmentMask4[0]))
+    //         }
+    //         if segmentMask4[1] != 0 {
+    //             viewPlans.append(ViewPlan(segmentIndex: i1, mask: segmentMask4[1]))
+    //         }
+    //         if segmentMask4[2] != 0 {
+    //             viewPlans.append(ViewPlan(segmentIndex: i2, mask: segmentMask4[2]))
+    //         }
+    //         if segmentMask4[3] != 0 {
+    //             viewPlans.append(ViewPlan(segmentIndex: i3, mask: segmentMask4[3]))
+    //         }
+
+    //         i += 4
+    //     }
+    // }
+
+    // while i <= global_Last {
+    //     var segment_i_mask = SparseSet_L2_BaseMask
+    //     repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+    //     repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
+
+    //     if segment_i_mask != 0 {
+    //         viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
+    //     }
+    //     i += 1
+    // }
+
+    // // --- 優化核心：Unroll 4 + Independent Dependency Chains ---
+    // var i = global_First
+
+    // if scanSegmentCount >= 4 {
+    //     let unrolledLast = global_Last - 3
+    //     while i <= unrolledLast {
+    //         // 定義 4 個獨立的累積器，斷開相依鏈
+    //         var m0 = SparseSet_L2_BaseMask
+    //         var m1 = SparseSet_L2_BaseMask
+    //         var m2 = SparseSet_L2_BaseMask
+    //         var m3 = SparseSet_L2_BaseMask
+
+    //         // 提前取出指針地址 (Peeling addresses)
+    //         // 現代 CPU 的 AGU 可以同時算出這四個地址
+    //         let base_i = i
+            
+    //         // 利用 Parameter Packs 暴力展開。
+    //         // 這裡不使用 SIMD 構造函數，避免裝箱開銷，直接讓 CPU 的多個 ALU 並行運算。
+    //         repeat (m0 &= (each allSegments).advanced(by: base_i).pointee.pointee.blockMask)
+    //         repeat (m1 &= (each allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask)
+    //         repeat (m2 &= (each allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask)
+    //         repeat (m3 &= (each allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask)
+
+    //         repeat (m0 &= (each wt_allSegments).advanced(by: base_i).pointee.pointee.blockMask)
+    //         repeat (m1 &= (each wt_allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask)
+    //         repeat (m2 &= (each wt_allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask)
+    //         repeat (m3 &= (each wt_allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask)
+
+    //         // 批次檢查並寫入。雖然有分支，但對於空資料，CPU 的分支預測器極強。
+    //         // 且這段代碼的記憶體訪問是非常連續的 (Cache-friendly)
+    //         if m0 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i, mask: m0)) }
+    //         if m1 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 1, mask: m1)) }
+    //         if m2 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 2, mask: m2)) }
+    //         if m3 != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 3, mask: m3)) }
+
+    //         i += 4
+    //     }
+    // }
+
+    // // 4. 處理剩餘的邊界
+    // while i <= global_Last {
+    //     var mask = SparseSet_L2_BaseMask
+    //     repeat mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+    //     repeat mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
+
+    //     if mask != 0 {
+    //         viewPlans.append(ViewPlan(segmentIndex: i, mask: mask))
+    //     }
+    //     i += 1
+    // }
+
