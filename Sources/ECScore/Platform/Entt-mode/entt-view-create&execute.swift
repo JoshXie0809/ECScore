@@ -131,13 +131,13 @@ func executeViewPlans<each T, each WT, each WOT> (
             now_pageIdx = blockMask.trailingZeroBitCount
             blockMask &= (blockMask - 1)
             
-            var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-            var pageMask2 = pageMask1
-            var pageMask3 = pageMask1
+            var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+            var pageMask2 = SparseSet_L2_BaseMask
+            var pageMask3 = UInt64(0)
             repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-            repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-            var pageMask = pageMask1 & pageMask2 & pageMask3
+            repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+            var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
@@ -160,13 +160,13 @@ func executeViewPlans<each T, each WT, each WOT> (
 
         let pageIdx = now_pageIdx
 
-        var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-        var pageMask2 = pageMask1
-        var pageMask3 = pageMask1
+        var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+        var pageMask2 = SparseSet_L2_BaseMask
+        var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-        var pageMask = pageMask1 & pageMask2 & pageMask3
+        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        var pageMask = pageMask1 & pageMask2 & (~pageMask3)
         
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
@@ -203,13 +203,13 @@ func executeViewPlans<each T, each WT, each WOT> (
         now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1)
 
-        var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-        var pageMask2 = pageMask1
-        var pageMask3 = pageMask1
+        var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+        var pageMask2 = SparseSet_L2_BaseMask
+        var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-        var pageMask = pageMask1 & pageMask2 & pageMask3
+        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
@@ -228,13 +228,13 @@ func executeViewPlans<each T, each WT, each WOT> (
 
     let pageIdx = now_pageIdx
 
-    var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-    var pageMask2 = pageMask1
-    var pageMask3 = pageMask1
+    var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+    var pageMask2 = SparseSet_L2_BaseMask
+    var pageMask3 = UInt64(0)
     repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
     repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-    repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-    var pageMask = pageMask1 & pageMask2 & pageMask3
+    repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+    var pageMask = pageMask1 & pageMask2 & (~pageMask3)
     
     while pageMask != 0 {
         let slotIdx = pageMask.trailingZeroBitCount
@@ -347,7 +347,6 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         let _ = (repeat (each wt_pagePtrs_now).ptr.pointee)
         let _ = (repeat (each wot_allSegment_now).pointee)
 
-        
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1) 
@@ -357,13 +356,13 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             now_pageIdx = blockMask.trailingZeroBitCount
             blockMask &= (blockMask - 1)
 
-            var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-            var pageMask2 = pageMask1
-            var pageMask3 = pageMask1
+            var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+            var pageMask2 = SparseSet_L2_BaseMask
+            var pageMask3 = UInt64(0)
             repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-            repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-            var pageMask = pageMask1 & pageMask2 & pageMask3
+            repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+            var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
             while pageMask != 0 {
                 let slotIdx = pageMask.trailingZeroBitCount
@@ -390,14 +389,13 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
         let pageIdx = now_pageIdx
 
-        var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-        var pageMask2 = pageMask1
-        var pageMask3 = pageMask1
+        var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+        var pageMask2 = SparseSet_L2_BaseMask
+        var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-
-        var pageMask = pageMask1 & pageMask2 & pageMask3
+        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
@@ -438,13 +436,13 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1)
 
-        var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-        var pageMask2 = pageMask1
-        var pageMask3 = pageMask1
+        var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+        var pageMask2 = SparseSet_L2_BaseMask
+        var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-        var pageMask = pageMask1 & pageMask2 & pageMask3
+        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
         while pageMask != 0 {
             let slotIdx = pageMask.trailingZeroBitCount
@@ -466,13 +464,13 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
     let pageIdx = now_pageIdx
 
-    var pageMask1 = entities_activeMaskPtr.advanced(by: blockIdx << 6 + pageIdx).pointee
-    var pageMask2 = pageMask1
-    var pageMask3 = pageMask1
+    var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+    var pageMask2 = SparseSet_L2_BaseMask
+    var pageMask3 = UInt64(0)
     repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
     repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-    repeat pageMask3 &= ~((each wot_allSegment).pointee.pageMasks[pageIdx])
-    var pageMask = pageMask1 & pageMask2 & pageMask3
+    repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+    var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
     while pageMask != 0 {
         let slotIdx = pageMask.trailingZeroBitCount
