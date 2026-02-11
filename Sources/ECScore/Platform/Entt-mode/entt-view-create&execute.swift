@@ -62,8 +62,6 @@ func createViewPlans<each T, each WT, each WOT>(
 //        }
 //    }
 
-    var segPtrs = (repeat (each allSegments).advanced(by: global_First))
-    var wtSegPtrs = (repeat (each wt_allSegments).advanced(by: global_First))
     var i = global_First
     if scanSegmentCount >= 4 {
         let unrolledLast = global_Last - 3
@@ -76,17 +74,17 @@ func createViewPlans<each T, each WT, each WOT>(
             var segmentMask4 = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
 
             repeat segmentMask4 &= SIMD4<UInt64>(
-                (each segPtrs).pointee.pointee.blockMask,
-                (each segPtrs).advanced(by: 1).pointee.pointee.blockMask,
-                (each segPtrs).advanced(by: 2).pointee.pointee.blockMask,
-                (each segPtrs).advanced(by: 3).pointee.pointee.blockMask
+                (each allSegments).advanced(by: i0).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: i1).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: i2).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: i3).pointee.pointee.blockMask
             )
 
             repeat segmentMask4 &= SIMD4<UInt64>(
-                (each wtSegPtrs).pointee.pointee.blockMask,
-                (each wtSegPtrs).advanced(by: 1).pointee.pointee.blockMask,
-                (each wtSegPtrs).advanced(by: 2).pointee.pointee.blockMask,
-                (each wtSegPtrs).advanced(by: 3).pointee.pointee.blockMask
+                (each wt_allSegments).advanced(by: i0).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: i1).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: i2).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: i3).pointee.pointee.blockMask
             )
 
             if segmentMask4[0] != 0 {
@@ -102,22 +100,18 @@ func createViewPlans<each T, each WT, each WOT>(
                 viewPlans.append(ViewPlan(segmentIndex: i3, mask: segmentMask4[3]))
             }
 
-            segPtrs = (repeat (each segPtrs).advanced(by: 4))
-            wtSegPtrs = (repeat (each wtSegPtrs).advanced(by: 4))
             i += 4
         }
     }
 
     while i <= global_Last {
         var segment_i_mask = SparseSet_L2_BaseMask
-        repeat segment_i_mask &= (each segPtrs).pointee.pointee.blockMask
-        repeat segment_i_mask &= (each wtSegPtrs).pointee.pointee.blockMask
+        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
 
         if segment_i_mask != 0 {
             viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
         }
-        segPtrs = (repeat (each segPtrs).advanced(by: 1))
-        wtSegPtrs = (repeat (each wtSegPtrs).advanced(by: 1))
         i += 1
     }
     
