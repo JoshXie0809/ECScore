@@ -66,32 +66,38 @@ func createViewPlans<each T, each WT, each WOT>(
     if scanSegmentCount >= 4 {
         let unrolledLast = global_Last - 3
         while i <= unrolledLast {
-            var segment_i0_mask = SparseSet_L2_BaseMask
-            var segment_i1_mask = SparseSet_L2_BaseMask
-            var segment_i2_mask = SparseSet_L2_BaseMask
-            var segment_i3_mask = SparseSet_L2_BaseMask
+            let i0 = i
+            let i1 = i + 1
+            let i2 = i + 2
+            let i3 = i + 3
 
-            repeat segment_i0_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
-            repeat segment_i1_mask &= (each allSegments).advanced(by: i + 1).pointee.pointee.blockMask
-            repeat segment_i2_mask &= (each allSegments).advanced(by: i + 2).pointee.pointee.blockMask
-            repeat segment_i3_mask &= (each allSegments).advanced(by: i + 3).pointee.pointee.blockMask
+            var segmentMask4 = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
 
-            repeat segment_i0_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
-            repeat segment_i1_mask &= (each wt_allSegments).advanced(by: i + 1).pointee.pointee.blockMask
-            repeat segment_i2_mask &= (each wt_allSegments).advanced(by: i + 2).pointee.pointee.blockMask
-            repeat segment_i3_mask &= (each wt_allSegments).advanced(by: i + 3).pointee.pointee.blockMask
+            repeat segmentMask4 &= SIMD4<UInt64>(
+                (each allSegments).advanced(by: i0).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: i1).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: i2).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: i3).pointee.pointee.blockMask
+            )
 
-            if segment_i0_mask != 0 {
-                viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i0_mask))
+            repeat segmentMask4 &= SIMD4<UInt64>(
+                (each wt_allSegments).advanced(by: i0).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: i1).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: i2).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: i3).pointee.pointee.blockMask
+            )
+
+            if segmentMask4[0] != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i0, mask: segmentMask4[0]))
             }
-            if segment_i1_mask != 0 {
-                viewPlans.append(ViewPlan(segmentIndex: i + 1, mask: segment_i1_mask))
+            if segmentMask4[1] != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i1, mask: segmentMask4[1]))
             }
-            if segment_i2_mask != 0 {
-                viewPlans.append(ViewPlan(segmentIndex: i + 2, mask: segment_i2_mask))
+            if segmentMask4[2] != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i2, mask: segmentMask4[2]))
             }
-            if segment_i3_mask != 0 {
-                viewPlans.append(ViewPlan(segmentIndex: i + 3, mask: segment_i3_mask))
+            if segmentMask4[3] != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i3, mask: segmentMask4[3]))
             }
 
             i += 4
