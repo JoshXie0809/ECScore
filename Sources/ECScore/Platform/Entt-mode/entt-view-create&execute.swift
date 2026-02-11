@@ -52,34 +52,62 @@ func createViewPlans<each T, each WT, each WOT>(
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
     
-    // for i in stride(from: global_First, through: global_Last, by: 1) {
-    //     var segment_i_mask = SparseSet_L2_BaseMask
-    //     repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
-    //     repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
-        
-    //     if segment_i_mask != 0 {
-    //         viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask)) 
-    //     }
-    // }
+//    for i in stride(from: global_First, through: global_Last, by: 1) {
+//        var segment_i_mask = SparseSet_L2_BaseMask
+//        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+//        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
+//
+//        if segment_i_mask != 0 {
+//            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
+//        }
+//    }
 
-    // 示意（重點是「指標遞增」而不是每次 advanced(by: i)）
-    var segPtrs = (repeat (each allSegments).advanced(by: global_First))
-    var wtSegPtrs = (repeat (each wt_allSegments).advanced(by: global_First))
     var i = global_First
-    while i <= global_Last {
-        var mask1 = SparseSet_L2_BaseMask
-        var mask2 = SparseSet_L2_BaseMask
-        repeat mask1 &= (each segPtrs).pointee.pointee.blockMask
-        repeat mask2 &= (each wtSegPtrs).pointee.pointee.blockMask
-        let mask = mask1 & mask2
+    if scanSegmentCount >= 4 {
+        let unrolledLast = global_Last - 3
+        while i <= unrolledLast {
+            var segment_i0_mask = SparseSet_L2_BaseMask
+            var segment_i1_mask = SparseSet_L2_BaseMask
+            var segment_i2_mask = SparseSet_L2_BaseMask
+            var segment_i3_mask = SparseSet_L2_BaseMask
 
-        if mask != 0 { viewPlans.append(.init(segmentIndex: i, mask: mask)) }
-        
-        segPtrs = (repeat (each segPtrs).advanced(by: 1))
-        wtSegPtrs = (repeat (each wtSegPtrs).advanced(by: 1))
-        i += 1
+            repeat segment_i0_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+            repeat segment_i1_mask &= (each allSegments).advanced(by: i + 1).pointee.pointee.blockMask
+            repeat segment_i2_mask &= (each allSegments).advanced(by: i + 2).pointee.pointee.blockMask
+            repeat segment_i3_mask &= (each allSegments).advanced(by: i + 3).pointee.pointee.blockMask
+
+            repeat segment_i0_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
+            repeat segment_i1_mask &= (each wt_allSegments).advanced(by: i + 1).pointee.pointee.blockMask
+            repeat segment_i2_mask &= (each wt_allSegments).advanced(by: i + 2).pointee.pointee.blockMask
+            repeat segment_i3_mask &= (each wt_allSegments).advanced(by: i + 3).pointee.pointee.blockMask
+
+            if segment_i0_mask != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i0_mask))
+            }
+            if segment_i1_mask != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i + 1, mask: segment_i1_mask))
+            }
+            if segment_i2_mask != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i + 2, mask: segment_i2_mask))
+            }
+            if segment_i3_mask != 0 {
+                viewPlans.append(ViewPlan(segmentIndex: i + 3, mask: segment_i3_mask))
+            }
+
+            i += 4
+        }
     }
 
+    while i <= global_Last {
+        var segment_i_mask = SparseSet_L2_BaseMask
+        repeat segment_i_mask &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
+        repeat segment_i_mask &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
+
+        if segment_i_mask != 0 {
+            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
+        }
+        i += 1
+    }
     
     repeat _fixLifetime(each storages)
     repeat _fixLifetime(each wt_storages)
