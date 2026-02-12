@@ -6,6 +6,15 @@ struct MockComponentA2: TagComponent {}
 struct MockComponentA3: TagComponent {}
 struct MockComponentA4: TagComponent {}
 struct MockComponentA5: TagComponent {}
+struct MockComponentA6: TagComponent {}
+struct MockComponentA7: TagComponent {}
+struct MockComponentA8: TagComponent {}
+struct MockComponentA9: TagComponent {}
+struct MockComponentA10: TagComponent {}
+struct MockComponentA11: TagComponent {}
+
+private let IntersectionIterations = 4
+private let IntersectionEntitiesPerIteration = 40_000
 
 //@Test func checkASan() {
 //    print("--- ASan 檢查開始 ---")
@@ -17,11 +26,9 @@ struct MockComponentA5: TagComponent {}
 //}
 
 @Test func intersectionTest() async throws {
-    // let ITER = 100
-    let ITER = 5
     var rng = Xoshiro128(seed: UInt32(666))
 
-    for _ in 1...ITER {
+    for _ in 1...IntersectionIterations {
         let base = makeBootedPlatform()
         let ttokens = interop(base, 
             MockComponentA.self, 
@@ -34,6 +41,12 @@ struct MockComponentA5: TagComponent {}
             MockComponentA3.self, 
             MockComponentA4.self, 
             MockComponentA5.self, 
+            MockComponentA6.self,
+            MockComponentA7.self,
+            MockComponentA8.self,
+            MockComponentA9.self,
+            MockComponentA10.self,
+            MockComponentA11.self,
         )
 
         var count = 0
@@ -41,11 +54,11 @@ struct MockComponentA5: TagComponent {}
 
         emplace(base, tokens: ttokens) {
             entities, pack in
-            var (a, b, c, d, e, a1, a2, a3, a4, a5) = pack.storages
+            var (a, b, c, d, e, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) = pack.storages
             var entitiesToDestroy = [EmplaceEntityId]()
-            entitiesToDestroy.reserveCapacity(50_000)
+            entitiesToDestroy.reserveCapacity(IntersectionEntitiesPerIteration)
 
-            for _ in 1...50_000 {
+            for _ in 1...IntersectionEntitiesPerIteration {
                 let entity = entities.createEntity()
 
                 let roll1 = rng.next() & 1
@@ -58,6 +71,12 @@ struct MockComponentA5: TagComponent {}
                 let rolla3 = rng.next() & 1
                 let rolla4 = rng.next() & 1
                 let rolla5 = rng.next() & 1
+                let rolla6 = rng.next() & 1
+                let rolla7 = rng.next() & 1
+                let rolla8 = rng.next() & 1
+                let rolla9 = rng.next() & 1
+                let rolla10 = rng.next() & 1
+                let rolla11 = rng.next() & 1
                 
                 let destroy_roll = rng.next() & 1
                 
@@ -72,11 +91,20 @@ struct MockComponentA5: TagComponent {}
                 if rolla3 != 0 { a3.addComponent(entity, MockComponentA3()) }
                 if rolla4 != 0 { a4.addComponent(entity, MockComponentA4()) }
                 if rolla5 != 0 { a5.addComponent(entity, MockComponentA5()) }
+                if rolla6 == 0 { a6.addComponent(entity, MockComponentA6()) }
+                if rolla7 == 0 { a7.addComponent(entity, MockComponentA7()) }
+                if rolla8 == 0 { a8.addComponent(entity, MockComponentA8()) }
+                if rolla9 != 0 { a9.addComponent(entity, MockComponentA9()) }
+                if rolla10 != 0 { a10.addComponent(entity, MockComponentA10()) }
+                if rolla11 != 0 { a11.addComponent(entity, MockComponentA11()) }
 
                 var isTrue = false
                 if 
                 roll1 == 0 && roll2 == 0 && roll3 == 0 && roll4 == 0 && roll5 == 0 &&
-                rolla1 == 0 && rolla2 == 0 && rolla3 == 0 && rolla4 == 0 && rolla5 == 0 {
+                rolla1 == 0 && rolla2 == 0 &&
+                rolla3 == 0 && rolla4 == 0 && rolla5 == 0 &&
+                rolla6 == 0 && rolla7 == 0 && rolla8 == 0 &&
+                rolla9 == 0 && rolla10 == 0 && rolla11 == 0 {
                     isTrue = true
                     count += 1
                 }
@@ -99,14 +127,30 @@ struct MockComponentA5: TagComponent {}
                 a3.removeComponent(entity)
                 a4.removeComponent(entity)
                 a5.removeComponent(entity)
+                a6.removeComponent(entity)
+                a7.removeComponent(entity)
+                a8.removeComponent(entity)
+                a9.removeComponent(entity)
+                a10.removeComponent(entity)
+                a11.removeComponent(entity)
 
                 entities.destroyEntity(entity)
             }
 
         }
 
-        let withTagTokens = interop(base, MockComponentA.self, MockComponentB.self, MockComponentC.self, MockComponentA1.self, MockComponentA2.self)
-        let withoutTagTokens = interop(base, MockComponentD.self, MockComponentE.self, MockComponentA3.self, MockComponentA4.self, MockComponentA5.self)
+        let withTagTokens = interop(
+            base,
+            MockComponentA.self, MockComponentB.self, MockComponentC.self,
+            MockComponentA1.self, MockComponentA2.self,
+            MockComponentA6.self, MockComponentA7.self, MockComponentA8.self
+        )
+        let withoutTagTokens = interop(
+            base,
+            MockComponentD.self, MockComponentE.self,
+            MockComponentA3.self, MockComponentA4.self, MockComponentA5.self,
+            MockComponentA9.self, MockComponentA10.self, MockComponentA11.self
+        )
         
         view(base: base, with: (), withTag: withTagTokens, withoutTag: withoutTagTokens) {
             _ in
@@ -132,11 +176,9 @@ struct FooLogic: SystemBody {
 }
 
 @Test func intersectionTest2() async throws {
-    // let ITER = 100
-    let ITER = 5
     var rng = Xoshiro128(seed: UInt32(666666))
 
-    for _ in 1...ITER {
+    for _ in 1...IntersectionIterations {
         let base = makeBootedPlatform()
         let ttokens = interop(base, 
             MockComponentA.self, 
@@ -149,17 +191,23 @@ struct FooLogic: SystemBody {
             MockComponentA3.self, 
             MockComponentA4.self, 
             MockComponentA5.self, 
+            MockComponentA6.self,
+            MockComponentA7.self,
+            MockComponentA8.self,
+            MockComponentA9.self,
+            MockComponentA10.self,
+            MockComponentA11.self,
         )
 
         var count = 0
 
         emplace(base, tokens: ttokens) {
             entities, pack in
-            var (a, b, c, d, e, a1, a2, a3, a4, a5) = pack.storages
+            var (a, b, c, d, e, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) = pack.storages
             var entitiesToDestroy = [EmplaceEntityId]()
-            entitiesToDestroy.reserveCapacity(50_000)
+            entitiesToDestroy.reserveCapacity(IntersectionEntitiesPerIteration)
 
-            for _ in 1...50_000 {
+            for _ in 1...IntersectionEntitiesPerIteration {
                 let entity = entities.createEntity()
 
                 let roll1 = rng.next() & 1
@@ -172,6 +220,12 @@ struct FooLogic: SystemBody {
                 let rolla3 = rng.next() & 1
                 let rolla4 = rng.next() & 1
                 let rolla5 = rng.next() & 1
+                let rolla6 = rng.next() & 1
+                let rolla7 = rng.next() & 1
+                let rolla8 = rng.next() & 1
+                let rolla9 = rng.next() & 1
+                let rolla10 = rng.next() & 1
+                let rolla11 = rng.next() & 1
                 
                 let destroy_roll = rng.next() & 1
                 
@@ -186,11 +240,20 @@ struct FooLogic: SystemBody {
                 if rolla3 != 0 { a3.addComponent(entity, MockComponentA3()) }
                 if rolla4 != 0 { a4.addComponent(entity, MockComponentA4()) }
                 if rolla5 != 0 { a5.addComponent(entity, MockComponentA5()) }
+                if rolla6 == 0 { a6.addComponent(entity, MockComponentA6()) }
+                if rolla7 == 0 { a7.addComponent(entity, MockComponentA7()) }
+                if rolla8 == 0 { a8.addComponent(entity, MockComponentA8()) }
+                if rolla9 != 0 { a9.addComponent(entity, MockComponentA9()) }
+                if rolla10 != 0 { a10.addComponent(entity, MockComponentA10()) }
+                if rolla11 != 0 { a11.addComponent(entity, MockComponentA11()) }
 
                 var isTrue = false
                 if 
                 roll1 == 0 && roll2 == 0 && roll3 == 0 && roll4 == 0 && roll5 == 0 &&
-                rolla1 == 0 && rolla2 == 0 && rolla3 == 0 && rolla4 == 0 && rolla5 == 0 {
+                rolla1 == 0 && rolla2 == 0 &&
+                rolla3 == 0 && rolla4 == 0 && rolla5 == 0 &&
+                rolla6 == 0 && rolla7 == 0 && rolla8 == 0 &&
+                rolla9 == 0 && rolla10 == 0 && rolla11 == 0 {
                     isTrue = true
                     count += 1
                 }
@@ -213,14 +276,30 @@ struct FooLogic: SystemBody {
                 a3.removeComponent(entity)
                 a4.removeComponent(entity)
                 a5.removeComponent(entity)
+                a6.removeComponent(entity)
+                a7.removeComponent(entity)
+                a8.removeComponent(entity)
+                a9.removeComponent(entity)
+                a10.removeComponent(entity)
+                a11.removeComponent(entity)
 
                 entities.destroyEntity(entity)
             }
 
         }
 
-        let withTagTokens = interop(base, MockComponentA.self, MockComponentB.self, MockComponentC.self, MockComponentA1.self, MockComponentA2.self)
-        let withoutTagTokens = interop(base, MockComponentD.self, MockComponentE.self, MockComponentA3.self, MockComponentA4.self, MockComponentA5.self)
+        let withTagTokens = interop(
+            base,
+            MockComponentA.self, MockComponentB.self, MockComponentC.self,
+            MockComponentA1.self, MockComponentA2.self,
+            MockComponentA6.self, MockComponentA7.self, MockComponentA8.self
+        )
+        let withoutTagTokens = interop(
+            base,
+            MockComponentD.self, MockComponentE.self,
+            MockComponentA3.self, MockComponentA4.self, MockComponentA5.self,
+            MockComponentA9.self, MockComponentA10.self, MockComponentA11.self
+        )
         let vc = UnsafeMutablePointer<Int>.allocate(capacity: 1)
         defer { vc.deallocate() }
         vc.pointee = 0

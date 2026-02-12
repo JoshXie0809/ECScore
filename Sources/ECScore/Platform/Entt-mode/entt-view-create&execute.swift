@@ -53,18 +53,75 @@ where repeat (each T).SparseSetType: DenseSparseSet
     let allSegments = (repeat (each storages).segments)
     let wt_allSegments = (repeat (each wt_storages).segments)
     
-    for i in stride(from: global_First, through: global_Last, by: 1) {
-        
-        var mask1 = SparseSet_L2_BaseMask
-        var mask2 = SparseSet_L2_BaseMask
-        repeat mask1 &= (each allSegments).advanced(by: i).pointee.pointee.blockMask
-        repeat mask2 &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask
+    var i = global_First
+    if scanSegmentCount >= 4 {
+        let unrolledLast = global_Last - 3
+        var base_i = i
 
-        let segment_i_mask = mask1 & mask2
+        var withMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
+        var wtMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
 
-        if segment_i_mask != 0 {
-            viewPlans.append(ViewPlan(segmentIndex: i, mask: segment_i_mask))
+        repeat withMask4_now &= SIMD4<UInt64>(
+            (each allSegments).advanced(by: base_i).pointee.pointee.blockMask,
+            (each allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask,
+            (each allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask,
+            (each allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask
+        )
+
+        repeat wtMask4_now &= SIMD4<UInt64>(
+            (each wt_allSegments).advanced(by: base_i).pointee.pointee.blockMask,
+            (each wt_allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask,
+            (each wt_allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask,
+            (each wt_allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask
+        )
+
+        while true {
+            let mask4 = withMask4_now & wtMask4_now
+            if mask4[0] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i, mask: mask4[0])) }
+            if mask4[1] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 1, mask: mask4[1])) }
+            if mask4[2] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 2, mask: mask4[2])) }
+            if mask4[3] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 3, mask: mask4[3])) }
+
+            let nextBase = base_i + 4
+            if nextBase > unrolledLast {
+                i = nextBase
+                break
+            }
+
+            _preheat(
+                (repeat (each allSegments).advanced(by: nextBase).pointee.pointee.blockMask),
+                (repeat (each wt_allSegments).advanced(by: nextBase).pointee.pointee.blockMask)
+            )
+
+            withMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
+            wtMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
+
+            repeat withMask4_now &= SIMD4<UInt64>(
+                (each allSegments).advanced(by: nextBase).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: nextBase + 1).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: nextBase + 2).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: nextBase + 3).pointee.pointee.blockMask
+            )
+
+            repeat wtMask4_now &= SIMD4<UInt64>(
+                (each wt_allSegments).advanced(by: nextBase).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: nextBase + 1).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: nextBase + 2).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: nextBase + 3).pointee.pointee.blockMask
+            )
+
+            base_i = nextBase
         }
+    }
+
+    while i <= global_Last {
+        var m = SparseSet_L2_BaseMask
+        repeat (m &= (each allSegments).advanced(by: i).pointee.pointee.blockMask)
+        repeat (m &= (each wt_allSegments).advanced(by: i).pointee.pointee.blockMask)
+        if m != 0 {
+            viewPlans.append(ViewPlan(segmentIndex: i, mask: m))
+        }
+        i += 1
     }
     
     repeat _fixLifetime(each storages)
@@ -344,6 +401,7 @@ public protocol SystemBody {
     func execute(taskId: Int, components: borrowing Components)
 }
 
+@usableFromInline
 @inline(never)
 func _preheat<each T>(_ value:repeat borrowing each T) {}
 
