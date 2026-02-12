@@ -79,7 +79,7 @@ public struct Manifest_Facts: Facts {
     }
 
     public struct MF_Env: Default {
-        public var registry: Platform_Registry?
+        public var registry: (any Platform_Registry)?
         public static func _default() -> Self {
             return Self(registry: nil)
         }

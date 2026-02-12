@@ -1,5 +1,9 @@
 public protocol Component: ~Copyable {
-    static func createPFStorage() -> AnyPlatformStorage
+    static func createPFSBox() -> AnyPlatformStorage
+    static func createSparseSet() -> any AnySparseSet
+
+    associatedtype SparseSetType
+
     static var typeIdString: String { get }
     static var _hs: TypeStrIdHashed_FNV1A_64 { get } // hashed string of typeIdString
     init()
@@ -12,11 +16,17 @@ extension Component {
         String(reflecting: Self.self)
     }
 
+    public typealias SparseSetType = SparseSet_L2_2<Self>
+
     public static var _hs: TypeStrIdHashed_FNV1A_64 {
         typeIdString._hs_fnv1a_64
     }
 
-    public static func createPFStorage() -> AnyPlatformStorage {
+    public static func createSparseSet() -> any AnySparseSet {
+        SparseSetType()
+    }
+
+    public static func createPFSBox() -> AnyPlatformStorage {
         PFStorageBox(PFStorageHandle<Self>())
     }
 }

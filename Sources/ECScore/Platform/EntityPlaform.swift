@@ -43,10 +43,6 @@ public final class EntityPlatForm_Ver0: Platform_Entity, Component {
         entities.despawn(eid)
     }
 
-    public static func createPFStorage() -> any AnyPlatformStorage {
-        return PFStorageBox(PFStorageHandle<Self>())
-    }
-
     public func forEachLiveId(_ body: (EntityId) -> Void) {
         for i in 0..<entities.maxId {
             if entities.idIsActive(i) {

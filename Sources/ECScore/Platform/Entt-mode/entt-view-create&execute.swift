@@ -76,7 +76,7 @@ func createViewPlans<each T, each WT, each WOT>(
 @usableFromInline
 @inline(__always)
 func executeViewPlans<each T, each WT, each WOT> (
-    entities: Platform_Entity,
+    entities: any Platform_Entity,
     viewPlans: ContiguousArray<ViewPlan>,
     storages: borrowing (repeat PFStorageBox<each T>),
     wt_storages: borrowing (repeat PFStorageBox<each WT>), 
@@ -349,7 +349,7 @@ func _preheat<each T>(_ value:repeat borrowing each T) {}
 @usableFromInline
 @inline(__always)
 func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
-    entities: Platform_Entity,
+    entities: any Platform_Entity,
     viewPlans: ContiguousArray<ViewPlan>,
     storages: borrowing (repeat PFStorageBox<each T>),
     wt_storages: borrowing (repeat PFStorageBox<each WT>), 

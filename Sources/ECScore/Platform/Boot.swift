@@ -12,8 +12,8 @@ public extension BasePlatform {
         let entityPlatformId = registry.register(E.self)
 
         // create storage for base pf
-        var r_storage = R.createPFStorage()
-        var e_storage = E.createPFStorage()
+        var r_storage = R.createPFSBox()
+        var e_storage = E.createPFSBox()
         
         // entityId 0
         let eid0 = entities.spawn(1)[0]
@@ -35,7 +35,7 @@ public extension BasePlatform {
 
 public extension BasePlatform {
     @inlinable
-    var registry: Platform_Registry? {
+    var registry: (any Platform_Registry)? {
         let rid0 = RegistryId(id: 0, version: 0)
         let eid0 = EntityId(id: 0, version: 0)
         // 直接找 0 號位並嘗試轉型
@@ -43,18 +43,18 @@ public extension BasePlatform {
             return nil
         }
 
-        return storage.get(eid0) as? Platform_Registry
+        return storage.get(eid0) as? (any Platform_Registry)
     }
 
     @inlinable
-    var entities: Platform_Entity? {
+    var entities: (any Platform_Entity)? {
         let rid1 =  RegistryId(id: 1, version: 0)
         let eid0 = EntityId(id: 0, version: 0)
         guard let storage = self.storages[rid1.id] else {
             return nil
         }
 
-        return storage.get(eid0) as? Platform_Entity
+        return storage.get(eid0) as? (any Platform_Entity)
     }
 }
 

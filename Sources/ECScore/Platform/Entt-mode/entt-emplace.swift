@@ -34,11 +34,11 @@ public struct EmplaceEntityId {
 public struct EmplaceEntities: ~Copyable {
     @inline(__always)
     @usableFromInline
-    internal let entities: Platform_Entity
+    internal let entities: any Platform_Entity
 
     @inline(__always)
     @usableFromInline
-    init(_ entities: Platform_Entity) { self.entities = entities}
+    init(_ entities: any Platform_Entity) { self.entities = entities}
 
     @inlinable
     @inline(__always)

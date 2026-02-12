@@ -2,7 +2,6 @@ public typealias BlockOffset = Int16
 public typealias CompArrayIndex = Int16
 
 public struct SparseSetEntry: Sendable {
-    // 必須是 public 或是 @usableFromInline 才能被 @inlinable 存取
     public var compArrIdx: CompArrayIndex 
     
     @inline(__always)
@@ -29,9 +28,11 @@ func printBit(_ val: UInt64) {
 }
 
 
-let HardwareBufferPadding = 16
 
-public struct SparseSet_L2_2<T: Component> {
+public let HardwareBufferPadding = 16
+
+public struct SparseSet_L2_2<C: Component>: AnySparseSet {
+    public typealias T = C
     @usableFromInline
     private(set) var blockMask: UInt64 = 0
     @usableFromInline
@@ -40,7 +41,7 @@ public struct SparseSet_L2_2<T: Component> {
     @usableFromInline
     private(set) var sparseEntries: ContiguousArray<SparseSetEntry>
     @usableFromInline
-    private(set) var components: ContiguousArray<T>
+    private(set) var components: ContiguousArray<C>
     @usableFromInline
     private(set) var reverseEntities: ContiguousArray<BlockId>
     @usableFromInline let staggerOffset: Int
@@ -48,15 +49,15 @@ public struct SparseSet_L2_2<T: Component> {
 
     @inlinable public var count: Int { components.count - staggerOffset }
 
-
+    @inlinable
     public init() {
         self.pageMasks = ContiguousArray<UInt64>(repeating: 0, count: 64)
         
-        // let oid = ObjectIdentifier(T.self)
+        // let oid = ObjectIdentifier(C.self)
         // let staggerIdx = abs(oid.hashValue) & 7
         // let byteOffset = staggerIdx * 64
 
-        self.staggerOffset = 0 // max(byteOffset / MemoryLayout<T>.stride, 1)
+        self.staggerOffset = 0 // max(byteOffset / MemoryLayout<C>.stride, 1)
         self.sparseStaggerOffset = 0 // max(byteOffset / MemoryLayout<SparseSetEntry>.stride, 1)
 
         // 定義安全區大小：16 條 Cache Lines (1024 Bytes)
@@ -71,11 +72,11 @@ public struct SparseSet_L2_2<T: Component> {
         
         // 2. Components (這部分你寫對了！)
         // 計算 T 需要多少個元素才能填滿 1024 bytes
-        self.components = ContiguousArray<T>()
-        let paddingElements = (paddingBytes + MemoryLayout<T>.stride - 1) / MemoryLayout<T>.stride
+        self.components = ContiguousArray<C>()
+        let paddingElements = (paddingBytes + MemoryLayout<C>.stride - 1) / MemoryLayout<C>.stride
         self.components.reserveCapacity(4096 + paddingElements + staggerOffset)
         
-        for _ in 0..<staggerOffset { self.components.append(T()) }
+        for _ in 0..<staggerOffset { self.components.append(C()) }
         
         // 3. ReverseEntities (【修正這裡】)
         self.reverseEntities = ContiguousArray<BlockId>()
@@ -94,7 +95,7 @@ public struct SparseSet_L2_2<T: Component> {
     // MARK: - 符合 PFStorage 介面的操作
 
     @inlinable
-    public mutating func add(_ eid: EntityId, _ component: T) {
+    public mutating func add(_ eid: EntityId, _ component: C) {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
         let slotIdx = offset & 63
@@ -160,7 +161,7 @@ public struct SparseSet_L2_2<T: Component> {
     }
 
     @inlinable
-    public mutating func get(_ eid: EntityId) -> T? {
+    public mutating func get(_ eid: EntityId) -> C? {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
         let slotIdx = offset & 63
@@ -178,7 +179,7 @@ public struct SparseSet_L2_2<T: Component> {
     // MARK: - PFStorage 指標介面
     /// 供 ViewPlan 獲取數據陣列指標
     @inlinable
-    public mutating func getRawDataPointer() -> UnsafeMutablePointer<T> {
+    public mutating func getRawDataPointer() -> UnsafeMutablePointer<C> {
         return components.withUnsafeMutableBufferPointer { $0.baseAddress! + staggerOffset }
     }
 
@@ -190,12 +191,12 @@ public struct SparseSet_L2_2<T: Component> {
 
     /// 提供連續的 SparseEntries 指標，供快速索引轉換
     @inlinable
-    public func getSparseEntriesPointer() -> SSEPtr<T>  {
+    public func getSparseEntriesPointer() -> SSEPtr<C>  {
         return SSEPtr(ptr: sparseEntries.withUnsafeBufferPointer { $0.baseAddress! + sparseStaggerOffset })
     }
 }
 
-public struct SSEPtr<T> {
+public struct SSEPtr<C> {
     @usableFromInline
     let ptr: UnsafePointer<SparseSetEntry>
     

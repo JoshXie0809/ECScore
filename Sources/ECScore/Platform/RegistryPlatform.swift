@@ -3,7 +3,7 @@ public typealias RegistryId = EntityId
 public protocol Platform_Registry: AnyObject, Component {
     func register(_ type: any Component.Type) -> RegistryId
     func lookup(_ type_rs: TypeStrIdHashed_FNV1A_64) -> RegistryId?
-    func lookup(_ rid: RegistryId) -> Component.Type?
+    func lookup(_ rid: RegistryId) -> (any Component.Type)?
     func contains(_ type: any Component.Type) -> Bool
     var maxRidId: Int { get }
     var count: Int { get }
@@ -37,9 +37,5 @@ public final class RegistryPlatform : Platform, Platform_Registry, Component {
 
     public func contains(_ type: any Component.Type) -> Bool {
         return typeToRId[type._hs] != nil
-    }
-
-    public static func createPFStorage() -> AnyPlatformStorage {
-        return PFStorageBox(PFStorageHandle<Self>())
     }
 }

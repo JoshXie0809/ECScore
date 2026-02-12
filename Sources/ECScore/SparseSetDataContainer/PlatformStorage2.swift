@@ -1,3 +1,7 @@
+public protocol AnySparseSet {
+    associatedtype T
+}
+
 struct PFStorage<T: Component>: ~Copyable {
     // this is not nill version
     private(set) var segments: ContiguousArray<UnsafeMutablePointer<SparseSet_L2_2<T>>>
@@ -13,6 +17,7 @@ struct PFStorage<T: Component>: ~Copyable {
     
     init() {
         self.sentinelPtr = UnsafeMutablePointer<SparseSet_L2_2<T>>.allocate(capacity: 1)
+
         self.sentinelPtr.initialize(to: SparseSet_L2_2<T>()) 
         
         self.segments = ContiguousArray()
@@ -343,8 +348,12 @@ struct PFStorageView<T: Component>: @unchecked Sendable, ~Copyable {
 extension PFStorageBox: Component where T: Component {
     public init() { self.handle = PFStorageHandle<T>()}
     
-    public static func createPFStorage() -> any AnyPlatformStorage {
+    public static func createPFSBox() -> any AnyPlatformStorage {
         return PFStorageBox<Self>(PFStorageHandle<Self>())
     }
+}
+
+struct PFStorage_Tag<TC: TagComponent>: ~Copyable {
+
 }
 
