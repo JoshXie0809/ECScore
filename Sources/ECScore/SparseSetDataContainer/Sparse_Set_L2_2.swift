@@ -1,3 +1,34 @@
+public typealias BlockOffset = Int16
+public typealias CompArrayIndex = Int16
+
+public struct SparseSetEntry: Sendable {
+    // 必須是 public 或是 @usableFromInline 才能被 @inlinable 存取
+    public var compArrIdx: CompArrayIndex 
+    
+    @inline(__always)
+    public init(compArrIdx: CompArrayIndex) {
+        self.compArrIdx = compArrIdx
+    }
+}
+
+public struct BlockId: Sendable {
+    public var offset: BlockOffset
+    
+    @inline(__always)
+    public init(offset: BlockOffset) {
+        self.offset = offset
+    }
+}
+
+func printBit(_ val: UInt64) {
+    for i in (0..<64).reversed() {
+        let bit = (val >> i) & 1
+        print(bit == 0 ? "." : "1", terminator: "")
+    }
+    print()
+}
+
+
 let HardwareBufferPadding = 16
 
 public struct SparseSet_L2_2<T: Component> {
