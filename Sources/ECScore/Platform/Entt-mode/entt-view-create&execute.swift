@@ -56,45 +56,13 @@ where repeat (each T).SparseSetType: DenseSparseSet
     var i = global_First
     if scanSegmentCount >= 4 {
         let unrolledLast = global_Last - 3
-        var base_i = i
-
-        var withMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
-        var wtMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
-
-        repeat withMask4_now &= SIMD4<UInt64>(
-            (each allSegments).advanced(by: base_i).pointee.pointee.blockMask,
-            (each allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask,
-            (each allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask,
-            (each allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask
-        )
-
-        repeat wtMask4_now &= SIMD4<UInt64>(
-            (each wt_allSegments).advanced(by: base_i).pointee.pointee.blockMask,
-            (each wt_allSegments).advanced(by: base_i + 1).pointee.pointee.blockMask,
-            (each wt_allSegments).advanced(by: base_i + 2).pointee.pointee.blockMask,
-            (each wt_allSegments).advanced(by: base_i + 3).pointee.pointee.blockMask
-        )
+        var nextBase = i
+        let simd_base = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
 
         while true {
-            let mask4 = withMask4_now & wtMask4_now
-            if mask4[0] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i, mask: mask4[0])) }
-            if mask4[1] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 1, mask: mask4[1])) }
-            if mask4[2] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 2, mask: mask4[2])) }
-            if mask4[3] != 0 { viewPlans.append(ViewPlan(segmentIndex: base_i + 3, mask: mask4[3])) }
-
-            let nextBase = base_i + 4
-            if nextBase > unrolledLast {
-                i = nextBase
-                break
-            }
-
-            _preheat(
-                (repeat (each allSegments).advanced(by: nextBase).pointee.pointee.blockMask),
-                (repeat (each wt_allSegments).advanced(by: nextBase).pointee.pointee.blockMask)
-            )
-
-            withMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
-            wtMask4_now = SIMD4<UInt64>(repeating: SparseSet_L2_BaseMask)
+            
+            var withMask4_now = simd_base
+            var wtMask4_now = simd_base
 
             repeat withMask4_now &= SIMD4<UInt64>(
                 (each allSegments).advanced(by: nextBase).pointee.pointee.blockMask,
@@ -110,7 +78,46 @@ where repeat (each T).SparseSetType: DenseSparseSet
                 (each wt_allSegments).advanced(by: nextBase + 3).pointee.pointee.blockMask
             )
 
-            base_i = nextBase
+            let mask4 = withMask4_now & wtMask4_now
+            if mask4[0] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase, mask: mask4[0])) }
+            if mask4[1] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase + 1, mask: mask4[1])) }
+            if mask4[2] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase + 2, mask: mask4[2])) }
+            if mask4[3] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase + 3, mask: mask4[3])) }
+
+            nextBase += 4
+            if nextBase > unrolledLast {
+                i = nextBase
+                break
+            }
+
+            var withMask4_now_2 = simd_base
+            var wtMask4_now_2 = simd_base
+
+            repeat withMask4_now_2 &= SIMD4<UInt64>(
+                (each allSegments).advanced(by: nextBase).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: nextBase + 1).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: nextBase + 2).pointee.pointee.blockMask,
+                (each allSegments).advanced(by: nextBase + 3).pointee.pointee.blockMask
+            )
+
+            repeat wtMask4_now_2 &= SIMD4<UInt64>(
+                (each wt_allSegments).advanced(by: nextBase).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: nextBase + 1).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: nextBase + 2).pointee.pointee.blockMask,
+                (each wt_allSegments).advanced(by: nextBase + 3).pointee.pointee.blockMask
+            )
+
+            let mask4_2 = withMask4_now_2 & wtMask4_now_2
+            if mask4_2[0] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase, mask: mask4_2[0])) }
+            if mask4_2[1] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase + 1, mask: mask4_2[1])) }
+            if mask4_2[2] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase + 2, mask: mask4_2[2])) }
+            if mask4_2[3] != 0 { viewPlans.append(ViewPlan(segmentIndex: nextBase + 3, mask: mask4_2[3])) }
+
+            nextBase += 4
+            if nextBase > unrolledLast {
+                i = nextBase
+                break
+            }
         }
     }
 
