@@ -28,6 +28,7 @@ func createViewPlans<each T, each WT, each WOT>(
     withTag: (repeat TypeToken<each WT>),
     withoutTag: (repeat TypeToken<each WOT>),
 ) -> (ContiguousArray<ViewPlan>, (repeat PFStorageBox<each T>), (repeat PFStorageBox<each WT>), (repeat PFStorageBox<each WOT>))
+where repeat (each T).SparseSetType: DenseSparseSet
 {
     let storages: (repeat PFStorageBox<each T>) = (repeat (each with).getStorage(base: base))
     let wt_storages: (repeat PFStorageBox<each WT>) = (repeat (each withTag).getStorage(base: base))
@@ -82,7 +83,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     wt_storages: borrowing (repeat PFStorageBox<each WT>), 
     wot_storages: borrowing (repeat PFStorageBox<each WOT>),
     _ action: (_ taskId: Int, _: repeat ComponentProxy<each T>) -> Void
-) {
+) where repeat (each T).SparseSetType: DenseSparseSet {
     let count = viewPlans.count
     guard count != 0 else { return }
     let entities_activeMaskPtr = entities._activeMaskPtr
@@ -355,7 +356,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     wt_storages: borrowing (repeat PFStorageBox<each WT>), 
     wot_storages: borrowing (repeat PFStorageBox<each WOT>),
     _ body: borrowing S
-) where S.Components == (repeat ComponentProxy<each T>) // 強制型別對齊
+) where S.Components == (repeat ComponentProxy<each T>), repeat (each T).SparseSetType: DenseSparseSet // 強制型別對齊
 {
     let count = viewPlans.count
     guard count != 0 else { return }
@@ -855,4 +856,3 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     //     }
     //     i += 1
     // }
-

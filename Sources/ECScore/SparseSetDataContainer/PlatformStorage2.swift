@@ -1,24 +1,39 @@
 public protocol AnySparseSet {
-    associatedtype T
+    associatedtype T where T: Component
+    init()
+    var count: Int { get }
+    var blockMask: UInt64 { get }
+    var pageMasks: ContiguousArray<UInt64> { get }
+    mutating func add(_ eid: EntityId, _ component: consuming T)
+    mutating func remove(_ eid: EntityId)
+    func get(_ eid: EntityId) -> T?
+    func getPageMasksPointer() -> UnsafePointer<UInt64>
 }
+
+public protocol DenseSparseSet: AnySparseSet {
+    mutating func getRawDataPointer() -> UnsafeMutablePointer<T>
+    func getSparseEntriesPointer() -> SSEPtr<T>
+}
+
 
 struct PFStorage<T: Component>: ~Copyable {
     // this is not nill version
-    private(set) var segments: ContiguousArray<UnsafeMutablePointer<SparseSet_L2_2<T>>>
+    private(set) var segments: ContiguousArray<UnsafeMutablePointer< T.SparseSetType >>
+    
     private(set) var activeEntityCount = 0
     private(set) var firstActiveSegment: Int = Int.max
     private(set) var lastActiveSegment: Int = Int.min
     private(set) var activeSegmentCount: Int = 0
 
-    public let sentinelPtr: UnsafeMutablePointer<SparseSet_L2_2<T>>
+    public let sentinelPtr: UnsafeMutablePointer< T.SparseSetType >
 
     var storageType: any Component.Type { T.self }
     var segmentCount : Int { segments.count }
     
     init() {
-        self.sentinelPtr = UnsafeMutablePointer<SparseSet_L2_2<T>>.allocate(capacity: 1)
+        self.sentinelPtr = UnsafeMutablePointer< T.SparseSetType >.allocate(capacity: 1)
 
-        self.sentinelPtr.initialize(to: SparseSet_L2_2<T>()) 
+        self.sentinelPtr.initialize(to: T.createSparseSet())
         
         self.segments = ContiguousArray()
         self.segments.reserveCapacity(1024) // init some place
@@ -38,15 +53,15 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inline(__always)
-    private func allocatePage() -> UnsafeMutablePointer<SparseSet_L2_2<T>> {
-        let ptr = UnsafeMutablePointer<SparseSet_L2_2<T>>.allocate(capacity: 1)
-        ptr.initialize(to: SparseSet_L2_2<T>())
+    private func allocatePage() -> UnsafeMutablePointer<T.SparseSetType> {
+        let ptr = UnsafeMutablePointer<T.SparseSetType>.allocate(capacity: 1)
+        ptr.initialize(to: T.createSparseSet())
         return ptr
     }
 
     // 輔助：釋放 Page
     @inline(__always)
-    private func freePage(_ ptr: UnsafeMutablePointer<SparseSet_L2_2<T>>) {
+    private func freePage(_ ptr: UnsafeMutablePointer<T.SparseSetType>) {
         ptr.deinitialize(count: 1)
         ptr.deallocate()
     }
@@ -101,6 +116,7 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
+    @inline(__always)
     mutating func add(eid: borrowing EntityId, component: consuming T) {
         let blockIdx = ensureCapacity(for: eid)
 
@@ -114,6 +130,7 @@ struct PFStorage<T: Component>: ~Copyable {
     
 
     @inlinable
+    @inline(__always)
     mutating func remove(eid: borrowing EntityId) {
         let blockIdx = Int(eid.id >> 12)
         
@@ -127,7 +144,7 @@ struct PFStorage<T: Component>: ~Copyable {
 
         // if segment has no active member
         if storagePtr.pointee.count == 0 {
-            freePage(storagePtr)
+            freePage(segments[blockIdx])
             // set as sentinel
             segments[blockIdx] = sentinelPtr
             activeSegmentCount -= 1
@@ -142,11 +159,13 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
+    @inline(__always)
     func getWithDenseIndex_Uncheck_Typed(_ index: Int) -> T? {
+        guard T.SparseSetType.self == SparseSet_L2_2<T>.self else { return nil }
         var temp_index = index
         for i in stride(from: firstActiveSegment, through: lastActiveSegment, by: 1) 
         {
-            let segmentPtr = segments[i]
+            let segmentPtr = segments[i] as! UnsafeMutablePointer<SparseSet_L2_2<T>>
             if segmentPtr != sentinelPtr {
                 let count = segmentPtr.pointee.count
                 if temp_index >= count {
@@ -162,6 +181,7 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
+    @inline(__always)
     func get(_ eid: borrowing EntityId) -> T? {
         let blockIdx = Int(eid.id >> 12)
         guard blockIdx < segments.count else { return nil }
@@ -169,15 +189,17 @@ struct PFStorage<T: Component>: ~Copyable {
         if ptr == sentinelPtr { return nil }
         
         // 直接調用 SparseSet 內部的 get，它會處理 Sparse -> Dense 的轉換
-        return ptr.pointee.get(EntityId(id: eid.id, version: eid.version))
+        return ptr.pointee.get(eid)
     }
 
     @inlinable
+    @inline(__always)
     func getWithDenseIndex_Uncheck(_ index: Int) -> Any? {
+        guard T.SparseSetType.self == SparseSet_L2_2<T>.self else { return nil }
         var temp_index = index
         for i in stride(from: firstActiveSegment, through: lastActiveSegment, by: 1) 
         {
-            let segmentPtr = segments[i]
+            let segmentPtr = segments[i] as! UnsafeMutablePointer<SparseSet_L2_2<T>>
             if segmentPtr != sentinelPtr {
                 let count = segmentPtr.pointee.count
                 if temp_index >= count {
@@ -191,19 +213,21 @@ struct PFStorage<T: Component>: ~Copyable {
     }
     
     @inlinable
+    @inline(__always)
     func get(_ eid: borrowing EntityId) -> Any? {
-        let (blockIdx, offset) = (eid.id >> 12, eid.id & 4095)
+        let blockIdx = eid.id >> 12
         guard blockIdx < segments.count else { return nil }
         let segmentPtr = segments[blockIdx]
         guard segmentPtr != sentinelPtr else {
             return nil
         }
         
-        return segmentPtr.pointee.getRawDataPointer()[offset]
+        return segmentPtr.pointee.get(eid)
     }
 
 
     @inlinable
+    @inline(__always)
     mutating func rawAdd(eid: borrowing EntityId, component: consuming Any) {
         guard let typedComponent = component as? T else {
             fatalError("the type mismatched while using rawAdd")
@@ -212,20 +236,22 @@ struct PFStorage<T: Component>: ~Copyable {
     }
 
     @inlinable
-    mutating func getSegmentComponentsRawPointer_Internal(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
+    @inline(__always)
+    mutating func getSegmentComponentsRawPointer_Internal(_ blockIdx: Int) -> UnsafeMutablePointer<T> where T.SparseSetType: DenseSparseSet {
         // 這裡使用 Unsafe 存取來繞過 mutating 限制
         // 既然你保證了 reserveCapacity，這是安全的
         // 直接回傳，呼叫者需確保該 Segment 有效
-        return segments[blockIdx].pointee.getRawDataPointer() 
+        return segments[blockIdx].pointee.getRawDataPointer()
     }
 
     @inlinable
-    func getSegmentsRawPointer_Internal() -> UnsafePointer<UnsafeMutablePointer<SparseSet_L2_2<T>>> {
+    @inline(__always)
+    func getSegmentsRawPointer_Internal() -> UnsafePointer<UnsafeMutablePointer<T.SparseSetType>> {
         // 【核心優化成果】
         // 現在這裡回傳的是「指標的陣列」，而不是「Optional 的陣列」
         // 在 C 語言層面，這就是 T** (pointer to pointer)
         // 這是最適合 createViewPlans 進行無分支讀取的格式
-        return segments.withUnsafeBufferPointer { $0.baseAddress! }    
+        return segments.withUnsafeBufferPointer { $0.baseAddress! }
     }
 }
 
@@ -304,7 +330,7 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
     // }
 
     @inline(__always)
-    func get_SparseSetL2_CompMutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> {
+    func get_SparseSetL2_CompMutPointer_Uncheck(_ blockIdx: Int) -> UnsafeMutablePointer<T> where T.SparseSetType: DenseSparseSet {
         handle.pfstorage.getSegmentComponentsRawPointer_Internal(blockIdx)
     }
     
@@ -315,7 +341,7 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
 
     @usableFromInline
     @inline(__always)
-    var segments: UnsafePointer<UnsafeMutablePointer<SparseSet_L2_2<T>>> {
+    var segments: UnsafePointer<UnsafeMutablePointer<T.SparseSetType>> {
         handle.pfstorage.getSegmentsRawPointer_Internal()
     }
 
@@ -352,8 +378,3 @@ extension PFStorageBox: Component where T: Component {
         return PFStorageBox<Self>(PFStorageHandle<Self>())
     }
 }
-
-struct PFStorage_Tag<TC: TagComponent>: ~Copyable {
-
-}
-

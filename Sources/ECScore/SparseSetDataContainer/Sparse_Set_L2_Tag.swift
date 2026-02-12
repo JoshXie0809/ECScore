@@ -1,24 +1,25 @@
-public struct SparseSet_L2_2_Tag<TC: TagComponent>: AnySparseSet {
+public struct SparseSet_L2_2_Tag<TC: Component>: AnySparseSet {
     public typealias T = TC
-
-    @usableFromInline
-    private(set) var blockMask: UInt64 = 0
-    @usableFromInline
-    private(set) var pageMasks: ContiguousArray<UInt64>
+    
+    public var blockMask: UInt64 = 0
+    public var pageMasks: ContiguousArray<UInt64>
 
     @usableFromInline
     private(set) var _count: Int = 0
     
     @inlinable
+    @inline(__always)
     public var count: Int { _count }
 
     @inlinable
+    @inline(__always)
     public init() {
         self.pageMasks = ContiguousArray<UInt64>(repeating: 0, count: 64)
     }
 
     @inlinable
-    public mutating func add(_ eid: EntityId, _ component: TC = TC()) {
+    @inline(__always)
+    public mutating func add(_ eid: EntityId, _ component: consuming TC = TC()) {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
         let slotIdx = offset & 63
@@ -33,6 +34,7 @@ public struct SparseSet_L2_2_Tag<TC: TagComponent>: AnySparseSet {
     }
 
     @inlinable
+    @inline(__always)
     public mutating func remove(_ eid: EntityId) {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
@@ -51,7 +53,8 @@ public struct SparseSet_L2_2_Tag<TC: TagComponent>: AnySparseSet {
     }
 
     @inlinable
-    public mutating func get(_ eid: EntityId) -> TC? {
+    @inline(__always)
+    public func get(_ eid: EntityId) -> TC? {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
         let slotIdx = offset & 63
@@ -61,23 +64,10 @@ public struct SparseSet_L2_2_Tag<TC: TagComponent>: AnySparseSet {
         return TC()
     }
 
-
-    // MARK: - PFStorage 指標介面
-    /// 供 ViewPlan 獲取數據陣列指標
-    @inlinable
-    public mutating func getRawDataPointer() -> UnsafeMutablePointer<TC> {
-        fatalError("cannot get components pointer for Tag Components")
-    }
-
     /// 【核心改進】提供連續的 PageMasks 指標，不再需要 PagePtr 逐級查找
     @inlinable
+    @inline(__always)
     public func getPageMasksPointer() -> UnsafePointer<UInt64> {
         return pageMasks.withUnsafeBufferPointer { $0.baseAddress! }
-    }
-
-    /// 提供連續的 SparseEntries 指標，供快速索引轉換
-    @inlinable
-    public func getSparseEntriesPointer() -> SSEPtr<TC>  {
-        fatalError("cannot get SparseEntries Pointer for Tag Component")
     }
 }

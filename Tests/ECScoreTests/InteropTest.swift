@@ -3,15 +3,15 @@ import Testing
 
 
 // 模擬組件 A
-struct MockComponentA: Component {}
+struct MockComponentA: TagComponent {}
 // 模擬組件 B
-struct MockComponentB: Component {}
+struct MockComponentB: TagComponent {}
 // 模擬組件 C
-struct MockComponentC: Component {}
+struct MockComponentC: TagComponent {}
 // 模擬組件 D
-struct MockComponentD: Component {}
+struct MockComponentD: TagComponent {}
 // 模擬組件 E
-struct MockComponentE: Component {}
+struct MockComponentE: TagComponent {}
 
 @Suite("BasePlatform Interop 測試")
 struct PlatformTests {

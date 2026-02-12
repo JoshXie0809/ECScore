@@ -1,11 +1,11 @@
 import Testing
 @testable import ECScore
 
-struct MockComponentA1: Component {}
-struct MockComponentA2: Component {}
-struct MockComponentA3: Component {}
-struct MockComponentA4: Component {}
-struct MockComponentA5: Component {}
+struct MockComponentA1: TagComponent {}
+struct MockComponentA2: TagComponent {}
+struct MockComponentA3: TagComponent {}
+struct MockComponentA4: TagComponent {}
+struct MockComponentA5: TagComponent {}
 
 //@Test func checkASan() {
 //    print("--- ASan 檢查開始 ---")

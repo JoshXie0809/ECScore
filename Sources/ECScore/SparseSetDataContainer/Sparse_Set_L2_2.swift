@@ -31,12 +31,10 @@ func printBit(_ val: UInt64) {
 
 public let HardwareBufferPadding = 16
 
-public struct SparseSet_L2_2<C: Component>: AnySparseSet {
+public struct SparseSet_L2_2<C: Component>: DenseSparseSet {
     public typealias T = C
-    @usableFromInline
-    private(set) var blockMask: UInt64 = 0
-    @usableFromInline
-    private(set) var pageMasks: ContiguousArray<UInt64>
+    public var blockMask: UInt64 = 0
+    public var pageMasks: ContiguousArray<UInt64>
     
     @usableFromInline
     private(set) var sparseEntries: ContiguousArray<SparseSetEntry>
@@ -47,9 +45,12 @@ public struct SparseSet_L2_2<C: Component>: AnySparseSet {
     @usableFromInline let staggerOffset: Int
     @usableFromInline let sparseStaggerOffset: Int
 
-    @inlinable public var count: Int { components.count - staggerOffset }
+    @inlinable
+    @inline(__always)
+    public var count: Int { components.count - staggerOffset }
 
     @inlinable
+    @inline(__always)
     public init() {
         self.pageMasks = ContiguousArray<UInt64>(repeating: 0, count: 64)
         
@@ -95,7 +96,8 @@ public struct SparseSet_L2_2<C: Component>: AnySparseSet {
     // MARK: - 符合 PFStorage 介面的操作
 
     @inlinable
-    public mutating func add(_ eid: EntityId, _ component: C) {
+    @inline(__always)
+    public mutating func add(_ eid: EntityId, _ component: consuming C) {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
         let slotIdx = offset & 63
@@ -114,6 +116,7 @@ public struct SparseSet_L2_2<C: Component>: AnySparseSet {
     }
 
     @inlinable
+    @inline(__always)
     public mutating func remove(_ eid: EntityId) {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
@@ -161,7 +164,8 @@ public struct SparseSet_L2_2<C: Component>: AnySparseSet {
     }
 
     @inlinable
-    public mutating func get(_ eid: EntityId) -> C? {
+    @inline(__always)
+    public func get(_ eid: EntityId) -> C? {
         let offset = eid.id & 4095
         let pageIdx = offset >> 6
         let slotIdx = offset & 63
@@ -172,25 +176,28 @@ public struct SparseSet_L2_2<C: Component>: AnySparseSet {
         
         // 2. 透過 Pointer 存取 (getRawDataPointer 已經 +stagger 了)
         // 所以 ptr[logicalIdx] = (base + stagger)[0] = base[stagger] -> 正確！
-        return getRawDataPointer()[logicalIdx]
+        return components[logicalIdx + staggerOffset]
     }
 
 
     // MARK: - PFStorage 指標介面
     /// 供 ViewPlan 獲取數據陣列指標
     @inlinable
+    @inline(__always)
     public mutating func getRawDataPointer() -> UnsafeMutablePointer<C> {
         return components.withUnsafeMutableBufferPointer { $0.baseAddress! + staggerOffset }
     }
 
     /// 【核心改進】提供連續的 PageMasks 指標，不再需要 PagePtr 逐級查找
     @inlinable
+    @inline(__always)
     public func getPageMasksPointer() -> UnsafePointer<UInt64> {
         return pageMasks.withUnsafeBufferPointer { $0.baseAddress! }
     }
 
     /// 提供連續的 SparseEntries 指標，供快速索引轉換
     @inlinable
+    @inline(__always)
     public func getSparseEntriesPointer() -> SSEPtr<C>  {
         return SSEPtr(ptr: sparseEntries.withUnsafeBufferPointer { $0.baseAddress! + sparseStaggerOffset })
     }

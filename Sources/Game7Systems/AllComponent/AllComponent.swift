@@ -36,7 +36,7 @@ struct DataComponent: Component {
 
 
 // @@ ############################################################################## 2
-struct EmptyComponent: Component {}
+struct EmptyComponent: TagComponent {}
 
 // @@ ############################################################################## 2
 
