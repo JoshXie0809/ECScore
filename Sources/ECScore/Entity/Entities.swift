@@ -28,10 +28,14 @@ public class Entities {
     @inline(__always)
     private var versions:  [Int] = [] // the version for an id, init is 0
     @inline(__always)
-    private var isActive: [UInt64] = []
+    private var isActive = ContiguousArray<UInt64>()
     @inline(__always)
     var maxId : Int {
         versions.count - 1
+    }
+
+    init() {
+        isActive.reserveCapacity(64 * 1024)
     }
 
     @usableFromInline
