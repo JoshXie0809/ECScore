@@ -204,11 +204,9 @@ public struct SparseSet_L2_2<C: Component>: DenseSparseSet {
 }
 
 public struct SSEPtr<C> {
-    @usableFromInline
-    let ptr: UnsafePointer<SparseSetEntry>
-    
-    @usableFromInline
-    init(ptr: UnsafePointer<SparseSetEntry>) {
+    public let ptr: UnsafePointer<SparseSetEntry>
+
+    public init(ptr: UnsafePointer<SparseSetEntry>) {
         self.ptr = ptr
     }
 }

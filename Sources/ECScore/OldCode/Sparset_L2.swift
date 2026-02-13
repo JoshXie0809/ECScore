@@ -126,10 +126,18 @@
 //     }
 // }
 
+@usableFromInline
 struct PagePtr<T> {
+    @usableFromInline
     @inline(__always)
     let ptr: UnsafePointer<UInt64>
-    
+
+    @usableFromInline
+    @inline(__always)
+    init(ptr: UnsafePointer<UInt64>) {
+        self.ptr = ptr
+    }
+
     // @inline(__always)
     // func getEntityOnPagePointer_Uncheck(_ pageIdx: Int) -> EntityOnPagePtr<T> {
     //     EntityOnPagePtr(ptr: ptr.advanced(by: pageIdx).pointee.entityOnPage.withUnsafeBufferPointer { $0.baseAddress! } )

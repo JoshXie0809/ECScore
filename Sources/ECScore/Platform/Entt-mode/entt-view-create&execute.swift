@@ -138,7 +138,7 @@ where repeat (each T).SparseSetType: DenseSparseSet
     return (viewPlans, storages, wt_storages, wot_storages)
 }
 
-@usableFromInline
+@inlinable
 @inline(__always)
 func executeViewPlans<each T, each WT, each WOT> (
     entities: any Platform_Entity,
@@ -422,7 +422,7 @@ public protocol SystemBody {
 @inline(never)
 func _preheat<each T>(_ value:repeat borrowing each T) {}
 
-@usableFromInline
+@inlinable
 @inline(__always)
 func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     entities: any Platform_Entity,
