@@ -13,6 +13,7 @@ public protocol AnySparseSet {
 public protocol DenseSparseSet: AnySparseSet {
     mutating func getRawDataPointer() -> UnsafeMutablePointer<T>
     func getSparseEntriesPointer() -> SSEPtr<T>
+    func getReverseEntitiesPointer() -> UnsafePointer<BlockId>
 }
 
 
@@ -246,6 +247,12 @@ struct PFStorage<T: Component>: ~Copyable {
 
     @inlinable
     @inline(__always)
+    func getSegmentReverseEntitiesRawPointer_Internal(_ blockIdx: Int) -> UnsafePointer<BlockId> where T.SparseSetType: DenseSparseSet {
+        return segments[blockIdx].pointee.getReverseEntitiesPointer()
+    }
+
+    @inlinable
+    @inline(__always)
     func getSegmentsRawPointer_Internal() -> UnsafePointer<UnsafeMutablePointer<T.SparseSetType>> {
         // 【核心優化成果】
         // 現在這裡回傳的是「指標的陣列」，而不是「Optional 的陣列」
@@ -339,6 +346,18 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
     @inline(__always)
     func get_SparseSetL2_PagePointer_Uncheck(_ blockIdx: Int) -> PagePtr<T> {
         PagePtr(ptr: handle.pfstorage.segments[blockIdx].pointee.getPageMasksPointer())
+    }
+
+    @usableFromInline
+    @inline(__always)
+    func get_SparseSetL2_ReversePointer_Uncheck(_ blockIdx: Int) -> UnsafePointer<BlockId> where T.SparseSetType: DenseSparseSet {
+        handle.pfstorage.getSegmentReverseEntitiesRawPointer_Internal(blockIdx)
+    }
+
+    @usableFromInline
+    @inline(__always)
+    func get_SparseSetL2_Count_Uncheck(_ blockIdx: Int) -> Int {
+        handle.pfstorage.segments[blockIdx].pointee.count
     }
 
     @usableFromInline

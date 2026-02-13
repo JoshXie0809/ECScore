@@ -201,6 +201,12 @@ public struct SparseSet_L2_2<C: Component>: DenseSparseSet {
     public func getSparseEntriesPointer() -> SSEPtr<C>  {
         return SSEPtr(ptr: sparseEntries.withUnsafeBufferPointer { $0.baseAddress! + sparseStaggerOffset })
     }
+
+    @inlinable
+    @inline(__always)
+    public func getReverseEntitiesPointer() -> UnsafePointer<BlockId> {
+        return reverseEntities.withUnsafeBufferPointer { $0.baseAddress! + staggerOffset }
+    }
 }
 
 public struct SSEPtr<C> {

@@ -49,6 +49,23 @@ public func view<S: SystemBody, each T, each WT, each WOT> (
 // overloading view
 // ##############################################################################################################
 
+// @inlinable
+// @inline(__always)
+// public func view<T> (
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+//     with: TypeToken<T>,
+//     _ action: (_: Int, _: ComponentProxy<T>) -> Void
+// ) where T.SparseSetType: DenseSparseSet {
+//     let (vps, storage, _, _) = createViewPlans(base: base, with: with, withTag: (), withoutTag: ())
+//     if vps.isEmpty { return }
+//     executeViewPlansSingleComponentFast(
+//         entities: base.entities,
+//         viewPlans: vps,
+//         storage: storage,
+//         action
+//     )
+// }
+
 @inlinable
 @inline(__always)
 public func view<each T> (
@@ -84,6 +101,23 @@ public func view<each T, each WOT> (
 
 // overloading static view
 // ##############################################################################################################
+
+// @inlinable
+// @inline(__always)
+// public func view<S: SystemBody, T> (
+//     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+//     with: TypeToken<T>,
+//     _ body: borrowing S
+// ) where S.Components == ComponentProxy<T>, T.SparseSetType: DenseSparseSet {
+//     let (vps, storage, _, _) = createViewPlans(base: base, with: with, withTag: (), withoutTag: ())
+//     if vps.isEmpty { return }
+//     executeViewPlansSingleComponentFast(
+//         entities: base.entities,
+//         viewPlans: vps,
+//         storage: storage,
+//         body
+//     )
+// }
 
 @inlinable
 @inline(__always)

@@ -386,6 +386,88 @@ func executeViewPlans<each T, each WT, each WOT> (
     _fixLifetime(entities)
 }
 
+// @inlinable
+// @inline(__always)
+// func executeViewPlansSingleComponentFast<T>(
+//     entities: any Platform_Entity,
+//     viewPlans: ContiguousArray<ViewPlan>,
+//     storage: borrowing PFStorageBox<T>,
+//     _ action: (_ taskId: Int, _: ComponentProxy<T>) -> Void
+// ) where T.SparseSetType: DenseSparseSet {
+//     guard !viewPlans.isEmpty else { return }
+//     let entitiesActiveMaskPtr = entities._activeMaskPtr
+
+//     for vp in viewPlans {
+//         let blockIdx = vp.segmentIndex
+//         let denseCount = storage.get_SparseSetL2_Count_Uncheck(blockIdx)
+//         if denseCount == 0 { continue }
+
+//         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockIdx)
+//         let reversePtr = storage.get_SparseSetL2_ReversePointer_Uncheck(blockIdx)
+//         let activeBlockPtr = entitiesActiveMaskPtr.advanced(by: blockIdx << 6)
+
+//         _preheat(dataPtr.pointee, reversePtr.pointee, activeBlockPtr.pointee)
+
+//         for i in 0..<denseCount {
+//             let preheatIdx = i + 1
+//             if preheatIdx < denseCount {
+//                 _preheat(dataPtr.advanced(by: preheatIdx).pointee, reversePtr.advanced(by: preheatIdx).pointee)
+//             }
+
+//             let offset = Int(reversePtr.advanced(by: i).pointee.offset)
+//             let pageIdx = offset >> 6
+//             let slotBit = UInt64(1) << (offset & 63)
+//             if (activeBlockPtr.advanced(by: pageIdx).pointee & slotBit) != 0 {
+//                 action(0, ComponentProxy(pointer: dataPtr.advanced(by: i)))
+//             }
+//         }
+//     }
+
+//     _fixLifetime(storage)
+//     _fixLifetime(entities)
+// }
+
+// @inlinable
+// @inline(__always)
+// func executeViewPlansSingleComponentFast<S: SystemBody, T>(
+//     entities: any Platform_Entity,
+//     viewPlans: ContiguousArray<ViewPlan>,
+//     storage: borrowing PFStorageBox<T>,
+//     _ body: borrowing S
+// ) where S.Components == ComponentProxy<T>, T.SparseSetType: DenseSparseSet {
+//     guard !viewPlans.isEmpty else { return }
+//     let entitiesActiveMaskPtr = entities._activeMaskPtr
+
+//     for vp in viewPlans {
+//         let blockIdx = vp.segmentIndex
+//         let denseCount = storage.get_SparseSetL2_Count_Uncheck(blockIdx)
+//         if denseCount == 0 { continue }
+
+//         let dataPtr = storage.get_SparseSetL2_CompMutPointer_Uncheck(blockIdx)
+//         let reversePtr = storage.get_SparseSetL2_ReversePointer_Uncheck(blockIdx)
+//         let activeBlockPtr = entitiesActiveMaskPtr.advanced(by: blockIdx << 6)
+
+//         _preheat(dataPtr.pointee, reversePtr.pointee, activeBlockPtr.pointee)
+
+//         for i in 0..<denseCount {
+//             let preheatIdx = i + 1
+//             if preheatIdx < denseCount {
+//                 _preheat(dataPtr.advanced(by: preheatIdx).pointee, reversePtr.advanced(by: preheatIdx).pointee)
+//             }
+
+//             let offset = Int(reversePtr.advanced(by: i).pointee.offset)
+//             let pageIdx = offset >> 6
+//             let slotBit = UInt64(1) << (offset & 63)
+//             if (activeBlockPtr.advanced(by: pageIdx).pointee & slotBit) != 0 {
+//                 body.execute(taskId: 0, components: ComponentProxy(pointer: dataPtr.advanced(by: i)))
+//             }
+//         }
+//     }
+
+//     _fixLifetime(storage)
+//     _fixLifetime(entities)
+// }
+
 
 @usableFromInline
 @inline(__always)
