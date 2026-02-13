@@ -22,13 +22,13 @@ extension EntityId: CustomStringConvertible {
     }
 }
 
-public class Entities {
+public final class Entities {
     @inline(__always)
-    private var freeList: [Int] = [] // where id can be reused
+    private var freeList: ContiguousArray<Int> = [] // where id can be reused
     @inline(__always)
-    private var versions:  [Int] = [] // the version for an id, init is 0
+    private var versions: ContiguousArray<Int> = [] // the version for an id, init is 0
     @inline(__always)
-    private var isActive = ContiguousArray<UInt64>()
+    private var isActive: ContiguousArray<UInt64> = []
     @inline(__always)
     var maxId : Int {
         versions.count - 1
@@ -39,6 +39,7 @@ public class Entities {
     }
 
     @usableFromInline
+    @inline(__always)
     func spawn(_ n: Int = 1) -> [EntityId] {
         var results: [EntityId] = []
         results.reserveCapacity(n)
@@ -64,6 +65,7 @@ public class Entities {
     }
 
     @usableFromInline
+    @inline(__always)
     func despawn(_ entity: EntityId) {
         // 安全檢查：版本號必須相符才能銷毀
         guard isValid(entity) else { return }
@@ -78,22 +80,26 @@ public class Entities {
     }
 
     @usableFromInline
+    @inline(__always)
     func isValid(_ entity: EntityId) -> Bool {
         return entity.id < versions.count && versions[entity.id] == entity.version && 
                (isActive[entity.id >> 6] & (1 << (entity.id & 63)) != 0)
     }
 
     @usableFromInline
+    @inline(__always)
     func idIsActive(_ id: Int) -> Bool {
         return id <= maxId && (isActive[id >> 6] & (1 << (id & 63)) != 0)
     }
 
     @usableFromInline
+    @inline(__always)
     func getVersion(_ id: Int) -> Int {
         return versions[id]
     }
 
     @usableFromInline
+    @inline(__always)
     func getActiveEntitiesMask_Uncheck(_ block: Int) -> UInt64 {
         isActive[block]
     }

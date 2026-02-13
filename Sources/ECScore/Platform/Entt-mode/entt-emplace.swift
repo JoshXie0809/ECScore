@@ -1,5 +1,6 @@
 public extension TypeToken {
     @inlinable
+    @inline(__always)
     func getStorage(
         base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     ) -> PFStorageBox<T>

@@ -27,8 +27,6 @@ func printBit(_ val: UInt64) {
     print()
 }
 
-
-
 public let HardwareBufferPadding = 16
 
 public struct SparseSet_L2_2<C: Component>: DenseSparseSet {
@@ -212,6 +210,7 @@ public struct SparseSet_L2_2<C: Component>: DenseSparseSet {
 public struct SSEPtr<C> {
     public let ptr: UnsafePointer<SparseSetEntry>
 
+    @inline(__always)
     public init(ptr: UnsafePointer<SparseSetEntry>) {
         self.ptr = ptr
     }

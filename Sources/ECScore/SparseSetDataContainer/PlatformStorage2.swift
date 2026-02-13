@@ -16,7 +16,6 @@ public protocol DenseSparseSet: AnySparseSet {
     func getReverseEntitiesPointer() -> UnsafePointer<BlockId>
 }
 
-
 struct PFStorage<T: Component>: ~Copyable {
     // this is not nill version
     private(set) var segments: ContiguousArray<UnsafeMutablePointer< T.SparseSetType >>
