@@ -165,7 +165,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     
     _preheat((repeat (each pagePtrs_now).ptr.pointee))
     _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-    _preheat((repeat (each wot_allSegment_now).pointee))
+    _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
@@ -189,7 +189,7 @@ func executeViewPlans<each T, each WT, each WOT> (
 
         _preheat((repeat (each pagePtrs_now).ptr.pointee))
         _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-        _preheat((repeat (each wot_allSegment_now).pointee))
+        _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
 
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
@@ -451,7 +451,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
     _preheat((repeat (each pagePtrs_now).ptr.pointee))
     _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-    _preheat((repeat (each wot_allSegment_now).pointee))
+    _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
@@ -475,7 +475,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
         _preheat((repeat (each pagePtrs_now).ptr.pointee))
         _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-        _preheat((repeat (each wot_allSegment_now).pointee))
+        _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
 
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
