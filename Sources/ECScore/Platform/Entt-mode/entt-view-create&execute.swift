@@ -175,6 +175,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         let wot_allSegment = wot_allSegment_now
         let blockIdx = segmentIndex_now
         let sparsePtrs = sparsePtrs_now
+        let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
 
         // update next
         blockMask_now = viewPlans[i].mask
@@ -194,7 +195,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1)
-        var activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+        var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
         while blockMask != 0 { 
             let activeMask = activeMask_now
@@ -202,7 +203,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             // next
             now_pageIdx = blockMask.trailingZeroBitCount
             blockMask &= (blockMask - 1)
-            activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+            activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
             var pageMask1 = activeMask
             var pageMask2 = SparseSet_L2_BaseMask
@@ -298,10 +299,11 @@ func executeViewPlans<each T, each WT, each WOT> (
     let wot_allSegment = wot_allSegment_now
     let blockIdx = segmentIndex_now
     let sparsePtrs = sparsePtrs_now
+    let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
 
     var now_pageIdx = blockMask.trailingZeroBitCount
     blockMask &= (blockMask - 1) 
-    var activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+    var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
     while blockMask != 0 { 
         let activeMask = activeMask_now
@@ -309,7 +311,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         // next
         now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1)
-        activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+        activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
         var pageMask1 = activeMask
         var pageMask2 = SparseSet_L2_BaseMask
@@ -461,6 +463,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         let wot_allSegment = wot_allSegment_now
         let blockIdx = segmentIndex_now
         let sparsePtrs = sparsePtrs_now
+        let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
 
         // update next
         blockMask_now = viewPlans[i].mask
@@ -480,7 +483,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1) 
-        var activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+        var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
         while blockMask != 0 { 
             let activeMask = activeMask_now
@@ -488,7 +491,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             // next
             now_pageIdx = blockMask.trailingZeroBitCount
             blockMask &= (blockMask - 1)
-            activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+            activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
             var pageMask1 = activeMask
             var pageMask2 = SparseSet_L2_BaseMask
@@ -541,7 +544,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
         let pageIdx = now_pageIdx
 
-        var pageMask1 = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + pageIdx).pointee
+        var pageMask1 = activeBlockPtr.advanced(by: pageIdx).pointee
         var pageMask2 = SparseSet_L2_BaseMask
         var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
@@ -596,11 +599,12 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     let wot_allSegment = wot_allSegment_now
     let blockIdx = segmentIndex_now
     let sparsePtrs = sparsePtrs_now
+    let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
 
     // ###################################################### Sparse_Set_L2_i
     var now_pageIdx = blockMask.trailingZeroBitCount
     blockMask &= (blockMask - 1) 
-    var activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+    var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
     while blockMask != 0 { 
         let activeMask = activeMask_now
@@ -608,7 +612,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         // next
         now_pageIdx = blockMask.trailingZeroBitCount
         blockMask &= (blockMask - 1)
-        activeMask_now = entities_activeMaskPtr.advanced(by: (blockIdx << 6) + now_pageIdx).pointee
+        activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
 
         var pageMask1 = activeMask
         var pageMask2 = SparseSet_L2_BaseMask
