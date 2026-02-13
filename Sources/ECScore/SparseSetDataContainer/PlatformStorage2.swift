@@ -344,10 +344,11 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
     @usableFromInline
     @inline(__always)
     func get_SparseSetL2_PagePointer(_ blockIdx: Int) -> PagePtr<T> {
-        guard blockIdx < handle.pfstorage.segmentCount else {
-            return PagePtr(ptr: handle.pfstorage.sentinelPtr.pointee.getPageMasksPointer())
-        }
-        return PagePtr(ptr: handle.pfstorage.segments[blockIdx].pointee.getPageMasksPointer())
+        let ptr = blockIdx < handle.pfstorage.segmentCount ?
+              PagePtr<T>(ptr: handle.pfstorage.segments[blockIdx].pointee.getPageMasksPointer())
+            : PagePtr<T>(ptr: handle.pfstorage.sentinelPtr.pointee.getPageMasksPointer()) 
+
+        return ptr
     }
 
     @usableFromInline
