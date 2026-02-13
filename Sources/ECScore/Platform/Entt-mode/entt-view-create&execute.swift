@@ -152,7 +152,6 @@ func executeViewPlans<each T, each WT, each WOT> (
     guard count != 0 else { return }
     let entities_activeMaskPtr = entities._activeMaskPtr
     
-    let wot_allSegments = (repeat (each wot_storages).segments)
     var blockMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
@@ -160,19 +159,19 @@ func executeViewPlans<each T, each WT, each WOT> (
 
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-    var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
+    var wot_pagePtrs_now = (repeat (each wot_storages).get_SparseSetL2_PagePointer(segmentIndex_now)) // use check because doesnot joined global-first/-last
     var sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
     
     _preheat((repeat (each pagePtrs_now).ptr.pointee))
     _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-    _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
+    _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
         let dataPtrs = dataPtrs_now
         let pagePtrs = pagePtrs_now
         let wt_pagePtrs = wt_pagePtrs_now
-        let wot_allSegment = wot_allSegment_now
+        let wot_pagePtrs = wot_pagePtrs_now
         let blockIdx = segmentIndex_now
         let sparsePtrs = sparsePtrs_now
         let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
@@ -185,12 +184,12 @@ func executeViewPlans<each T, each WT, each WOT> (
         
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-        wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
+        wot_pagePtrs_now = (repeat (each wot_storages).get_SparseSetL2_PagePointer(segmentIndex_now)) // use check because doesnot joined global-first/-last
         sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
         _preheat((repeat (each pagePtrs_now).ptr.pointee))
         _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-        _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
+        _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
@@ -210,7 +209,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             var pageMask3 = UInt64(0)
             repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-            repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+            repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
             var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
             // ###################################################################################################
@@ -255,7 +254,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
         var pageMask = pageMask1 & pageMask2 & (~pageMask3)
         
         // ###################################################################################################
@@ -294,9 +293,11 @@ func executeViewPlans<each T, each WT, each WOT> (
 
     var blockMask = blockMask_now
     let dataPtrs = dataPtrs_now
+    
     let pagePtrs = pagePtrs_now
     let wt_pagePtrs = wt_pagePtrs_now
-    let wot_allSegment = wot_allSegment_now
+    let wot_pagePtrs = wot_pagePtrs_now
+    
     let blockIdx = segmentIndex_now
     let sparsePtrs = sparsePtrs_now
     let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
@@ -318,7 +319,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
         var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
         // ###################################################################################################
@@ -362,7 +363,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     var pageMask3 = UInt64(0)
     repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
     repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-    repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+    repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
     var pageMask = pageMask1 & pageMask2 & (~pageMask3)
     
     while pageMask != 0 {
@@ -437,9 +438,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 {
     let count = viewPlans.count
     guard count != 0 else { return }
-    
     let entities_activeMaskPtr = entities._activeMaskPtr
-    let wot_allSegments = (repeat (each wot_storages).segments)
 
     var blockMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
@@ -448,19 +447,19 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
     var pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
     var wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-    var wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
+    var wot_pagePtrs_now = (repeat (each wot_storages).get_SparseSetL2_PagePointer(segmentIndex_now)) // use check because doesnot joined global-first/-last
     var sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
     _preheat((repeat (each pagePtrs_now).ptr.pointee))
     _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-    _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
+    _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
     for i in stride(from: 1, to: count, by: 1) {
         var blockMask = blockMask_now
         let dataPtrs = dataPtrs_now
         let pagePtrs = pagePtrs_now
         let wt_pagePtrs = wt_pagePtrs_now
-        let wot_allSegment = wot_allSegment_now
+        let wot_pagePtrs = wot_pagePtrs_now
         let blockIdx = segmentIndex_now
         let sparsePtrs = sparsePtrs_now
         let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
@@ -473,12 +472,12 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
         pagePtrs_now = (repeat (each storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
         wt_pagePtrs_now = (repeat (each wt_storages).get_SparseSetL2_PagePointer_Uncheck(segmentIndex_now))
-        wot_allSegment_now = (repeat (each wot_allSegments).advanced(by: segmentIndex_now).pointee)
+        wot_pagePtrs_now = (repeat (each wot_storages).get_SparseSetL2_PagePointer(segmentIndex_now)) // use check because doesnot joined global-first/-last
         sparsePtrs_now = (repeat (each storages).segments.advanced(by: segmentIndex_now).pointee.pointee.getSparseEntriesPointer())
 
         _preheat((repeat (each pagePtrs_now).ptr.pointee))
         _preheat((repeat (each wt_pagePtrs_now).ptr.pointee))
-        _preheat((repeat (each wot_allSegment_now).pointee.pageMasks[0]))
+        _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
         // ###################################################### Sparse_Set_L2_i
         var now_pageIdx = blockMask.trailingZeroBitCount
@@ -498,7 +497,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             var pageMask3 = UInt64(0)
             repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
             repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-            repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+            repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
             var pageMask = pageMask1 & pageMask2 & (~pageMask3)
             
             // ############################################################################
@@ -549,7 +548,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
         var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
         // ############################################################################
@@ -596,7 +595,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     let dataPtrs = dataPtrs_now
     let pagePtrs = pagePtrs_now
     let wt_pagePtrs = wt_pagePtrs_now
-    let wot_allSegment = wot_allSegment_now
+    let wot_pagePtrs = wot_pagePtrs_now
     let blockIdx = segmentIndex_now
     let sparsePtrs = sparsePtrs_now
     let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
@@ -619,7 +618,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
         repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-        repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+        repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
         var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
         // ############################################################################
@@ -670,7 +669,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     var pageMask3 = UInt64(0)
     repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
     repeat pageMask2 &= (each wt_pagePtrs).ptr.advanced(by: pageIdx).pointee
-    repeat pageMask3 |= ((each wot_allSegment).pointee.pageMasks[pageIdx])
+    repeat pageMask3 |= (each wot_pagePtrs).ptr.advanced(by: pageIdx).pointee
     var pageMask = pageMask1 & pageMask2 & (~pageMask3)
 
     while pageMask != 0 {
