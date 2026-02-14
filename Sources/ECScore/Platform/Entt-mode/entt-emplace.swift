@@ -1,4 +1,4 @@
-public extension TypeToken {
+extension TypeToken {
     @inlinable
     @inline(__always)
     func getStorage(

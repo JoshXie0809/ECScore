@@ -7,7 +7,7 @@ public func view<each T, each WT, each WOT> (
     with: borrowing (repeat TypeToken<each T>),
     withTag: borrowing (repeat TypeToken<each WT>),
     withoutTag: borrowing (repeat TypeToken<each WOT>),
-    _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
+    _ action: (_: IterId, _: repeat ComponentProxy<each T>) -> Void
 ) where repeat (each T).SparseSetType: DenseSparseSet {
     let (vps, storages, wts, wots) = createViewPlans( base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (repeat each withoutTag) )
     if vps.isEmpty { return }
@@ -71,7 +71,7 @@ public func view<S: SystemBody, each T, each WT, each WOT> (
 public func view<each T> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
-    _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
+    _ action: (_: IterId, _: repeat ComponentProxy<each T>) -> Void
 ) where repeat (each T).SparseSetType: DenseSparseSet {
     view(base: base, with: (repeat each with), withTag: (), withoutTag: (), action)
 }
@@ -82,7 +82,7 @@ public func view<each T, each WT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
     withTag: borrowing (repeat TypeToken<each WT>),
-    _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
+    _ action: (_: IterId, _: repeat ComponentProxy<each T>) -> Void
 ) where repeat (each T).SparseSetType: DenseSparseSet {
     view(base: base, with: (repeat each with), withTag: (repeat each withTag), withoutTag: (), action)
 }
@@ -93,7 +93,7 @@ public func view<each T, each WOT> (
     base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
     with: borrowing (repeat TypeToken<each T>),
     withoutTag: borrowing (repeat TypeToken<each WOT>),
-    _ action: (_: Int, _: repeat ComponentProxy<each T>) -> Void
+    _ action: (_: IterId, _: repeat ComponentProxy<each T>) -> Void
 ) where repeat (each T).SparseSetType: DenseSparseSet {
     view(base: base, with: (repeat each with), withTag: (), withoutTag: (repeat each withoutTag), action)
 }

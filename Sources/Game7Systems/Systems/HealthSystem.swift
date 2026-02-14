@@ -40,7 +40,7 @@ struct HealthSystem {
 
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) 
+        func execute(iterId: IterId, components: Components) 
         {
             let _health = components
             // get fast proxy

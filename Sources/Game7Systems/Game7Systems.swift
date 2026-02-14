@@ -14,7 +14,7 @@ struct Game7Systems {
             let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
             let printWorldFlag = false
         // ##################################################
-
+        
         printSystemInfo()
 
         for iter in 0..<ITER_NUM {

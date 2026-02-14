@@ -169,7 +169,7 @@ struct FooLogic: SystemBody {
     let validated_count: UnsafeMutablePointer<Int>
 
     typealias Components = ()
-    func execute(taskId: Int, components: borrowing ()) {
+    func execute(iterId: IterId, components: borrowing ()) {
         validated_count.pointee += 1
     }
 

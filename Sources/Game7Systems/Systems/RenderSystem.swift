@@ -33,7 +33,7 @@ struct RenderSystem {
 
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) {
+        func execute(iterId: IterId, components: Components) {
             let (_pos, _sprite) = components
             // get fast proxy
             let (pos_fast, sprite_fast) = (_pos.fast, _sprite.self)

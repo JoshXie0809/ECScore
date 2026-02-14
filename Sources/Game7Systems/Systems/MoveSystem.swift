@@ -41,7 +41,7 @@ struct MoveSystem {
         typealias Components = (ComponentProxy<PositionComponent>, ComponentProxy<DirectionComponent>)
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) {
+        func execute(iterId: IterId, components: Components) {
             let (_pos, _dir) = components
             // get fast proxy
             let (pos_fast, dir_fast) = (_pos.fast, _dir.fast)

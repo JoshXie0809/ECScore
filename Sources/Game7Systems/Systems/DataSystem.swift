@@ -31,7 +31,7 @@ struct DataSystem {
         typealias Components = ComponentProxy<DataComponent>
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) {
+        func execute(iterId: IterId, components: Components) {
         
             let _data = components
             // get fast proxy

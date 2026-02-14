@@ -14,9 +14,21 @@ public struct ViewPlan: Sendable {
     public let mask: UInt64
     
     @inlinable
-    public init(segmentIndex: Int, mask: UInt64) {
+    @inline(__always)
+    init(segmentIndex: Int, mask: UInt64) {
         self.segmentIndex = segmentIndex
         self.mask = mask
+    }
+}
+
+public struct IterId: Sendable {
+    @inline(__always)
+    public let taskId: Int
+
+    @inlinable
+    @inline(__always)
+    init(taskId: Int) {
+        self.taskId = taskId
     }
 }
 
@@ -146,7 +158,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     storages: borrowing (repeat PFStorageBox<each T>),
     wt_storages: borrowing (repeat PFStorageBox<each WT>), 
     wot_storages: borrowing (repeat PFStorageBox<each WOT>),
-    _ action: (_ taskId: Int, _: repeat ComponentProxy<each T>) -> Void
+    _ action: (_ taskId: IterId, _: repeat ComponentProxy<each T>) -> Void
 ) where repeat (each T).SparseSetType: DenseSparseSet {
     let count = viewPlans.count
     guard count != 0 else { return }
@@ -225,7 +237,7 @@ func executeViewPlans<each T, each WT, each WOT> (
                 pageMask &= (pageMask - 1)
                 entityOffset_now = (pageIdx << 6) + slotIdx_now
 
-                action(0, 
+                action(IterId(taskId: 0), 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
                             by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -235,7 +247,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             }
 
             let entityOffset = entityOffset_now
-            action(0, 
+            action(IterId(taskId: 0), 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
                         by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -270,7 +282,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             pageMask &= (pageMask - 1)
             entityOffset_now = (pageIdx << 6) + slotIdx_now
 
-            action(0, 
+            action(IterId(taskId: 0), 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
                         by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -280,7 +292,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         }
 
         let entityOffset = entityOffset_now
-        action(0, 
+        action(IterId(taskId: 0), 
             repeat ComponentProxy(
                 pointer: (each dataPtrs).advanced(
                     by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -335,7 +347,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             pageMask &= (pageMask - 1)
             entityOffset_now = (pageIdx << 6) + slotIdx_now
 
-            action(0, 
+            action(IterId(taskId: 0),
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
                         by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -345,7 +357,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         }
 
         let entityOffset = entityOffset_now
-        action(0, 
+        action(IterId(taskId: 0),
             repeat ComponentProxy(
                 pointer: (each dataPtrs).advanced(
                     by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -371,7 +383,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         let entityOffset = (pageIdx << 6) + slotIdx
 
         pageMask &= (pageMask - 1)
-        action(0, 
+        action(IterId(taskId: 0),
             repeat ComponentProxy(
                 pointer: (each dataPtrs).advanced(
                     by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -500,7 +512,7 @@ public protocol SystemBody {
     
     @inline(__always)
     @inlinable 
-    func execute(taskId: Int, components: borrowing Components)
+    func execute(iterId: IterId, components: borrowing Components)
 }
 
 @usableFromInline
@@ -596,7 +608,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
                 entityOffset_now = (pageIdx << 6) + slotIdx_now
 
                 body.execute(
-                    taskId: 0, 
+                    iterId: IterId(taskId: 0),
                     components: ( 
                         repeat ComponentProxy(
                             pointer: (each dataPtrs).advanced(
@@ -610,7 +622,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             
             let entityOffset = entityOffset_now
             body.execute(
-                taskId: 0, 
+                iterId: IterId(taskId: 0),
                 components: ( 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
@@ -647,7 +659,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             entityOffset_now = (pageIdx << 6) + slotIdx_now
 
             body.execute(
-                taskId: 0, 
+                iterId: IterId(taskId: 0),
                 components: ( 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
@@ -661,7 +673,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         
         let entityOffset = entityOffset_now
         body.execute(
-            taskId: 0, 
+            iterId: IterId(taskId: 0),
             components: ( 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
@@ -717,7 +729,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             entityOffset_now = (pageIdx << 6) + slotIdx_now
 
             body.execute(
-                taskId: 0, 
+                iterId: IterId(taskId: 0),
                 components: ( 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
@@ -731,7 +743,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         
         let entityOffset = entityOffset_now
         body.execute(
-            taskId: 0, 
+            iterId: IterId(taskId: 0),
             components: ( 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
@@ -759,7 +771,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         pageMask &= (pageMask - 1)
         let entityOffset = (pageIdx << 6) + slotIdx
         body.execute(
-            taskId: 0, 
+            iterId: IterId(taskId: 0),
             components: ( 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(

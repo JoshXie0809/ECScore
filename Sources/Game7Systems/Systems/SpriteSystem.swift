@@ -48,7 +48,7 @@ struct SpriteSystem {
 
         @inlinable 
         @inline(__always)
-        func execute(taskId: Int, components: Components) 
+        func execute(iterId: IterId, components: Components) 
         {   
             let (_sprite, _player, _health) = components
             // get fast proxy
