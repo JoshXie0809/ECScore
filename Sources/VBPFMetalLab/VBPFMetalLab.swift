@@ -5,6 +5,6 @@
 struct VBPFMetalLab {
     public static func main() {
 
-        runtest1()
+        runtest2()
     }
 }

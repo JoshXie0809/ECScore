@@ -1,6 +1,6 @@
 import Metal
 
-let shaderSource = """
+fileprivate let shaderSource1 = """
     #include <metal_stdlib>
     using namespace metal;
     struct AddParams { uint count; };
@@ -24,7 +24,7 @@ struct AddParams {
 func runtest1() {
     guard let device = MTLCreateSystemDefaultDevice() else { return }
     guard let queue = device.makeCommandQueue() else { return }
-    guard let library = try? device.makeLibrary(source: shaderSource, options: nil) else {
+    guard let library = try? device.makeLibrary(source: shaderSource1, options: nil) else {
         print("❌ Shader 語法錯誤！")
         return
     }
