@@ -32,9 +32,7 @@ struct PFStorage<T: Component>: ~Copyable {
     
     init() {
         self.sentinelPtr = UnsafeMutablePointer< T.SparseSetType >.allocate(capacity: 1)
-
-        self.sentinelPtr.initialize(to: T.createSparseSet())
-        
+        self.sentinelPtr.initialize(to: T.createSparseSet())   
         self.segments = ContiguousArray()
         self.segments.reserveCapacity(1024) // init some place
     }
@@ -156,6 +154,21 @@ struct PFStorage<T: Component>: ~Copyable {
                 updateFirstLast_Remove(blockIdx: blockIdx)
             }
         }
+    }
+
+    @inlinable
+    @inline(__always)
+    mutating func removeAll() {
+        for i in stride(from: firstActiveSegment, through: lastActiveSegment, by: 1) {
+            if segments[i] == sentinelPtr { continue }
+            freePage(segments[i])
+            segments[i] = sentinelPtr
+        }
+
+        activeEntityCount = 0
+        firstActiveSegment = Int.max
+        lastActiveSegment = Int.min
+        activeSegmentCount = 0
     }
 
     @inlinable
@@ -298,6 +311,11 @@ public struct PFStorageBox<T: Component>: AnyPlatformStorage, @unchecked Sendabl
     @inline(__always)
     public mutating func remove(eid: EntityId) {
         handle.pfstorage.remove(eid: eid)
+    }
+
+    @inline(__always)
+    public mutating func removeAll() {
+        handle.pfstorage.removeAll()
     }
 
     @inline(__always)

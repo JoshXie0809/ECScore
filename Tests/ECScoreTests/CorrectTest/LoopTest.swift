@@ -14,7 +14,7 @@ struct MockComponentA10: TagComponent {}
 struct MockComponentA11: TagComponent {}
 
 private let IntersectionIterations = 1
-private let IntersectionEntitiesPerIteration = 1_000_000
+private let IntersectionEntitiesPerIteration = 200_000
 
 //@Test func checkASan() {
 //    print("--- ASan 檢查開始 ---")

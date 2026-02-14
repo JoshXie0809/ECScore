@@ -1,4 +1,6 @@
 public let SparseSet_L2_BaseMask: UInt64 = 0xFFFFFFFFFFFFFFFF
+public let SparseSet_L2_PageShift: Int = 6
+public let SparseSet_L2_SegmentShift: Int = 12
 
 @inlinable
 func getStorages<each T>(
@@ -25,10 +27,14 @@ public struct IterId: Sendable {
     @inline(__always)
     public let taskId: Int
 
+    @inline(__always)
+    public let eidId: Int
+
     @inlinable
     @inline(__always)
-    init(taskId: Int) {
+    init(taskId: Int, eidId: Int) {
         self.taskId = taskId
+        self.eidId = eidId
     }
 }
 
@@ -164,7 +170,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     guard count != 0 else { return }
     let entities_activeMaskPtr = entities._activeMaskPtr
     
-    var blockMask_now = viewPlans[0].mask
+    var segmentMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
     _preheat((repeat (each dataPtrs_now).pointee))
@@ -179,17 +185,18 @@ func executeViewPlans<each T, each WT, each WOT> (
     _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
     for i in stride(from: 1, to: count, by: 1) {
-        var blockMask = blockMask_now
+        var segmentMask = segmentMask_now
         let dataPtrs = dataPtrs_now
         let pagePtrs = pagePtrs_now
         let wt_pagePtrs = wt_pagePtrs_now
         let wot_pagePtrs = wot_pagePtrs_now
-        let blockIdx = segmentIndex_now
+        let segmentIdx = segmentIndex_now
+        let segmentOffset = segmentIdx << SparseSet_L2_SegmentShift
         let sparsePtrs = sparsePtrs_now
-        let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
+        let activeSegmentPtr = entities_activeMaskPtr.advanced(by: segmentIdx << SparseSet_L2_PageShift)
 
         // update next
-        blockMask_now = viewPlans[i].mask
+        segmentMask_now = viewPlans[i].mask
         segmentIndex_now = viewPlans[i].segmentIndex
         dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
         _preheat((repeat (each dataPtrs_now).pointee))
@@ -204,17 +211,18 @@ func executeViewPlans<each T, each WT, each WOT> (
         _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
         // ###################################################### Sparse_Set_L2_i
-        var now_pageIdx = blockMask.trailingZeroBitCount
-        blockMask &= (blockMask - 1)
-        var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+        var now_pageIdx = segmentMask.trailingZeroBitCount
+        segmentMask &= (segmentMask - 1)
+        var activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
-        while blockMask != 0 { 
+        while segmentMask != 0 {
             let activeMask = activeMask_now
             let pageIdx = now_pageIdx
+            let pageOffset = pageIdx << SparseSet_L2_PageShift
             // next
-            now_pageIdx = blockMask.trailingZeroBitCount
-            blockMask &= (blockMask - 1)
-            activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+            now_pageIdx = segmentMask.trailingZeroBitCount
+            segmentMask &= (segmentMask - 1)
+            activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
             var pageMask1 = activeMask
             var pageMask2 = SparseSet_L2_BaseMask
@@ -228,16 +236,16 @@ func executeViewPlans<each T, each WT, each WOT> (
             if pageMask == 0 { continue }
             var slotIdx_now = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
-            var entityOffset_now = (pageIdx << 6) + slotIdx_now
+            var entityOffset_now = pageOffset + slotIdx_now
 
             while pageMask != 0 {
                 let entityOffset = entityOffset_now
 
                 slotIdx_now = pageMask.trailingZeroBitCount
                 pageMask &= (pageMask - 1)
-                entityOffset_now = (pageIdx << 6) + slotIdx_now
+                entityOffset_now = pageOffset + slotIdx_now
 
-                action(IterId(taskId: 0), 
+                action(IterId(taskId: 0, eidId: segmentOffset + entityOffset), 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
                             by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -247,7 +255,7 @@ func executeViewPlans<each T, each WT, each WOT> (
             }
 
             let entityOffset = entityOffset_now
-            action(IterId(taskId: 0), 
+            action(IterId(taskId: 0, eidId: segmentOffset + entityOffset), 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
                         by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -260,6 +268,7 @@ func executeViewPlans<each T, each WT, each WOT> (
 
         let activeMask = activeMask_now
         let pageIdx = now_pageIdx
+        let pageOffset = pageIdx << SparseSet_L2_PageShift
 
         var pageMask1 = activeMask
         var pageMask2 = SparseSet_L2_BaseMask
@@ -273,16 +282,16 @@ func executeViewPlans<each T, each WT, each WOT> (
         if pageMask == 0 { continue }
         var slotIdx_now = pageMask.trailingZeroBitCount
         pageMask &= (pageMask - 1)
-        var entityOffset_now = (pageIdx << 6) + slotIdx_now
+        var entityOffset_now = pageOffset + slotIdx_now
 
         while pageMask != 0 {
             let entityOffset = entityOffset_now
 
             slotIdx_now = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
-            entityOffset_now = (pageIdx << 6) + slotIdx_now
+            entityOffset_now = pageOffset + slotIdx_now
 
-            action(IterId(taskId: 0), 
+            action(IterId(taskId: 0, eidId: segmentOffset + entityOffset), 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
                         by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -292,7 +301,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         }
 
         let entityOffset = entityOffset_now
-        action(IterId(taskId: 0), 
+        action(IterId(taskId: 0, eidId: segmentOffset + entityOffset), 
             repeat ComponentProxy(
                 pointer: (each dataPtrs).advanced(
                     by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -303,28 +312,30 @@ func executeViewPlans<each T, each WT, each WOT> (
         
     }
 
-    var blockMask = blockMask_now
+    var segmentMask = segmentMask_now
     let dataPtrs = dataPtrs_now
     
     let pagePtrs = pagePtrs_now
     let wt_pagePtrs = wt_pagePtrs_now
     let wot_pagePtrs = wot_pagePtrs_now
     
-    let blockIdx = segmentIndex_now
+    let segmentIdx = segmentIndex_now
+    let segmentOffset = segmentIdx << SparseSet_L2_SegmentShift
     let sparsePtrs = sparsePtrs_now
-    let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
+    let activeSegmentPtr = entities_activeMaskPtr.advanced(by: segmentIdx << SparseSet_L2_PageShift)
 
-    var now_pageIdx = blockMask.trailingZeroBitCount
-    blockMask &= (blockMask - 1) 
-    var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+    var now_pageIdx = segmentMask.trailingZeroBitCount
+    segmentMask &= (segmentMask - 1)
+    var activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
-    while blockMask != 0 { 
+    while segmentMask != 0 {
         let activeMask = activeMask_now
         let pageIdx = now_pageIdx
+        let pageOffset = pageIdx << SparseSet_L2_PageShift
         // next
-        now_pageIdx = blockMask.trailingZeroBitCount
-        blockMask &= (blockMask - 1)
-        activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+        now_pageIdx = segmentMask.trailingZeroBitCount
+        segmentMask &= (segmentMask - 1)
+        activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
         var pageMask1 = activeMask
         var pageMask2 = SparseSet_L2_BaseMask
@@ -338,16 +349,16 @@ func executeViewPlans<each T, each WT, each WOT> (
         if pageMask == 0 { continue }
         var slotIdx_now = pageMask.trailingZeroBitCount
         pageMask &= (pageMask - 1)
-        var entityOffset_now = (pageIdx << 6) + slotIdx_now
+        var entityOffset_now = pageOffset + slotIdx_now
 
         while pageMask != 0 {
             let entityOffset = entityOffset_now
 
             slotIdx_now = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
-            entityOffset_now = (pageIdx << 6) + slotIdx_now
+            entityOffset_now = pageOffset + slotIdx_now
 
-            action(IterId(taskId: 0),
+            action(IterId(taskId: 0, eidId: segmentOffset + entityOffset), 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
                         by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -357,7 +368,7 @@ func executeViewPlans<each T, each WT, each WOT> (
         }
 
         let entityOffset = entityOffset_now
-        action(IterId(taskId: 0),
+        action(IterId(taskId: 0, eidId: segmentOffset + entityOffset), 
             repeat ComponentProxy(
                 pointer: (each dataPtrs).advanced(
                     by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -369,6 +380,7 @@ func executeViewPlans<each T, each WT, each WOT> (
     
     let activeMask = activeMask_now
     let pageIdx = now_pageIdx
+    let pageOffset = pageIdx << SparseSet_L2_PageShift
 
     var pageMask1 = activeMask
     var pageMask2 = SparseSet_L2_BaseMask
@@ -380,10 +392,10 @@ func executeViewPlans<each T, each WT, each WOT> (
     
     while pageMask != 0 {
         let slotIdx = pageMask.trailingZeroBitCount
-        let entityOffset = (pageIdx << 6) + slotIdx
+        let entityOffset = pageOffset + slotIdx
 
         pageMask &= (pageMask - 1)
-        action(IterId(taskId: 0),
+        action(IterId(taskId: 0, eidId: segmentOffset + entityOffset), 
             repeat ComponentProxy(
                 pointer: (each dataPtrs).advanced(
                     by: Int((each sparsePtrs).ptr.advanced(by: entityOffset).pointee.compArrIdx)
@@ -534,7 +546,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     guard count != 0 else { return }
     let entities_activeMaskPtr = entities._activeMaskPtr
 
-    var blockMask_now = viewPlans[0].mask
+    var segmentMask_now = viewPlans[0].mask
     var segmentIndex_now = viewPlans[0].segmentIndex
     var dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
     _preheat((repeat (each dataPtrs_now).pointee))
@@ -549,17 +561,18 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
     for i in stride(from: 1, to: count, by: 1) {
-        var blockMask = blockMask_now
+        var segmentMask = segmentMask_now
         let dataPtrs = dataPtrs_now
         let pagePtrs = pagePtrs_now
         let wt_pagePtrs = wt_pagePtrs_now
         let wot_pagePtrs = wot_pagePtrs_now
-        let blockIdx = segmentIndex_now
+        let segmentIdx = segmentIndex_now
+        let segmentOffset = segmentIdx << SparseSet_L2_SegmentShift
         let sparsePtrs = sparsePtrs_now
-        let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
+        let activeSegmentPtr = entities_activeMaskPtr.advanced(by: segmentIdx << SparseSet_L2_PageShift)
 
         // update next
-        blockMask_now = viewPlans[i].mask
+        segmentMask_now = viewPlans[i].mask
         segmentIndex_now = viewPlans[i].segmentIndex
         dataPtrs_now = (repeat (each storages).get_SparseSetL2_CompMutPointer_Uncheck(segmentIndex_now))
         _preheat((repeat (each dataPtrs_now).pointee))
@@ -574,17 +587,18 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         _preheat((repeat (each wot_pagePtrs_now).ptr.pointee))
 
         // ###################################################### Sparse_Set_L2_i
-        var now_pageIdx = blockMask.trailingZeroBitCount
-        blockMask &= (blockMask - 1) 
-        var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+        var now_pageIdx = segmentMask.trailingZeroBitCount
+        segmentMask &= (segmentMask - 1)
+        var activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
-        while blockMask != 0 { 
+        while segmentMask != 0 {
             let activeMask = activeMask_now
             let pageIdx = now_pageIdx
+            let pageOffset = pageIdx << SparseSet_L2_PageShift
             // next
-            now_pageIdx = blockMask.trailingZeroBitCount
-            blockMask &= (blockMask - 1)
-            activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+            now_pageIdx = segmentMask.trailingZeroBitCount
+            segmentMask &= (segmentMask - 1)
+            activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
             var pageMask1 = activeMask
             var pageMask2 = SparseSet_L2_BaseMask
@@ -598,17 +612,17 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             if pageMask == 0 { continue }
             var slotIdx_now = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
-            var entityOffset_now = (pageIdx << 6) + slotIdx_now
+            var entityOffset_now = pageOffset + slotIdx_now
             
             while pageMask != 0 {
                 let entityOffset = entityOffset_now
 
                 slotIdx_now = pageMask.trailingZeroBitCount
                 pageMask &= (pageMask - 1)
-                entityOffset_now = (pageIdx << 6) + slotIdx_now
+                entityOffset_now = pageOffset + slotIdx_now
 
                 body.execute(
-                    iterId: IterId(taskId: 0),
+                    iterId: IterId(taskId: 0, eidId: segmentOffset + entityOffset),
                     components: ( 
                         repeat ComponentProxy(
                             pointer: (each dataPtrs).advanced(
@@ -622,7 +636,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
             
             let entityOffset = entityOffset_now
             body.execute(
-                iterId: IterId(taskId: 0),
+                iterId: IterId(taskId: 0, eidId: segmentOffset + entityOffset),
                 components: ( 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
@@ -636,8 +650,9 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         }
 
         let pageIdx = now_pageIdx
+        let pageOffset = pageIdx << SparseSet_L2_PageShift
 
-        var pageMask1 = activeBlockPtr.advanced(by: pageIdx).pointee
+        var pageMask1 = activeSegmentPtr.advanced(by: pageIdx).pointee
         var pageMask2 = SparseSet_L2_BaseMask
         var pageMask3 = UInt64(0)
         repeat pageMask1 &= (each pagePtrs).ptr.advanced(by: pageIdx).pointee
@@ -649,17 +664,17 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         if pageMask == 0 { continue }
         var slotIdx_now = pageMask.trailingZeroBitCount
         pageMask &= (pageMask - 1)
-        var entityOffset_now = (pageIdx << 6) + slotIdx_now
+        var entityOffset_now = pageOffset + slotIdx_now
         
         while pageMask != 0 {
             let entityOffset = entityOffset_now
 
             slotIdx_now = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
-            entityOffset_now = (pageIdx << 6) + slotIdx_now
+            entityOffset_now = pageOffset + slotIdx_now
 
             body.execute(
-                iterId: IterId(taskId: 0),
+                iterId: IterId(taskId: 0, eidId: segmentOffset + entityOffset),
                 components: ( 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
@@ -673,7 +688,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         
         let entityOffset = entityOffset_now
         body.execute(
-            iterId: IterId(taskId: 0),
+            iterId: IterId(taskId: 0, eidId: segmentOffset + entityOffset),
             components: ( 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
@@ -685,27 +700,29 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         // ############################################################################
     }
 
-    var blockMask = blockMask_now
+    var segmentMask = segmentMask_now
     let dataPtrs = dataPtrs_now
     let pagePtrs = pagePtrs_now
     let wt_pagePtrs = wt_pagePtrs_now
     let wot_pagePtrs = wot_pagePtrs_now
-    let blockIdx = segmentIndex_now
+    let segmentIdx = segmentIndex_now
+    let segmentOffset = segmentIdx << SparseSet_L2_SegmentShift
     let sparsePtrs = sparsePtrs_now
-    let activeBlockPtr = entities_activeMaskPtr.advanced(by: blockIdx << 6)
+    let activeSegmentPtr = entities_activeMaskPtr.advanced(by: segmentIdx << SparseSet_L2_PageShift)
 
     // ###################################################### Sparse_Set_L2_i
-    var now_pageIdx = blockMask.trailingZeroBitCount
-    blockMask &= (blockMask - 1) 
-    var activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+    var now_pageIdx = segmentMask.trailingZeroBitCount
+    segmentMask &= (segmentMask - 1)
+    var activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
-    while blockMask != 0 { 
+    while segmentMask != 0 {
         let activeMask = activeMask_now
         let pageIdx = now_pageIdx
+        let pageOffset = pageIdx << SparseSet_L2_PageShift
         // next
-        now_pageIdx = blockMask.trailingZeroBitCount
-        blockMask &= (blockMask - 1)
-        activeMask_now = activeBlockPtr.advanced(by: now_pageIdx).pointee
+        now_pageIdx = segmentMask.trailingZeroBitCount
+        segmentMask &= (segmentMask - 1)
+        activeMask_now = activeSegmentPtr.advanced(by: now_pageIdx).pointee
 
         var pageMask1 = activeMask
         var pageMask2 = SparseSet_L2_BaseMask
@@ -719,17 +736,17 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         if pageMask == 0 { continue }
         var slotIdx_now = pageMask.trailingZeroBitCount
         pageMask &= (pageMask - 1)
-        var entityOffset_now = (pageIdx << 6) + slotIdx_now
+        var entityOffset_now = pageOffset + slotIdx_now
         
         while pageMask != 0 {
             let entityOffset = entityOffset_now
 
             slotIdx_now = pageMask.trailingZeroBitCount
             pageMask &= (pageMask - 1)
-            entityOffset_now = (pageIdx << 6) + slotIdx_now
+            entityOffset_now = pageOffset + slotIdx_now
 
             body.execute(
-                iterId: IterId(taskId: 0),
+                iterId: IterId(taskId: 0, eidId: segmentOffset + entityOffset),
                 components: ( 
                     repeat ComponentProxy(
                         pointer: (each dataPtrs).advanced(
@@ -743,7 +760,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
         
         let entityOffset = entityOffset_now
         body.execute(
-            iterId: IterId(taskId: 0),
+            iterId: IterId(taskId: 0, eidId: segmentOffset + entityOffset),
             components: ( 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
@@ -757,6 +774,7 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
 
     let activeMask = activeMask_now
     let pageIdx = now_pageIdx
+    let pageOffset = pageIdx << SparseSet_L2_PageShift
 
     var pageMask1 = activeMask
     var pageMask2 = SparseSet_L2_BaseMask
@@ -769,9 +787,9 @@ func executeViewPlans<S: SystemBody, each T, each WT, each WOT> (
     while pageMask != 0 {
         let slotIdx = pageMask.trailingZeroBitCount
         pageMask &= (pageMask - 1)
-        let entityOffset = (pageIdx << 6) + slotIdx
+        let entityOffset = pageOffset + slotIdx
         body.execute(
-            iterId: IterId(taskId: 0),
+            iterId: IterId(taskId: 0, eidId: segmentOffset + entityOffset),
             components: ( 
                 repeat ComponentProxy(
                     pointer: (each dataPtrs).advanced(
