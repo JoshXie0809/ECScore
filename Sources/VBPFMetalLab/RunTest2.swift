@@ -30,7 +30,7 @@ fragment float4 fragment_main(VertexOut in [[stage_in]]) {
     // 抗鋸齒平滑邊緣
     float alpha = 1.0 - smoothstep(radius - 0.005, radius + 0.005, dist);
     
-    // 如果 dist > radius，直接丟棄像素 (透明)
+    // 如果 dist > radius, 直接丟棄像素 (透明)
     if (alpha <= 0.0) discard_fragment();
     
     return float4(0.2, 0.6, 1.0, alpha); // 回傳藍色圓形
