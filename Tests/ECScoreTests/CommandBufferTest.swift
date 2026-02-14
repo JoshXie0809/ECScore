@@ -29,6 +29,8 @@ struct MovedTag: TagComponent {}
             pos.fast.x += 1 
             // add moved tag
             cmdbf.addCommand(iterId)
+            cmdbf.addCommand(iterId) // idempotent
+
         }
     }
 
