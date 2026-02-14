@@ -37,6 +37,16 @@ fragment float4 fragment_main(VertexOut in [[stage_in]]) {
 }
 """
 
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
+}
+
 // --- 2. 渲染器 (Renderer) ---
 class Renderer: NSObject, MTKViewDelegate {
     let device: MTLDevice
@@ -81,6 +91,10 @@ class Renderer: NSObject, MTKViewDelegate {
 func runtest2() {
     let app = NSApplication.shared
         app.setActivationPolicy(.regular) // 讓它成為一個真正的 UI 程式
+
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.setActivationPolicy(.regular)
 
         let device = MTLCreateSystemDefaultDevice()!
         let frame = NSRect(x: 0, y: 0, width: 600, height: 600)
