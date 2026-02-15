@@ -76,7 +76,7 @@ public struct EmplaceStorage<T: Component> {
     
     @inlinable
     @inline(__always)
-    public mutating func addComponent(_ eeid: EmplaceEntityId, _ comp: T) {
+    public mutating func addComponent(_ eeid: EmplaceEntityId, _ comp: T = T()) {
         storage.add(eid: eeid.entity, component: comp)
     }
 
