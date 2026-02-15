@@ -32,6 +32,9 @@ final class GameLoop: NSObject, MTKViewDelegate {
         let mainCharPtr = renderer.writableMainCharacterPtr()
         let _ = world.extractDataMainCharacter(mainCharPtr: mainCharPtr)
 
+        let trailPtr = renderer.writableTrailPtr() // 你需要在 Renderer 增加這個方法
+        world.extractHeroTrail(trailPtr: trailPtr)
+
         renderer.submit(mtk_view: mtk_view, instanceCount: count, time: Float(now))
     }
 

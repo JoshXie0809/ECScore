@@ -3,7 +3,7 @@ import simd
 
 final class GameWorld {
     static let totalParticles = 188
-    static let mainCharSpeed = Float(0.01)
+    static let mainCharSpeed = Float(0.02)
 
     let base = makeBootedPlatform()
     let pToken: TypeToken<Position>
@@ -16,6 +16,9 @@ final class GameWorld {
     var colorTable: [simd_float3] = (0..<128).map { _ in
         simd_float3(Float.random(in: 0...1), Float.random(in: 0...1), Float.random(in: 0...1))
     }
+
+    static let trailCount = 15 // 想要幾個殘影
+    var heroHistory: [simd_float2] = Array(repeating: .zero, count: trailCount)
 
     // simulate data load from file
     init() {
@@ -103,6 +106,13 @@ final class GameWorld {
         view(base: base, with: pToken, withTag: mainCharToken) 
         { _, pos in
             let p = pos.fast
+
+            // --- 新增：紀錄歷史紀錄 ---
+            // 每次移動前，把舊位置往後推
+            heroHistory.removeLast()
+            heroHistory.insert(simd_float2(Float(p.x), Float(p.y)), at: 0)
+
+
             p.x += mainCharDir.x * Self.mainCharSpeed * safeDT * 60
             p.y += mainCharDir.y * Self.mainCharSpeed * safeDT * 60
 
@@ -162,5 +172,13 @@ final class GameWorld {
 
     }
 
+    // GameWorld.swift 增加此方法
+    func extractHeroTrail(trailPtr: UnsafeMutablePointer<simd_float2>) {
+        // 將 heroHistory 陣列直接拷貝到 Buffer
+        for i in 0..<Self.trailCount {
+            trailPtr[i] = heroHistory[i]
+        }
+    }
+    
 }
 

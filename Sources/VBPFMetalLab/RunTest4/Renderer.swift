@@ -14,6 +14,7 @@ final class Renderer {
     private let instanceBuffers: [MTLBuffer]
     private let colorBuffers: [MTLBuffer]
     private var currentFrameIndex = 0
+    private let mainCharTrailBuffer: MTLBuffer
 
     // main character position buffer
     private let mainCharPositionBuffer: MTLBuffer
@@ -37,7 +38,8 @@ final class Renderer {
         }
 
         self.mainCharPositionBuffer = device.makeBuffer(length: mainCharBytes, options: .storageModeShared)!
-        
+        self.mainCharTrailBuffer = device.makeBuffer(length: MemoryLayout<simd_float2>.stride * 20, options: .storageModeShared)!
+
         let library = try! device.makeLibrary(
             URL: Bundle.module.url(forResource: "default", withExtension: "metallib")!
         )
@@ -76,6 +78,10 @@ final class Renderer {
         mainCharPositionBuffer.contents().bindMemory(to: simd_float2.self, capacity: 1)
     }
 
+    func writableTrailPtr() -> UnsafeMutablePointer<simd_float2> {
+        mainCharTrailBuffer.contents().bindMemory(to: simd_float2.self, capacity: 20)
+    }
+
     func submit(mtk_view: MTKView, instanceCount: Int, time: Float) {
         // 1. 等待一個可用的 Buffer (消耗一個訊號)
         _ = inFlightSemaphore.wait(timeout: .distantFuture)
@@ -98,19 +104,26 @@ final class Renderer {
         
         enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: instanceCount)
         
-        // --- 【第二階段：畫主角】 ---
-        enc.setRenderPipelineState(mainCharPipeline) // 切換管線
-        // 重新綁定 Buffer 0 為主角專屬 Buffer
-        enc.setVertexBuffer(mainCharPositionBuffer, offset: 0, index: 0)
-        // 為主角提供一個顏色 (你可以使用 setVertexBytes 直接傳遞數值，不需要額外 Buffer)
-        var heroColor = simd_float3(1.0, 1.0, 1.0) // 純白色
+        // --- 第二層：主角殘影 (Trail) ---
+        enc.setRenderPipelineState(mainCharPipeline)
+        // 關鍵：必須綁定 trailBuffer 而非 positionBuffer
+        enc.setVertexBuffer(mainCharTrailBuffer, offset: 0, index: 0) 
+        
+        var heroColor = simd_float3(1.0, 1.0, 1.0)
         enc.setVertexBytes(&heroColor, length: MemoryLayout<simd_float3>.stride, index: 1)
-        // 繪製主角 (instanceCount 為 1)
-
+        
+        // 設定時間 (殘影也需要時間計算呼吸感)
         var currentTime = time
         enc.setFragmentBytes(&currentTime, length: MemoryLayout<Float>.stride, index: 0)
-        enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: 1)        
         
+        // 繪製 15 個殘影
+        enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: GameWorld.trailCount)
+
+        // --- 第三層：主角本體 (Body) ---
+        // 重新綁定為單一位置的 Buffer，確保本體座標最精確
+        enc.setVertexBuffer(mainCharPositionBuffer, offset: 0, index: 0)
+        enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: 1)
+
         enc.endEncoding()
 
         // --- 【關鍵修正點：回傳訊號】 ---
