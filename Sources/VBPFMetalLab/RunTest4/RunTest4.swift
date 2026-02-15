@@ -13,12 +13,13 @@ func runTest4() {
     app.setActivationPolicy(.regular)
 
     let device = MTLCreateSystemDefaultDevice()!
-    let frame = NSRect(x: 0, y: 0, width: 600, height: 600)
+    let frame = NSRect(x: 0, y: 0, width: 800, height: 800)
     let window = NSWindow(contentRect: frame, styleMask: [.titled, .closable], backing: .buffered, defer: false)
     window.title = "ECScore Engine Skeleton"
     window.makeKeyAndOrderFront(nil)
 
-    let mtkView = MTKView(frame: frame, device: device)
+    let mtkView = GameMTKView(frame: frame, device: device)
+
     mtkView.colorPixelFormat = .bgra8Unorm
     mtkView.clearColor = MTLClearColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1.0)
     mtkView.preferredFramesPerSecond = 60

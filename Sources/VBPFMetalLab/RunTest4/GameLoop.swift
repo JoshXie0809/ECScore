@@ -13,17 +13,26 @@ final class GameLoop: NSObject, MTKViewDelegate {
     }
 
     func draw(in mtk_view: MTKView) {
+        // update resource
         let now = CACurrentMediaTime()
-        let dt = now - lastTime
+        world.dt = Float(now - lastTime)
         lastTime = now
+        world.mainCharDir = InputManager.shared.moveVector
+        world.updateParticelColor()
 
-        world.update(dt: Float(dt))
+        // update entity
+        world.updateParticles()
+        world.updateMainCharacter()
 
+        // extract data
         let pPtr = renderer.writableInstancePtr(capacity: capacity)
         let cPtr = renderer.writableColorPtr(capacity: capacity)
-        let count = world.extractData(posPtr: pPtr, colPtr: cPtr, capacity: capacity)
+        let count = world.extractDataParticles(posPtr: pPtr, colPtr: cPtr, capacity: capacity)
 
-        renderer.submit(mtk_view: mtk_view, instanceCount: count)
+        let mainCharPtr = renderer.writableMainCharacterPtr()
+        let _ = world.extractDataMainCharacter(mainCharPtr: mainCharPtr)
+
+        renderer.submit(mtk_view: mtk_view, instanceCount: count, time: Float(now))
     }
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}

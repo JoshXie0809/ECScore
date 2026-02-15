@@ -12,3 +12,5 @@ struct Velocity: Component {
     var dx: Float = 0.0
     var dy: Float = 0.0
 }
+
+struct MainChar: TagComponent {}

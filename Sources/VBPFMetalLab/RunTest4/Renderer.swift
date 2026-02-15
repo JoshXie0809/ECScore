@@ -4,16 +4,19 @@ import simd
 @MainActor
 final class Renderer {
     static let maxFramesInFlight = 3
-    
     let device: MTLDevice
     let queue: MTLCommandQueue
     let pipeline: MTLRenderPipelineState
+    let mainCharPipeline: MTLRenderPipelineState
     
     // Ring Buffer
     // max 3
     private let instanceBuffers: [MTLBuffer]
     private let colorBuffers: [MTLBuffer]
     private var currentFrameIndex = 0
+
+    // main character position buffer
+    private let mainCharPositionBuffer: MTLBuffer
     
     private let inFlightSemaphore = DispatchSemaphore(value: maxFramesInFlight)
 
@@ -23,6 +26,7 @@ final class Renderer {
 
         let posBytes = MemoryLayout<simd_float2>.stride * capacity
         let colorBytes = MemoryLayout<simd_float3>.stride * capacity
+        let mainCharBytes = MemoryLayout<simd_float2>.stride
         
         self.instanceBuffers = (0..<Self.maxFramesInFlight).map { _ in
             device.makeBuffer(length: posBytes, options: .storageModeShared)!
@@ -31,31 +35,48 @@ final class Renderer {
         self.colorBuffers = (0..<Self.maxFramesInFlight).map { _ in
             device.makeBuffer(length: colorBytes, options: .storageModeShared)!
         }
+
+        self.mainCharPositionBuffer = device.makeBuffer(length: mainCharBytes, options: .storageModeShared)!
         
         let library = try! device.makeLibrary(
             URL: Bundle.module.url(forResource: "default", withExtension: "metallib")!
         )
 
+        // other Particles pipeline
         let desc = MTLRenderPipelineDescriptor()
         desc.vertexFunction = library.makeFunction(name: "vertex_main")
         desc.fragmentFunction = library.makeFunction(name: "fragment_main")
-        
         desc.colorAttachments[0].pixelFormat = pixelFormat
         desc.colorAttachments[0].isBlendingEnabled = true
         desc.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
         desc.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
         self.pipeline = try! device.makeRenderPipelineState(descriptor: desc)
+
+        // --- 設定主角管線 (Hero Pipeline) ---
+        let mainCharDesc = MTLRenderPipelineDescriptor()
+        mainCharDesc.vertexFunction = library.makeFunction(name: "hero_vertex")   // 指向主角 Vertex
+        mainCharDesc.fragmentFunction = library.makeFunction(name: "hero_fragment") // 指向主角 Fragment
+        mainCharDesc.colorAttachments[0].pixelFormat = pixelFormat
+        mainCharDesc.colorAttachments[0].isBlendingEnabled = true
+        mainCharDesc.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+        mainCharDesc.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
+        self.mainCharPipeline = try! device.makeRenderPipelineState(descriptor: mainCharDesc)
+
     }
     
     func writableColorPtr(capacity: Int) -> UnsafeMutablePointer<simd_float3> {
-            colorBuffers[currentFrameIndex].contents().bindMemory(to: simd_float3.self, capacity: capacity)
+        colorBuffers[currentFrameIndex].contents().bindMemory(to: simd_float3.self, capacity: capacity)
     }
 
     func writableInstancePtr(capacity: Int) -> UnsafeMutablePointer<simd_float2> {
         instanceBuffers[currentFrameIndex].contents().bindMemory(to: simd_float2.self, capacity: capacity)
     }
 
-    func submit(mtk_view: MTKView, instanceCount: Int) {
+    func writableMainCharacterPtr() -> UnsafeMutablePointer<simd_float2> {
+        mainCharPositionBuffer.contents().bindMemory(to: simd_float2.self, capacity: 1)
+    }
+
+    func submit(mtk_view: MTKView, instanceCount: Int, time: Float) {
         // 1. 等待一個可用的 Buffer (消耗一個訊號)
         _ = inFlightSemaphore.wait(timeout: .distantFuture)
 
@@ -63,17 +84,33 @@ final class Renderer {
               let cmd = queue.makeCommandBuffer(),
               let rp = mtk_view.currentRenderPassDescriptor,
               let enc = cmd.makeRenderCommandEncoder(descriptor: rp),
-              let drawable = mtk_view.currentDrawable else {
-                  // 重要：如果這裡 return 了，一定要補回一個訊號，否則會永久卡死
-                  inFlightSemaphore.signal()
-                  return
-              }
+              let drawable = mtk_view.currentDrawable
+        else {
+              // 重要：如果這裡 return 了，一定要補回一個訊號，否則會永久卡死
+              inFlightSemaphore.signal()
+              return
+          }
 
         enc.setRenderPipelineState(pipeline)
+        
         enc.setVertexBuffer(instanceBuffers[currentFrameIndex], offset: 0, index: 0)
         enc.setVertexBuffer(colorBuffers[currentFrameIndex], offset: 0, index: 1)
         
         enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: instanceCount)
+        
+        // --- 【第二階段：畫主角】 ---
+        enc.setRenderPipelineState(mainCharPipeline) // 切換管線
+        // 重新綁定 Buffer 0 為主角專屬 Buffer
+        enc.setVertexBuffer(mainCharPositionBuffer, offset: 0, index: 0)
+        // 為主角提供一個顏色 (你可以使用 setVertexBytes 直接傳遞數值，不需要額外 Buffer)
+        var heroColor = simd_float3(1.0, 1.0, 1.0) // 純白色
+        enc.setVertexBytes(&heroColor, length: MemoryLayout<simd_float3>.stride, index: 1)
+        // 繪製主角 (instanceCount 為 1)
+
+        var currentTime = time
+        enc.setFragmentBytes(&currentTime, length: MemoryLayout<Float>.stride, index: 0)
+        enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: 1)        
+        
         enc.endEncoding()
 
         // --- 【關鍵修正點：回傳訊號】 ---
