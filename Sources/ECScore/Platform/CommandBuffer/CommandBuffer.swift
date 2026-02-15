@@ -27,6 +27,13 @@ public struct CommandBuffer<T: Component> {
 
     @inlinable
     @inline(__always)
+    public mutating func addCommand(_ eeid: borrowing EmplaceEntityId, _ comp: consuming T = T()) {
+        // version is no meaning in view api
+        box.add(eid: EntityId(id: eeid.entity.id, version: -1), component: comp)
+    }
+
+    @inlinable
+    @inline(__always)
     public mutating func removeCommand(_ itid: borrowing IterId) {
         // version is no meaning in view api
         box.remove(eid: EntityId(id: itid.eidId, version: -1))

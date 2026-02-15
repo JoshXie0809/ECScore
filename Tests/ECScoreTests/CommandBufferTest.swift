@@ -245,3 +245,120 @@ struct ProcessedTag: TagComponent {}
     #expect(leftoverTags == 0)
 }
 
+@Test func ChainReactionSystemTest_IdempotentStress() async throws {
+    let base = makeBootedPlatform()
+    
+    let pToken = interop(base, Position.self)
+    let targetTag = interop(base, TargetTag.self)
+    let processedTag = interop(base, ProcessedTag.self)
+    
+    let total = 880_000
+    emplace(base, tokens: pToken) { entities, pack in
+        var pSt = pack.storages
+        for i in 0..<total {
+            let eid = entities.createEntity()
+            let posX = i < total / 2 ? -1.0 : 1.0
+            pSt.addComponent(eid, Position(x: Float(posX), y: 0))
+        }
+    }
+
+    // --- System A: 瘋狂標記階段 ---
+    var targetBuffer = targetTag.getCommandBuffer(base: base)
+    view(base: base, with: pToken) { iterId, pos in
+        if pos.fast.x > 0 {
+            // 【故意刁難 1】：同一個實體標記 5 次
+            // 在傳統 Array 框架中，這會產生 220 萬個指令 (44萬 * 5)
+            targetBuffer.addCommand(iterId)
+            targetBuffer.addCommand(iterId)
+            targetBuffer.addCommand(iterId)
+            targetBuffer.addCommand(iterId)
+            targetBuffer.addCommand(iterId)
+        }
+    }
+
+    // --- System B: 瘋狂轉換階段 ---
+    var procBuffer = processedTag.getCommandBuffer(base: base)
+    var targetRemover = targetTag.getCommandBuffer(base: base)
+    
+    var processedCount = 0
+    view(base: base, with: pToken, withTag: targetTag) { iterId, pos in
+        pos.fast.x *= 2.0
+        
+        // 【故意刁難 2】：重複移除標籤
+        targetRemover.removeCommand(iterId)
+        targetRemover.removeCommand(iterId)
+        
+        // 【故意刁難 3】：重複添加處理標籤
+        procBuffer.addCommand(iterId)
+        procBuffer.addCommand(iterId)
+        procBuffer.addCommand(iterId)
+        
+        processedCount += 1
+    }
+
+    // --- System C: 最終驗證 ---
+    var finalCheckCount = 0
+    view(base: base, with: (), withTag: processedTag) { _ in
+        finalCheckCount += 1
+    }
+    
+    print("System B processed: \(processedCount)")
+    print("System C verified: \(finalCheckCount)")
+
+    #expect(processedCount == total / 2)
+    #expect(finalCheckCount == total / 2)
+    
+    var leftoverTags = 0
+    view(base: base, with: (), withTag: targetTag) { _ in leftoverTags += 1 }
+    #expect(leftoverTags == 0)
+}
+
+@Test func PhysicalReactiveSystemTest() async throws {
+    let base = makeBootedPlatform()
+    let pToken = interop(base, Position.self)
+    let targetTag = interop(base, TargetTag.self)
+
+    var targetBuffer = targetTag.getCommandBuffer(base: base)
+    
+    // 1. 初始化 10 萬個帶有標籤的實體
+    let total = 100_000
+    emplace(base, tokens: pToken) { entities, pack in
+        var st = pack.storages
+
+        for _ in 0..<total {
+            let eid = entities.createEntity()
+            st.addComponent(eid, Position(x: 1.0, y: 0))
+            targetBuffer.addCommand(eid) 
+        }
+    }
+    
+    // --- 階段 A：邏輯處理，移除一半的標籤 ---
+    var remover = targetTag.getCommandBuffer(base: base)
+    var count = 0
+
+    view(base: base, with: (), withTag: targetTag) { iterId in
+        if count % 2 == 0 {
+            remover.removeCommand(iterId) // 這裡只是移除標籤
+        }
+        count += 1
+    }
+
+    // --- 階段 B：物理觸發（Reactive Cleanup） ---
+    // 這就是「自動觸發」：我們找那些「有 Position 但沒 TargetTag」的孤兒
+    var posRemover = pToken.getCommandBuffer(base: base)
+    var reactiveCount = 0
+    
+    // 關鍵在於這個 `withoutTag` 的過濾邏輯
+    view(base: base, with: pToken, withoutTag: targetTag) { iterId, pos in
+        posRemover.removeCommand(iterId) // 自動清理組件
+        reactiveCount += 1
+    }
+
+    print("Automatically reacted and cleaned: \(reactiveCount)")
+    #expect(reactiveCount == 50_000)
+    
+    // --- 驗證最後結果 ---
+    var finalCount = 0
+    view(base: base, with: pToken) { _, _ in finalCount += 1 }
+    #expect(finalCount == 50_000)
+}
