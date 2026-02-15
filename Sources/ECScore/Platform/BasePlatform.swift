@@ -1,6 +1,6 @@
 // main platform
 public final class BasePlatform : Platform {
-    public var storages: [AnyPlatformStorage?] = []
+    public var storages: ContiguousArray<AnyPlatformStorage?> = []
     public init() {}
 }
 

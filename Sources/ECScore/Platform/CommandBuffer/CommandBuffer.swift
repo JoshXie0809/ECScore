@@ -41,6 +41,13 @@ public struct CommandBuffer<T: Component> {
 
     @inlinable
     @inline(__always)
+    public mutating func removeCommand(_ eeid: borrowing EmplaceEntityId) {
+        // version is no meaning in view api
+        box.remove(eid: EntityId(id: eeid.entity.id, version: -1))
+    }
+
+    @inlinable
+    @inline(__always)
     public mutating func removeAll() {
         box.removeAll()
     }

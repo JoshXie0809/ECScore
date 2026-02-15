@@ -5,6 +5,12 @@ public protocol Platform_Entity: Platform, Component, AnyObject {
     
     @inlinable @inline(__always)
     func despawn(_: EntityId)
+
+    @inlinable @inline(__always)
+    func despawnAndRemoveComponents(
+        _: EntityId,
+        _: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    )
     
     @inlinable @inline(__always)
     func forEachLiveId(_ body: (EntityId) -> Void)
@@ -40,6 +46,18 @@ public final class EntityPlatForm_Ver0: Platform_Entity, Component {
 
     @inline(__always)
     public func despawn(_ eid: EntityId) {
+        entities.despawn(eid)
+    }
+
+    @inline(__always)
+    public func despawnAndRemoveComponents(
+        _ eid: EntityId, 
+        _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>,
+    ) {
+        for i in 0..<base.value.storages.count {
+            base.value.storages[i]!.remove(eid: eid)
+        }
+
         entities.despawn(eid)
     }
 

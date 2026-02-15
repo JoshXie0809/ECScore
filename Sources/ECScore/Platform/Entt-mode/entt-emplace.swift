@@ -27,8 +27,6 @@ public struct EmplaceEntityId {
     @inlinable
     @inline(__always)
     internal init(_ eid: EntityId) { self.entity = eid }
-
-    
     
 }
 
@@ -51,6 +49,19 @@ public struct EmplaceEntities: ~Copyable {
     @inline(__always)
     public func destroyEntity(_ eeid: EmplaceEntityId) {
         entities.despawn(eeid.entity)
+    }
+
+    @inlinable
+    @inline(__always)
+    public func destroyEntityAndRemoveComponents(
+        _ eeid: EmplaceEntityId, 
+        _ base: borrowing Validated<BasePlatform, Proof_Handshake, Platform_Facts>
+    
+    ) {
+        entities.despawnAndRemoveComponents(
+            eeid.entity,
+            base
+        )
     }
 }
 
