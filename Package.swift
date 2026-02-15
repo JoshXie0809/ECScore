@@ -53,6 +53,9 @@ packageTargets.append(
         name: "VBPFMetalLab",
         dependencies: ["ECScore"],
         path: "Sources/VBPFMetalLab",
+        resources: [
+            .process("Shaders")
+        ],
         swiftSettings: crossModuleOptimizationSettings,
         linkerSettings: [
             .linkedFramework("Metal"),

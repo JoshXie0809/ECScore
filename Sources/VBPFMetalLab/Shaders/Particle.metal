@@ -10,10 +10,10 @@ struct VertexOut {
 vertex VertexOut vertex_main(
     uint vid [[vertex_id]],
     uint iid [[instance_id]],
-    constant float2 *allPos [[buffer(0)]],
+    constant float2 *allPos    [[buffer(0)]],
     constant float3 *allColors [[buffer(1)]]
 ) {
-    float size = 0.015;
+    float size = 0.025;
 
     float2 quad[4] = {
         float2(-size, -size),
@@ -26,6 +26,7 @@ vertex VertexOut vertex_main(
     out.position = float4(quad[vid] + allPos[iid], 0, 1);
     out.color = allColors[iid];
     out.uv = quad[vid] * (1.0 / size);
+
     return out;
 }
 
