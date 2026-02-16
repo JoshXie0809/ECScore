@@ -21,13 +21,13 @@ final class GameLoop: NSObject, MTKViewDelegate {
         world.updateParticelColor()
 
         // update entity
-        world.updateParticles()
-        world.updateMainCharacter()
-
-        // extract data
         let pPtr = renderer.writableInstancePtr(capacity: capacity)
         let cPtr = renderer.writableColorPtr(capacity: capacity)
-        let count = world.extractDataParticles(posPtr: pPtr, colPtr: cPtr, capacity: capacity)
+        let count = world.updateParticles(
+            posPtr: pPtr, 
+            colPtr: cPtr
+        )
+        world.updateMainCharacter()
 
         let mainCharPtr = renderer.writableMainCharacterPtr()
         let _ = world.extractDataMainCharacter(mainCharPtr: mainCharPtr)

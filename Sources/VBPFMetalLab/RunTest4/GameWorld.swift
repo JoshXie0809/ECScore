@@ -72,11 +72,15 @@ final class GameWorld {
     }
 
     // update particles place
-    func updateParticles() 
+    func updateParticles(
+        posPtr: UnsafeMutablePointer<simd_float2>,
+        colPtr: UnsafeMutablePointer<simd_float3>,
+    ) -> Int
     {
-        let safeDT = min(dt, 0.033)        
+        let safeDT = min(dt, 0.033)
+        var idx = 0
         view(base: base, with: (pToken, vToken)) 
-        { _, pos, vel in
+        { iterId , pos, vel in
             let p = pos.fast
             let v = vel.fast
 
@@ -98,7 +102,13 @@ final class GameWorld {
                 p.y = -1.0
                 v.dy *= -1
             }
+
+            posPtr[idx] = simd_float2(Float(pos.fast.x), Float(pos.fast.y))
+            colPtr[idx] = self.colorTable[Int(iterId.eidId & 127)]
+            idx += 1
         }
+
+        return idx
     }
 
     func updateMainCharacter() {
@@ -128,30 +138,6 @@ final class GameWorld {
                 p.y = -1.0
             }
         }
-    }
-
-    // write to metal buffer
-    func extractDataParticles(
-        posPtr: UnsafeMutablePointer<simd_float2>,
-        colPtr: UnsafeMutablePointer<simd_float3>,
-        capacity: Int) -> Int 
-    {
-        var idx = 0
-        
-        view(base: base, with: pToken, withTag: vToken)
-        { iterId, pos in
-            
-            if idx < capacity {
-                posPtr[idx] = simd_float2(Float(pos.fast.x), Float(pos.fast.y))
-                // 使用你最愛的位元運算索引
-                colPtr[idx] = self.colorTable[Int(iterId.eidId & 127)]
-                idx += 1
-            } else {
-                fatalError("particles number more than expected! @extractDataParticles")
-            }
-        }
-        
-        return idx
     }
 
     func extractDataMainCharacter(

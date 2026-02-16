@@ -48,6 +48,7 @@ var packageTargets: [Target] = [
 ]
 
 #if os(macOS)
+// metal test
 packageTargets.append(
     .executableTarget(
         name: "VBPFMetalLab",
@@ -62,8 +63,19 @@ packageTargets.append(
             .linkedFramework("MetalKit"),
             .linkedFramework("QuartzCore")
         ]
+    ),
+)
+
+// inspector
+packageTargets.append(
+    .executableTarget(
+        name: "VBPFInspector",
+        dependencies: ["ECScore"],
+        path: "Sources/VBPFInspector"
     )
 )
+
+
 #endif
 
 let package = Package(

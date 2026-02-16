@@ -9,7 +9,7 @@ struct Game7Systems {
         // ##################################################
         // parameter
             let ITER_NUM = 100
-            let totalEntityNum = 4096 * 512
+            let totalEntityNum = 4096 * 4
             let seed = UInt32(12345)
             let emplaceStrategy = GameSettings.emplaceStrategyProb.prob_100
             let printWorldFlag = false

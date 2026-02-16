@@ -16,7 +16,7 @@ vertex VertexOut hero_vertex(
     constant float3 *col [[buffer(1)]]
 ) {
     // 殘影邏輯：iid 越大代表越舊，尺寸稍微縮小
-    float size = (iid == 0) ? 0.05 : (0.045 * (1.0 - float(iid)/20.0));
+    float size = (iid == 0) ? 0.05 : (0.045 * (1.0 - float(iid)/15.0));
     
     // 關鍵修正：使用 pos[iid] 取得對應的歷史位置
     float2 center = pos[iid];
@@ -32,7 +32,7 @@ vertex VertexOut hero_vertex(
     out.uv = quad[vid] * (1.0 / size);
     
     // 計算殘影衰減：iid 0 是 1.0 (本體)，iid 14 則接近透明
-    out.trailAlpha = 1.0 - (float(iid) / 15.0);
+    out.trailAlpha = 1.0 - (float(iid) / 20.0);
     
     return out;
 }
@@ -47,7 +47,7 @@ fragment float4 hero_fragment(
     float breathe = 1.0 + 0.15 * sin(time * 3.0);
     
     // 畫出圓形，並乘上頂點傳過來的殘影衰減係數
-    float alpha = (0.64 - smoothstep(0.4 * breathe, 0.5 * breathe, dist)) * in.trailAlpha;
+    float alpha = (0.9 - smoothstep(0.4 * breathe, 0.5 * breathe, dist)) * in.trailAlpha;
     
     // 指數發光效果，同樣受殘影衰減影響
     float glow = exp(-dist * 3.5) * 0.6 * breathe * in.trailAlpha;
