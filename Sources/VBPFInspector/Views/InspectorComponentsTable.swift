@@ -14,7 +14,6 @@ struct InspectorComponentsTable: View {
     
     func registeredComponents(_ registry: any Platform_Registry) -> [ComponentTypeRow]
     {
-        
         let entries = registry.giveAllRigsterTypes()
                 
         return entries.map { (rid, type) in
