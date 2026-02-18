@@ -39,28 +39,34 @@ struct InspectorComponentsTable: View {
                 
                 let rts = registeredComponents(registry)
                 
-                // 使用 List 或 ScrollView 搭配 ForEach 來顯示
-                List {
-                    // SwiftUI 需要 ForEach 來根據數量產生 View
-                    ForEach(rts) { row in
+                Table(rts) {
+                    // 第一欄：顯示 ID
+                    TableColumn("RID") { row in
+                        Text("\(row.id.id)")
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+                    .width(min: 50, max: 80) // 限制 ID 欄位寬度
+                    
+                    // 第二欄：顯示型別名稱
+                    TableColumn("Component Type Name") { row in
                         HStack {
                             Image(systemName: "cube.fill")
                                 .foregroundColor(.accentColor)
-                            
-                            Text("[\(row.id.id)]")
-                                .font(.system(.body, design: .monospaced))
-                                .foregroundColor(.secondary)
-                            
                             Text(row.typeName)
                                 .fontWeight(.medium)
-                            
-                            Spacer()
                         }
                     }
                 }
 
             } else {
-                Text("waiting world load")
+                VStack {
+                    Spacer()
+                    ProgressView()
+                    Text("waiting world load")
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
             }
             
         }
