@@ -1,9 +1,14 @@
 import AppKit
 import ECScore
 
+
 @MainActor
+@Observable
 final class InspectorDelegate: NSObject, NSApplicationDelegate {
     let world = GameWorld()
+    var refreshTrigger: Int = 0
+    func tick() { refreshTrigger += 1 }
+    
     static private(set) var shared: InspectorDelegate?
 
     override init() {
@@ -13,12 +18,6 @@ final class InspectorDelegate: NSObject, NSApplicationDelegate {
             UserDefaults.standard.set("josh.ECScoreMetalLab", forKey: "CFBundleIdentifier")
         }
     }
-
-
-
-
-
-
 
     func applicationWillFinishLaunching(_ notification: Notification) {
 
@@ -47,6 +46,10 @@ final class InspectorDelegate: NSObject, NSApplicationDelegate {
             hw.addComponent(e, HelloWorld(specialId: "josh", val: "hello_world"))
         }
 
+        // components
+        let _ = interop(shared.world.base, Num1.self, Num2.self)
+        
+        tick()
         // #######################################################
     }
     

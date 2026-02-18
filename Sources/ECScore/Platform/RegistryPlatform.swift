@@ -5,6 +5,7 @@ public protocol Platform_Registry: AnyObject, Component {
     func lookup(_ type_rs: TypeStrIdHashed_FNV1A_64) -> RegistryId?
     func lookup(_ rid: RegistryId) -> (any Component.Type)?
     func contains(_ type: any Component.Type) -> Bool
+    func giveAllRigsterTypes() -> [(RegistryId, any Component.Type)]
     var maxRidId: Int { get }
     var count: Int { get }
 }
@@ -37,5 +38,9 @@ public final class RegistryPlatform : Platform, Platform_Registry, Component {
 
     public func contains(_ type: any Component.Type) -> Bool {
         return typeToRId[type._hs] != nil
+    }
+
+    public func giveAllRigsterTypes() -> [(RegistryId, any Component.Type)] {
+        return ridToType.map { ($0.key, $0.value) }
     }
 }
